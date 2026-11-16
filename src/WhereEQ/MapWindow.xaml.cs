@@ -146,10 +146,27 @@ public partial class MapWindow : Window
         StatusText.Text =
             _settings.EffectiveMapsFolder == null ? "Maps folder not set: open Settings in WhereEQ." :
             map == null ? (shortName == null ? $"No map name known for \"{zone}\". Pick one under ⚙ → Map."
-                                             : $"No map file for {shortName} in the maps folder.") :
+                                             : $"No map file for {shortName} in {_settings.EffectiveMapsFolder}") :
+            map.Lines.Count == 0 && map.Labels.Count == 0 ?
+                $"{string.Join(", ", map.Files)}: no map lines could be read ({map.TotalLines} L/P lines" +
+                (map.FirstSkipped != null ? $", e.g. \"{map.FirstSkipped}\"" : "") + ")" :
             !locHere ? "No /loc in this zone yet. Type /loc (or use a /loc hotkey)." :
             $"{Character.Ago(log!.LocSeen!.Value)} · {-log.MapY!.Value:0}, {-log.MapX!.Value:0}" +
-            (log.Heading != null ? $" · {log.Heading}" : "");
+            (log.Heading != null ? $" · {log.Heading}" : "") + OutsideNote(map, player);
+        StatusText.ToolTip = map == null ? null :
+            $"Map: {string.Join(", ", map.Files)}\n{map.Lines.Count} lines, {map.Labels.Count} labels" +
+            (map.SkippedLines > 0 ? $", {map.SkippedLines} lines not understood" : "") +
+            (map.Bounds.IsEmpty ? "" : $"\nBounds x {map.Bounds.Left:0}..{map.Bounds.Right:0}, y {map.Bounds.Top:0}..{map.Bounds.Bottom:0}");
+    }
+
+    /// <summary>Warn when the player is nowhere near the map: wrong map, or a map pack with different coordinates.</summary>
+    private static string OutsideNote(MapData map, Point? player)
+    {
+        if (player is not { } p || map.Bounds.IsEmpty) return "";
+        var b = map.Bounds;
+        var margin = Math.Max(b.Width, b.Height) * 0.25 + 100;
+        var inside = p.X > b.Left - margin && p.X < b.Right + margin && p.Y > b.Top - margin && p.Y < b.Bottom + margin;
+        return inside ? "" : " · you're outside this map's area";
     }
 
     private static List<Point> SafeTrail(LogState log)

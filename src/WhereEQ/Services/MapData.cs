@@ -44,33 +44,57 @@ public sealed class MapData
 
         var map = new MapData { ShortName = shortName };
         foreach (var file in files)
+        {
+            map.Files.Add(Path.GetFileName(file));
             foreach (var raw in FileUtil.ReadLinesShared(file))
                 map.ParseLine(raw);
+        }
         map.ComputeBounds();
         return map;
     }
 
+    /// <summary>Files that were read, and how many L/P lines were seen vs. understood (for diagnostics).</summary>
+    public List<string> Files { get; } = new();
+    public int TotalLines { get; private set; }
+    public int SkippedLines { get; private set; }
+    public string? FirstSkipped { get; private set; }
+
+    private static readonly System.Text.RegularExpressions.Regex Number =
+        new(@"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// Reads "L x1, y1, z1, x2, y2, z2, r, g, b" and "P x, y, z, r, g, b, size, Label". Pulls the numbers out with a
+    /// regex rather than relying on exact comma/space layout, since map packs differ slightly.
+    /// </summary>
     private void ParseLine(string raw)
     {
-        var line = raw.Trim();
+        var line = raw.Trim().TrimStart('﻿', 'ï', '»', '¿').Trim();
         if (line.Length < 3) return;
         var kind = char.ToUpperInvariant(line[0]);
-        var parts = line[1..].Split(',', StringSplitOptions.TrimEntries);
-        try
+        if (kind is not ('L' or 'P') || !(char.IsWhiteSpace(line[1]) || line[1] == ',')) return;
+        TotalLines++;
+        var body = line[1..];
+        var nums = Number.Matches(body);
+
+        if (kind == 'L' && nums.Count >= 6)
         {
-            if (kind == 'L' && parts.Length >= 9)
-            {
-                Lines.Add(new MapLine(new Point(D(parts[0]), D(parts[1])), new Point(D(parts[3]), D(parts[4])),
-                                      Rgb(parts[6], parts[7], parts[8])));
-            }
-            else if (kind == 'P' && parts.Length >= 8)
-            {
-                var text = string.Join(",", parts.Skip(7)).Replace('_', ' ').Trim();
-                Labels.Add(new MapLabel(new Point(D(parts[0]), D(parts[1])), Rgb(parts[3], parts[4], parts[5]),
-                                        int.TryParse(parts[6], out var sz) ? sz : 2, text));
-            }
+            // Some packs omit the colour; default to black (drawn light grey in "Bright" style).
+            var color = nums.Count >= 9 ? Rgb(nums[6].Value, nums[7].Value, nums[8].Value) : Colors.Black;
+            Lines.Add(new MapLine(new Point(D(nums[0].Value), D(nums[1].Value)),
+                                  new Point(D(nums[3].Value), D(nums[4].Value)), color));
+            return;
         }
-        catch (FormatException) { /* skip malformed lines */ }
+        if (kind == 'P' && nums.Count >= 7)
+        {
+            // Label is whatever follows the 7th number (size); usually after a comma.
+            var afterSize = body[(nums[6].Index + nums[6].Length)..].TrimStart(',', ' ', '\t');
+            Labels.Add(new MapLabel(new Point(D(nums[0].Value), D(nums[1].Value)),
+                                    Rgb(nums[3].Value, nums[4].Value, nums[5].Value),
+                                    (int)D(nums[6].Value), afterSize.Replace('_', ' ').Trim()));
+            return;
+        }
+        SkippedLines++;
+        FirstSkipped ??= line.Length > 80 ? line[..80] : line;
     }
 
     private void ComputeBounds()
@@ -86,5 +110,6 @@ public sealed class MapData
     private static Color Rgb(string r, string g, string b) =>
         Color.FromRgb(B(r), B(g), B(b));
 
-    private static byte B(string s) => (byte)Math.Clamp(int.TryParse(s, out var v) ? v : 0, 0, 255);
+    private static byte B(string s) =>
+        (byte)Math.Clamp(double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? (int)v : 0, 0, 255);
 }

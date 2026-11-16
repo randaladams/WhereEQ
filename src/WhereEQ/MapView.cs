@@ -55,7 +55,17 @@ public sealed class MapView : FrameworkElement
 
     public void Fit()
     {
-        if (_map == null || _map.Bounds.IsEmpty || ActualWidth < 10 || ActualHeight < 10) return;
+        if (ActualWidth < 10 || ActualHeight < 10) return;
+        if (_map == null || _map.Bounds.IsEmpty)
+        {
+            // No walls to fit: show ~600 units around the player so the trail is a sensible size.
+            if (Player is not { } pp) return;
+            _scale = Math.Min(ActualWidth, ActualHeight) / 600;
+            _center = pp;
+            _fitted = true;
+            InvalidateVisual();
+            return;
+        }
         var b = _map.Bounds;
         _scale = Math.Min(ActualWidth / Math.Max(b.Width, 1), ActualHeight / Math.Max(b.Height, 1)) * 0.92;
         _center = Follow && Player is { } p ? p : new Point(b.X + b.Width / 2, b.Y + b.Height / 2);
@@ -113,7 +123,7 @@ public sealed class MapView : FrameworkElement
     {
         // Transparent but hit-testable, so the mouse works anywhere on the map.
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, ActualWidth, ActualHeight));
-        if (_map == null) return;
+        if (_map == null && Player == null) return;
         if (!_fitted) Fit();
 
         dc.PushClip(new RectangleGeometry(new Rect(0, 0, ActualWidth, ActualHeight)));
@@ -129,7 +139,7 @@ public sealed class MapView : FrameworkElement
         dc.Pop();
 
         var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-        if (ShowLabels)
+        if (ShowLabels && _map != null)
         {
             foreach (var label in _map.Labels)
             {
