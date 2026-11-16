@@ -92,7 +92,7 @@ public partial class MapWindow : Window
             CharacterBox.ItemsSource = names;
         CharacterBox.SelectedItem = names.Contains(cur) ? cur : AutoCharacter;
 
-        var maps = new[] { AutoMap }.Concat(MapData.Available(_settings.EffectiveMapsFolder)).ToList();
+        var maps = new[] { AutoMap }.Concat(MapData.AvailableAll(_settings.EffectiveMapsFolder)).ToList();
         if (MapBox.Items.Count != maps.Count) MapBox.ItemsSource = maps;
         MapBox.SelectedItem = _mapOverride ?? AutoMap;
         _updatingUi = false;
@@ -115,7 +115,7 @@ public partial class MapWindow : Window
     private MapData? LoadMap(string shortName)
     {
         if (_mapCache.TryGetValue(shortName, out var m)) return m;
-        m = MapData.Load(_settings.EffectiveMapsFolder, shortName);
+        m = MapData.LoadBest(_settings.EffectiveMapsFolder, shortName);
         _mapCache[shortName] = m;
         return m;
     }
@@ -144,9 +144,8 @@ public partial class MapWindow : Window
         View.SetPlayer(player, locHere ? HeadingOf(log!, trail) : null, trail);
 
         StatusText.Text =
-            _settings.EffectiveMapsFolder == null ? "Maps folder not set: open Settings in WhereEQ." :
             map == null ? (shortName == null ? $"No map name known for \"{zone}\". Pick one under ⚙ → Map."
-                                             : $"No map file for {shortName} in {_settings.EffectiveMapsFolder}") :
+                                             : $"No map for {shortName} in your maps folder or the built-in set.") :
             map.Lines.Count == 0 && map.Labels.Count == 0 ?
                 $"{string.Join(", ", map.Files)}: no map lines could be read ({map.TotalLines} L/P lines" +
                 (map.FirstSkipped != null ? $", e.g. \"{map.FirstSkipped}\"" : "") + ")" :
@@ -154,7 +153,7 @@ public partial class MapWindow : Window
             $"{Character.Ago(log!.LocSeen!.Value)} · {-log.MapY!.Value:0}, {-log.MapX!.Value:0}" +
             (log.Heading != null ? $" · {log.Heading}" : "") + OutsideNote(map, player);
         StatusText.ToolTip = map == null ? null :
-            $"Map: {string.Join(", ", map.Files)}\n{map.Lines.Count} lines, {map.Labels.Count} labels" +
+            $"Map ({map.Source}): {string.Join(", ", map.Files)}\n{map.Lines.Count} lines, {map.Labels.Count} labels" +
             (map.SkippedLines > 0 ? $", {map.SkippedLines} lines not understood" : "") +
             (map.Bounds.IsEmpty ? "" : $"\nBounds x {map.Bounds.Left:0}..{map.Bounds.Right:0}, y {map.Bounds.Top:0}..{map.Bounds.Bottom:0}");
     }

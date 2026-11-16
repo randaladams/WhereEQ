@@ -18,7 +18,9 @@ EverQuest client writes and keeps them up to date while you play.
   colors, labels, which character to track, and a manual map pick.
 - 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
 - EverQuest has to run in windowed mode for any overlay to show on top of it.
-- Map files are read from the `maps` folder of your P1999 install (set in Settings).
+- Map files are read from the `maps` folder of your P1999 install (set in Settings). WhereEQ also ships a
+  built-in set of P1999 maps, from [EqTool](https://github.com/smasherprog/EqTool) (MIT, see
+  `src/WhereEQ/Data/Maps/NOTICE.md`), which is used when your folder lacks a zone or only has its label layers.
 
 ## Download
 

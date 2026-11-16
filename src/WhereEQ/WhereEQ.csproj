@@ -15,6 +15,8 @@
   <ItemGroup>
     <!-- Reference spell lists per class: Data/Spells/<Class>.txt ("level<TAB>spell name") -->
     <None Include="Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Built-in map files (from EqTool, MIT) and their license notice -->
+    <None Include="Data\Maps\NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -17,6 +17,32 @@ public sealed record MapLabel(Point At, Color Color, int Size, string Text);
 public sealed class MapData
 {
     public required string ShortName { get; init; }
+    /// <summary>"your maps" (the P1999 maps folder) or "built-in" (bundled EqTool maps).</summary>
+    public string Source { get; set; } = "your maps";
+
+    /// <summary>Bundled map files (from EqTool, MIT), next to the exe.</summary>
+    public static string BuiltInFolder => Path.Combine(AppContext.BaseDirectory, "Data", "Maps");
+
+    /// <summary>
+    /// The user's map if it has walls; otherwise the built-in one (some P1999 map folders only have label
+    /// layers for a zone); otherwise whatever the user's folder has.
+    /// </summary>
+    public static MapData? LoadBest(string? userFolder, string shortName)
+    {
+        var mine = Load(userFolder, shortName);
+        if (mine is { Lines.Count: > 0 }) return mine;
+        var builtIn = Load(BuiltInFolder, shortName);
+        if (builtIn != null)
+        {
+            builtIn.Source = mine == null ? "built-in" : "built-in (your map has no walls)";
+            return builtIn;
+        }
+        return mine;
+    }
+
+    /// <summary>Zones with a map in either the user's folder or the built-in set.</summary>
+    public static List<string> AvailableAll(string? userFolder) =>
+        Available(userFolder).Concat(Available(BuiltInFolder)).Distinct().OrderBy(n => n).ToList();
     public List<MapLine> Lines { get; } = new();
     public List<MapLabel> Labels { get; } = new();
     public Rect Bounds { get; private set; } = Rect.Empty;

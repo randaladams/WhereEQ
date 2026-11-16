@@ -67,10 +67,12 @@ public partial class SettingsWindow : Window
         var mapsFolder = string.IsNullOrWhiteSpace(MapsBox.Text) ? mapsGuess : MapsBox.Text;
         var mapsPrefix = string.IsNullOrWhiteSpace(MapsBox.Text) ? "Using 'maps' under the inventory folder. " : "";
         var maps = MapData.Available(mapsFolder);
-        MapsInfo.Text = mapsFolder == null ? "Not set. Point this at the maps folder in your P1999 install." :
-            !Directory.Exists(mapsFolder) ? mapsPrefix + "Folder not found. Point this at the maps folder in your P1999 install." :
-            maps.Count == 0 ? mapsPrefix + "No map files (zone.txt) found here." :
-            $"{mapsPrefix}{maps.Count} zone maps: {string.Join(", ", maps.Take(8))}{(maps.Count > 8 ? ", …" : "")}";
+        var builtIn = MapData.Available(MapData.BuiltInFolder).Count;
+        var fallback = $" Built-in maps ({builtIn} zones) fill in anything missing.";
+        MapsInfo.Text = mapsFolder == null ? "Not set: using built-in maps only." + fallback :
+            !Directory.Exists(mapsFolder) ? mapsPrefix + "Folder not found; using built-in maps." + fallback :
+            maps.Count == 0 ? mapsPrefix + "No map files (zone.txt) found here." + fallback :
+            $"{mapsPrefix}{maps.Count} zone maps: {string.Join(", ", maps.Take(6))}{(maps.Count > 6 ? ", …" : "")}.{fallback}";
 
         // Offer the servers found in the log folder.
         var current = ServerBox.Text;
