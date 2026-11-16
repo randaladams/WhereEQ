@@ -137,7 +137,7 @@ public partial class MainWindow : Window
         if (parts.Length > 1 && int.TryParse(parts[1], out var tab)) Tabs.SelectedIndex = tab;
         if (parts.Length > 2)
             SpellCharacters.SelectedItem = (SpellCharacters.ItemsSource as IEnumerable<SpellCharacterRow>)?.FirstOrDefault(r => r.Name == parts[2]);
-        if (parts.Length > 3 && parts[3] == "missing") { ShowHave.IsChecked = false; ShowSpells(); }
+        if (parts.Length > 3 && parts[3] == "missing") { ShowMissingSpells.IsChecked = true; ShowSpells(); }
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         await Task.Delay(500);
         RenderToPng(this, parts[0]);
@@ -209,7 +209,7 @@ public partial class MainWindow : Window
 
         if (terms.Length == 0)
         {
-            SearchSummary.Text = $"{items.Count} items. Type part of an item name (or several, separated by commas). Double-click a row to open it on the P1999 wiki.";
+            SearchSummary.Text = $"{items.Count} items. Type part of an item name (or several, separated by commas). Right-click an item to search all characters for it; double-click to open it on the P1999 wiki.";
             return;
         }
 
@@ -231,6 +231,27 @@ public partial class MainWindow : Window
     private static bool Matches(InventoryItem i, string term) =>
         i.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
         (int.TryParse(term, out var id) && i.Id == id);
+
+    /// <summary>Right-click an item (Find item or Bags grid): search every character for it.</summary>
+    private void ItemGrid_RightClick(object sender, MouseButtonEventArgs e)
+    {
+        var dep = e.OriginalSource as DependencyObject;
+        while (dep != null && dep is not DataGridRow) dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
+        if (dep is not DataGridRow { Item: InventoryItem item }) return;
+        e.Handled = true;
+        SearchAllCharacters(item.Name);
+    }
+
+    private void SearchAllCharacters(string itemName)
+    {
+        CharacterFilter.SelectedItem = AllCharacters;
+        AreaEquipped.IsChecked = AreaInventory.IsChecked = AreaBank.IsChecked = true;
+        SearchBox.Text = itemName; // TextChanged runs the search
+        RunSearch();
+        Tabs.SelectedIndex = 0;
+        SearchBox.Focus();
+        SearchBox.CaretIndex = SearchBox.Text.Length;
+    }
 
     private void Results_DoubleClick(object sender, MouseButtonEventArgs e)
     {
@@ -279,7 +300,7 @@ public partial class MainWindow : Window
         if (bags.Count == 0) { BagsSummary.Text = "No bags found."; return; }
         var perChar = bags.GroupBy(b => b.Character)
             .Select(g => $"{g.Key}: {g.Count()} bags, {g.Sum(b => b.BagFreeSlots)} of {g.Sum(b => b.BagSlots)} slots free");
-        BagsSummary.Text = string.Join("    ·    ", perChar) + ".  Double-click a bag to open it on the P1999 wiki.";
+        BagsSummary.Text = string.Join("    ·    ", perChar) + ".  Right-click a bag to find that bag on every character; double-click to open it on the P1999 wiki.";
     }
 
     private static int SlotNumber(string rawLocation) =>
@@ -505,7 +526,7 @@ public partial class MainWindow : Window
             $"  Spellbook saved {c.SpellbookAge}. Double-click a spell to open the wiki.";
 
         SpellsGrid.ItemsSource = all
-            .Where(r => r.Status != "Have" || ShowHave.IsChecked == true)
+            .Where(r => ShowAllSpells.IsChecked == true || r.Status is "Missing" or "Future")
             .Where(r => r.Status != "Future" || ShowFuture.IsChecked == true)
             .ToList();
     }

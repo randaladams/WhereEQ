@@ -46,7 +46,7 @@
                     <TextBlock x:Name="SearchSummary" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"/>
                     <DataGrid x:Name="ResultsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="None" SelectionMode="Extended"
-                              MouseDoubleClick="Results_DoubleClick">
+                              MouseDoubleClick="Results_DoubleClick" PreviewMouseRightButtonUp="ItemGrid_RightClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Character" Binding="{Binding Character}" Width="130"/>
                             <DataGridTextColumn Header="Item" Binding="{Binding Name}" Width="2*"/>
@@ -70,7 +70,7 @@
                     <TextBlock x:Name="BagsSummary" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
                                Foreground="{StaticResource MutedBrush}"/>
                     <DataGrid x:Name="BagsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              HeadersVisibility="Column" GridLinesVisibility="None" MouseDoubleClick="Bags_DoubleClick">
+                              HeadersVisibility="Column" GridLinesVisibility="None" MouseDoubleClick="Bags_DoubleClick" PreviewMouseRightButtonUp="ItemGrid_RightClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Character" Binding="{Binding Character}" Width="130"/>
                             <DataGridTextColumn Header="Bag" Binding="{Binding Name}" Width="2*"/>
@@ -98,7 +98,7 @@
                             <ComboBox x:Name="OverrideLevel" Width="90" Margin="0,0,8,0" ToolTip="Level 1–60 (blank = not set)"/>
                             <Button Content="Save" Click="OverrideSave_Click" Margin="0,0,8,0"/>
                             <Button Content="Clear" Click="OverrideClear_Click"/>
-                            <TextBlock Text="  Used only where the log doesn't say (log /who and level-ups win)."
+                            <TextBlock Text="  Used only where the log doesn't say (log /who and level-ups win). Hover Class or Lvl to see where it came from."
                                        VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
                         </WrapPanel>
                     </Border>
@@ -118,11 +118,29 @@
                               SelectionChanged="CharactersGrid_SelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name" Binding="{Binding NameText}" SortMemberPath="Name" Width="130"/>
-                            <DataGridTextColumn Header="Last active" Binding="{Binding LastActivityText}" SortMemberPath="LastActivity" Width="90"/>
-                            <DataGridTextColumn Header="Class" Binding="{Binding ClassText}" Width="110"/>
-                            <DataGridTextColumn Header="Lvl" Binding="{Binding LevelText}" Width="50"/>
-                            <DataGridTextColumn Header="Level from" Binding="{Binding LevelSource}" Width="130"/>
-                            <DataGridTextColumn Header="Class from" Binding="{Binding ClassSource}" Width="105"/>
+                            <DataGridTextColumn Header="Last active" Binding="{Binding LastActivityText}" SortMemberPath="LastActivity" Width="100"/>
+                            <!-- Where class/level came from is in the tooltip to save width. -->
+                            <DataGridTextColumn Header="Class" Binding="{Binding ClassText}" Width="115">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+                                        <Setter Property="ToolTip" Value="{Binding ClassSource, StringFormat='Class from: {0}'}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Lvl" Binding="{Binding LevelText}" SortMemberPath="Level" Width="50">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+                                        <Setter Property="ToolTip" Value="{Binding LevelSource, StringFormat='Level from: {0}'}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Guild" Binding="{Binding GuildText}" Width="*" MinWidth="90">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+                                        <Setter Property="ToolTip" Value="{Binding GuildTip}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="Zone" Binding="{Binding Zone}" Width="*" MinWidth="120"/>
                             <DataGridTextColumn Header="Bound" Binding="{Binding BindText}" Width="*" MinWidth="110">
                                 <DataGridTextColumn.ElementStyle>
@@ -132,10 +150,10 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Last log" Binding="{Binding LastSeenText}" Width="90"/>
-                            <DataGridTextColumn Header="Bags free" Binding="{Binding BagsText}" Width="80"/>
-                            <DataGridTextColumn Header="Bank free" Binding="{Binding BankText}" Width="80"/>
+                            <DataGridTextColumn Header="Bags free" Binding="{Binding BagsText}" Width="90"/>
+                            <DataGridTextColumn Header="Bank free" Binding="{Binding BankText}" Width="90"/>
                             <DataGridTextColumn Header="Inventory" Binding="{Binding InventoryAge}" Width="90"/>
-                            <DataGridTextColumn Header="Spellbook" Binding="{Binding SpellbookAge}" Width="90"/>
+                            <DataGridTextColumn Header="Spellbook" Binding="{Binding SpellbookAge}" Width="95"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
@@ -190,7 +208,10 @@
                             <TextBlock x:Name="SpellHeader" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock x:Name="SpellSubHeader" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"/>
                             <WrapPanel Margin="0,6,0,0">
-                                <CheckBox x:Name="ShowHave" Content="Show spells I have" IsChecked="True" Margin="0,0,16,0" Click="SpellFilter_Click"/>
+                                <RadioButton x:Name="ShowAllSpells" GroupName="SpellView" Content="Show all spells" IsChecked="True"
+                                             Margin="0,0,16,0" Click="SpellFilter_Click"/>
+                                <RadioButton x:Name="ShowMissingSpells" GroupName="SpellView" Content="Show missing spells"
+                                             Margin="0,0,24,0" Click="SpellFilter_Click"/>
                                 <CheckBox x:Name="ShowFuture" Content="Show spells above my level" IsChecked="False" Margin="0,0,16,0" Click="SpellFilter_Click"/>
                             </WrapPanel>
                         </StackPanel>

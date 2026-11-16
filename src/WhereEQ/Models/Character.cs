@@ -54,6 +54,9 @@ public sealed class Character
     public int? SpellbookMaxLevel => Spellbook is { Count: > 0 } b ? b.Max(s => s.Level) : null;
 
     public string? Zone => Log?.Zone;
+    public string GuildText => Log?.GuildSeen == null ? "" : Log.Guild ?? "(none)";
+    public string GuildTip => Log?.GuildSeen is { } t
+        ? $"From /who on {t:MMM d, h:mm tt}" : "Not in the log yet. /who yourself in game to record it.";
     public string BindText => Log?.BindZone is { } z ? z : "";
     public string BindTip => Log?.BindZone == null ? "Not in the log yet. In game, type /char to show your bind point."
         : $"{(Log.BindHow == "/charinfo" ? "Reported by /char" : "Bound while in this zone")}{(Log.BindSeen is { } t ? $" on {t:MMM d, h:mm tt}" : "")}";

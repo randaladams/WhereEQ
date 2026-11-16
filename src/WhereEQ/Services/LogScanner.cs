@@ -22,7 +22,7 @@ public sealed class FriendInfo
 public sealed class LogState
 {
     /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
     public int Version { get; set; }
 
     public string Path { get; set; } = "";
@@ -34,6 +34,11 @@ public sealed class LogState
     public string? Class { get; set; }
     public string? Zone { get; set; }
     public DateTime? LastLine { get; set; }
+
+    /// <summary>Current guild (null = not in a guild, when <see cref="GuildSeen"/> is set).</summary>
+    public string? Guild { get; set; }
+    /// <summary>When the guild was last confirmed (from /who of yourself or a join/leave message).</summary>
+    public DateTime? GuildSeen { get; set; }
 
     public string? BindZone { get; set; }
     public DateTime? BindSeen { get; set; }
@@ -74,6 +79,14 @@ public static partial class LogScanner
     [GeneratedRegex(@"^(?:AFK |<LINKDEAD>)?\s*\[(?:(?<lvl>\d+) (?<cls>[A-Za-z ]+?)|ANONYMOUS)\] (?<name>\w+)(?: \((?<race>[A-Za-z ]+)\))?(?:\s+<(?<guild>[^>]+)>)?(?:\s+ZONE: (?<zone>\S+))?")]
     private static partial Regex WhoLine();
 
+    // "You have joined Some Guild." / "You are now a member of Some Guild." / "You have been added to Some Guild."
+    [GeneratedRegex(@"^You (?:have joined|are now a member of|have been added to)(?: the guild)? (?<guild>[^.!]+?)[.!]?$", RegexOptions.IgnoreCase)]
+    private static partial Regex GuildJoined();
+
+    // "You have left the guild." / "You have been removed from Some Guild." / "...kicked from..."
+    [GeneratedRegex(@"^You (?:have left|have been removed from|have been kicked from|are no longer a member of)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex GuildLeft();
+
     [GeneratedRegex(@"^You are currently bound in: (?<zone>.+?)\.?$")]
     private static partial Regex BoundIn();
 
@@ -109,6 +122,7 @@ public static partial class LogScanner
             state.Offset = 0;
             state.Friends.Clear();
             state.BindZone = null; state.BindSeen = null; state.BindHow = null;
+            state.Guild = null; state.GuildSeen = null;
             state.InFriendsList = false;
         }
         if (info.Length < state.Offset) state.Offset = 0; // log was rotated or truncated
@@ -147,6 +161,9 @@ public static partial class LogScanner
                     var hasLevel = w.Groups["lvl"].Success;
                     if (who.Equals(name, StringComparison.OrdinalIgnoreCase))
                     {
+                        // /who always shows the guild tag (even when anonymous), so no tag means no guild.
+                        state.Guild = w.Groups["guild"].Success ? w.Groups["guild"].Value.Trim() : null;
+                        state.GuildSeen = ts;
                         if (hasLevel)
                         {
                             state.Level = int.Parse(w.Groups["lvl"].Value);
@@ -196,6 +213,13 @@ public static partial class LogScanner
             {
                 var b = BoundIn().Match(msg);
                 if (b.Success) { state.BindZone = b.Groups["zone"].Value; state.BindSeen = ts; state.BindHow = "/charinfo"; }
+            }
+            else if (msg.Contains("guild", StringComparison.OrdinalIgnoreCase) && !msg.Contains(", '"))
+            {
+                // System messages only (chat lines contain ", '"). Best-effort: P1999 wording varies.
+                var g = GuildJoined().Match(msg);
+                if (g.Success) { state.Guild = g.Groups["guild"].Value.Trim(); state.GuildSeen = ts; }
+                else if (GuildLeft().IsMatch(msg)) { state.Guild = null; state.GuildSeen = ts; }
             }
             else if (msg == "You feel yourself bind to the area.")
             {
