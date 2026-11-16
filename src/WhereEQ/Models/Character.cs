@@ -41,8 +41,8 @@ public sealed class Character
 
     public string? Zone => Log?.Zone;
     public string BindText => Log?.BindZone is { } z ? z : "";
-    public string BindTip => Log?.BindZone == null ? "Not in the log yet. In game, /charinfo shows your bind point."
-        : $"{(Log.BindHow == "/charinfo" ? "Reported by /charinfo" : "Bound while in this zone")}{(Log.BindSeen is { } t ? $" on {t:MMM d, h:mm tt}" : "")}";
+    public string BindTip => Log?.BindZone == null ? "Not in the log yet. In game, type /char to show your bind point."
+        : $"{(Log.BindHow == "/charinfo" ? "Reported by /char" : "Bound while in this zone")}{(Log.BindSeen is { } t ? $" on {t:MMM d, h:mm tt}" : "")}";
     public DateTime? LastSeen => Log?.LastLine;
 
     public string ClassText => Class ?? "?";

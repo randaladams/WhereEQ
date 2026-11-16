@@ -37,7 +37,8 @@ public sealed class LogState
 
     public string? BindZone { get; set; }
     public DateTime? BindSeen { get; set; }
-    /// <summary>"/charinfo" when the game named the zone, "bound here" when inferred from the current zone.</summary>
+    /// <summary>"/charinfo" when /char reported the zone ("You are currently bound in: X"), "bound here" when
+    /// inferred from the current zone. (Value kept as "/charinfo" for compatibility with cached state.)</summary>
     public string? BindHow { get; set; }
 
     public List<FriendInfo> Friends { get; set; } = new();

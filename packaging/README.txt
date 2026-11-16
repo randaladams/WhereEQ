@@ -17,7 +17,7 @@ In game
   /outputfile inventory   - refresh a character's inventory/bank (WhereEQ updates within a second)
   /outputfile spellbook   - refresh a character's spellbook
   /who (yourself)         - records your level and class in the log
-  /charinfo               - records your bind point in the log (binding also updates it)
+  /char                   - records your bind point in the log (binding also updates it)
   /friends                - records which friends are online, with level/class/zone
   /log on                 - logging must be on for level/class/zone/bind/friends
 

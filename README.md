@@ -27,7 +27,7 @@ On first run the Settings window asks where your files are:
 | `Name_server.ini` | the client (friends list) | EverQuest folder |
 
 From the logs WhereEQ picks up level and class (`/who` yourself, level-ups), zone, bind point
-(`/charinfo` or binding) and when friends were last seen online (`/friends`, `/who`). The friends list
+(`/char`, which logs "You are currently bound in: …", or binding) and when friends were last seen online (`/friends`, `/who`). The friends list
 itself comes from each character's `.ini` file.
 
 ## Building
