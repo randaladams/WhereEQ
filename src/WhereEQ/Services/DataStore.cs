@@ -249,7 +249,7 @@ public sealed class DataStore : IDisposable
             foreach (var (path, (spells, time)) in _spellbooks)
             {
                 var c = Get(SpellbookParser.CharacterFromFile(path));
-                if (c.SpellbookTime == null || time > c.SpellbookTime) { c.Spellbook = spells; c.SpellbookTime = time; }
+                if (c.SpellbookTime == null || time > c.SpellbookTime) { c.Spellbook = spells; c.SpellbookTime = time; c.SpellbookPath = path; }
             }
             foreach (var log in _logs.Values)
             {
@@ -258,13 +258,14 @@ public sealed class DataStore : IDisposable
             }
             // The EQ folder keeps .ini files for every character ever played; only attach them to characters we
             // already know from inventory/spellbook/log files so old characters don't clutter the list.
-            foreach (var (character, friends, time) in _inis.Values)
+            foreach (var (iniPath, (character, friends, time)) in _inis)
             {
                 if (!chars.TryGetValue(character, out var c)) continue;
-                if (c.IniTime == null || time > c.IniTime) { c.IniFriends = friends; c.IniTime = time; }
+                if (c.IniTime == null || time > c.IniTime) { c.IniFriends = friends; c.IniTime = time; c.IniPath = iniPath; }
             }
             foreach (var c in chars.Values)
             {
+                c.Hidden = Settings.HiddenCharacters.Contains(c.Name, StringComparer.OrdinalIgnoreCase);
                 c.Override = Settings.Overrides.TryGetValue(c.Name, out var o) ? o : null;
                 if (c.Spellbook != null && c.Log?.Class == null && c.Override?.Class == null)
                     c.GuessedClass = Spells.GuessClass(c.Spellbook);

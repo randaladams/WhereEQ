@@ -40,6 +40,9 @@ public sealed class Settings
     public double? WindowWidth { get; set; }
     public double? WindowHeight { get; set; }
 
+    /// <summary>Characters hidden from every tab (their files are left alone).</summary>
+    public List<string> HiddenCharacters { get; set; } = new();
+
     /// <summary>Manual class/level for characters without a log (keyed by character name).</summary>
     public Dictionary<string, CharacterOverride> Overrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -66,6 +69,7 @@ public sealed class Settings
                 if (s != null)
                 {
                     s.Overrides = new(s.Overrides ?? new(), StringComparer.OrdinalIgnoreCase);
+                    s.HiddenCharacters ??= new();
                     if (!string.IsNullOrWhiteSpace(s.DataFolder) && !s.HasAnyFolder)
                     {
                         s.InventoryFolder = s.SpellbookFolder = s.LogFolder = s.DataFolder;

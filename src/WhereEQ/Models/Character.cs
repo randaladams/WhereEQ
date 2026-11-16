@@ -9,10 +9,24 @@ public sealed class Character
     public CharacterInventory? Inventory { get; set; }
     public List<SpellEntry>? Spellbook { get; set; }
     public DateTime? SpellbookTime { get; set; }
+    public string? SpellbookPath { get; set; }
     public LogState? Log { get; set; }
     /// <summary>Friends list from Name_server.ini (authoritative when present).</summary>
     public List<string>? IniFriends { get; set; }
     public DateTime? IniTime { get; set; }
+    public string? IniPath { get; set; }
+    /// <summary>Hidden from every tab (Settings.HiddenCharacters); files are untouched.</summary>
+    public bool Hidden { get; set; }
+
+    /// <summary>Every file WhereEQ knows for this character.</summary>
+    public IEnumerable<string> Files =>
+        new[] { Inventory?.FilePath, SpellbookPath, Log?.Path, IniPath }.OfType<string>();
+
+    /// <summary>Most recent change to any of this character's files (or log line).</summary>
+    public DateTime? LastActivity =>
+        new[] { Inventory?.SnapshotTime, SpellbookTime, Log?.LastLine, IniTime }.Max();
+    public string LastActivityText => LastActivity is { } t ? Ago(t) : "";
+    public string NameText => Hidden ? $"{Name} (hidden)" : Name;
 
     /// <summary>This character's friends: the .ini list if we have it, otherwise what the log shows.</summary>
     public IEnumerable<string> FriendNames =>

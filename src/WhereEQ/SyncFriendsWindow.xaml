@@ -1,0 +1,75 @@
+<Window x:Class="WhereEQ.SyncFriendsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sync friends lists" Width="820" Height="620" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <DockPanel Margin="20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Text="Sync friends lists" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"
+                       Text="Every ticked character gets exactly the ticked friends. Untick a friend to remove them everywhere. Each character's Name_server.ini is backed up as .ini.whereeq.bak before it's changed."/>
+            <Border x:Name="EqRunningBanner" Visibility="Collapsed" Margin="0,10,0,0" Padding="10" CornerRadius="4"
+                    Background="#33E5484D" BorderBrush="{StaticResource MissingBrush}" BorderThickness="1">
+                <TextBlock TextWrapping="Wrap"
+                           Text="EverQuest is running. The game rewrites a character's .ini when you camp, which would undo these changes for any character that's logged in. Camp out (or close EverQuest) first."/>
+            </Border>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+            <TextBlock x:Name="SummaryText" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="ApplyButton" Content="Update" MinWidth="120" Click="Apply_Click" Style="{DynamicResource AccentButtonStyle}"/>
+                <Button Content="Cancel" IsCancel="True" MinWidth="90" Margin="8,0,0,0"/>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <Button Content="All" Padding="10,2" Click="FriendsAll_Click"/>
+                        <Button Content="None" Padding="10,2" Margin="6,0,0,0" Click="FriendsNone_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="Friends" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </DockPanel>
+                <ListBox x:Name="FriendsList">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsChecked}" Click="Item_Click">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}"/>
+                                    <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="Characters to update" FontWeight="SemiBold" Margin="0,0,0,6" Height="28"
+                           VerticalAlignment="Center" Padding="0,5,0,0"/>
+                <TextBlock x:Name="NoIniText" DockPanel.Dock="Bottom" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                           Foreground="{StaticResource MutedBrush}"/>
+                <ListBox x:Name="CharactersList">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsChecked}" Click="Item_Click">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}"/>
+                                    <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -24,6 +24,43 @@ public static partial class CharacterIniParser
         return m.Success && Path.GetExtension(path).Equals(".ini", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>The EQ client's friends list holds at most this many names.</summary>
+    public const int MaxFriends = 100;
+
+    /// <summary>
+    /// Replaces the [Friends] section of <paramref name="path"/> with Friend0..FriendN = <paramref name="friends"/>,
+    /// leaving every other section as it was. A copy of the original is kept as &lt;file&gt;.whereeq.bak.
+    /// </summary>
+    public static void WriteFriends(string path, IReadOnlyList<string> friends)
+    {
+        if (friends.Count > MaxFriends) throw new ArgumentException($"EverQuest allows at most {MaxFriends} friends.");
+        var lines = File.ReadAllLines(path, System.Text.Encoding.Latin1).ToList();
+
+        var start = lines.FindIndex(l => l.Trim().Equals("[Friends]", StringComparison.OrdinalIgnoreCase));
+        var section = friends.Select((f, i) => $"Friend{i}={f}").ToList();
+        if (start < 0)
+        {
+            if (lines.Count > 0 && lines[^1].Trim().Length > 0) lines.Add("");
+            lines.Add("[Friends]");
+            lines.AddRange(section);
+        }
+        else
+        {
+            var end = start + 1;
+            while (end < lines.Count && !lines[end].TrimStart().StartsWith('[')) end++;
+            // Keep any blank line that separated [Friends] from the next section.
+            var trailingBlank = end > start + 1 && lines[end - 1].Trim().Length == 0 && end < lines.Count;
+            lines.RemoveRange(start + 1, end - start - 1);
+            if (trailingBlank) section.Add("");
+            lines.InsertRange(start + 1, section);
+        }
+
+        File.Copy(path, path + ".whereeq.bak", overwrite: true);
+        var tmp = path + ".whereeq.tmp";
+        File.WriteAllText(tmp, string.Join("\r\n", lines) + "\r\n", System.Text.Encoding.Latin1);
+        File.Move(tmp, path, overwrite: true);
+    }
+
     public static List<string> ReadFriends(string path)
     {
         var friends = new List<string>();

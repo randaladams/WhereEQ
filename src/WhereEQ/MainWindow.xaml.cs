@@ -16,7 +16,10 @@ public partial class MainWindow : Window
     private readonly Settings _settings = Settings.Load();
     private readonly SpellDatabase _spellDb = new(Path.Combine(AppContext.BaseDirectory, "Data", "Spells"));
     private DataStore? _store;
+    /// <summary>Visible characters (everything except hidden ones); what every tab works from.</summary>
     private List<Character> _characters = new();
+    /// <summary>All characters including hidden ones (Characters tab with "Show hidden").</summary>
+    private List<Character> _allCharacters = new();
     private bool _loading;
 
     public sealed record SpellRow(int Level, string Name, string Status);
@@ -120,9 +123,10 @@ public partial class MainWindow : Window
         var spec = Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT");
         if (string.IsNullOrEmpty(spec)) return;
         var parts = spec.Split('|');
-        if (parts.Length > 1 && parts[1] == "settings")
+        if (parts.Length > 1 && parts[1] is "settings" or "sync")
         {
-            var dlg = new SettingsWindow(_settings) { Owner = this };
+            Window dlg = parts[1] == "sync" ? new SyncFriendsWindow(_characters) { Owner = this }
+                                            : new SettingsWindow(_settings) { Owner = this };
             dlg.Show();
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             await Task.Delay(500);
@@ -157,7 +161,8 @@ public partial class MainWindow : Window
 
     private void RefreshAll()
     {
-        _characters = _store?.GetCharacters() ?? new();
+        _allCharacters = _store?.GetCharacters() ?? new();
+        _characters = _allCharacters.Where(c => !c.Hidden).ToList();
         RefreshCharacterFilter();
         RunSearch();
         RefreshCharacters();
@@ -168,7 +173,8 @@ public partial class MainWindow : Window
         var books = _characters.Count(c => c.Spellbook != null);
         var logs = _characters.Count(c => c.Log != null);
         var spellNote = _spellDb.IsEmpty ? "  ·  no spell reference data installed" : $"  ·  spell lists for {_spellDb.Classes.Count} classes";
-        StatusText.Text = $"{_characters.Count} characters  ·  {inv} inventories  ·  {books} spellbooks  ·  {logs} logs{spellNote}  ·  updated {DateTime.Now:HH:mm:ss}";
+        var hidden = _allCharacters.Count - _characters.Count;
+        StatusText.Text = $"{_characters.Count} characters{(hidden > 0 ? $" ({hidden} hidden)" : "")}  ·  {inv} inventories  ·  {books} spellbooks  ·  {logs} logs{spellNote}  ·  updated {DateTime.Now:HH:mm:ss}";
     }
 
     // ---------------------------------------------------------------- find item
@@ -241,14 +247,73 @@ public partial class MainWindow : Window
     private void RefreshCharacters()
     {
         if (_loading) return;
-        var selected = (CharactersGrid.SelectedItem as Character)?.Name;
-        CharactersGrid.ItemsSource = _characters.ToList();
-        if (selected != null) CharactersGrid.SelectedItem = _characters.FirstOrDefault(c => c.Name == selected);
+        var selected = SelectedCharacters().Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var list = (ShowHiddenCheck.IsChecked == true ? _allCharacters : _characters).ToList();
+        CharactersGrid.ItemsSource = list;
+        foreach (var c in list.Where(c => selected.Contains(c.Name))) CharactersGrid.SelectedItems.Add(c);
+        var hidden = _allCharacters.Count(c => c.Hidden);
+        UnhideButton.IsEnabled = hidden > 0;
+        ShowHiddenCheck.Content = hidden > 0 ? $"Show hidden ({hidden})" : "Show hidden";
+    }
+
+    private List<Character> SelectedCharacters() => CharactersGrid.SelectedItems.OfType<Character>().ToList();
+
+    private void ShowHidden_Click(object sender, RoutedEventArgs e) => RefreshCharacters();
+
+    private void HideCharacters_Click(object sender, RoutedEventArgs e)
+    {
+        var sel = SelectedCharacters().Where(c => !c.Hidden).ToList();
+        if (sel.Count == 0) { MessageBox.Show(this, "Select one or more characters to hide.", "WhereEQ"); return; }
+        foreach (var c in sel)
+            if (!_settings.HiddenCharacters.Contains(c.Name, StringComparer.OrdinalIgnoreCase))
+                _settings.HiddenCharacters.Add(c.Name);
+        _settings.Save();
+        RefreshAll();
+    }
+
+    private void UnhideCharacters_Click(object sender, RoutedEventArgs e)
+    {
+        // Unhide the selected hidden characters; with none selected, offer to unhide all.
+        var sel = SelectedCharacters().Where(c => c.Hidden).Select(c => c.Name).ToList();
+        if (sel.Count == 0)
+        {
+            if (_settings.HiddenCharacters.Count == 0) return;
+            if (MessageBox.Show(this, $"Unhide all {_settings.HiddenCharacters.Count} hidden characters?\n\n" +
+                                      string.Join(", ", _settings.HiddenCharacters), "WhereEQ",
+                                MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            sel = _settings.HiddenCharacters.ToList();
+        }
+        _settings.HiddenCharacters.RemoveAll(h => sel.Contains(h, StringComparer.OrdinalIgnoreCase));
+        _settings.Save();
+        RefreshAll();
+    }
+
+    private void DeleteCharacterFiles_Click(object sender, RoutedEventArgs e)
+    {
+        var sel = SelectedCharacters();
+        var files = sel.SelectMany(c => c.Files.Select(f => (c.Name, f))).Where(x => File.Exists(x.f)).ToList();
+        if (sel.Count == 0) { MessageBox.Show(this, "Select one or more characters first.", "WhereEQ"); return; }
+        if (files.Count == 0) { MessageBox.Show(this, "No files found for the selected characters.", "WhereEQ"); return; }
+
+        var list = string.Join("\n", files.Select(x => $"  {x.Name}:  {x.f}"));
+        var msg = $"Send these {files.Count} file(s) to the Recycle Bin?\n\n{list}\n\n" +
+                  "You can restore them from the Recycle Bin. Log files hold that character's chat history.";
+        if (MessageBox.Show(this, msg, "WhereEQ: delete character files", MessageBoxButton.YesNo, MessageBoxImage.Warning)
+            != MessageBoxResult.Yes) return;
+
+        var failed = new List<string>();
+        foreach (var (_, f) in files)
+            if (!RecycleBin.Send(f)) failed.Add(f);
+        if (failed.Count > 0)
+            MessageBox.Show(this, "These files couldn't be moved (EverQuest may have them open):\n\n" + string.Join("\n", failed),
+                            "WhereEQ", MessageBoxButton.OK, MessageBoxImage.Warning);
+        // The folder watcher drops the removed files; refresh now for anything it missed.
+        _ = LoadDataAsync();
     }
 
     private void CharactersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (CharactersGrid.SelectedItem is not Character c) return;
+        if (CharactersGrid.SelectedItems.Count != 1 || CharactersGrid.SelectedItem is not Character c) return;
         OverrideName.Text = c.Name;
         OverrideClass.SelectedItem = c.Override?.Class ?? "";
         OverrideLevel.SelectedItem = c.Override?.Level?.ToString() ?? "";
@@ -275,6 +340,22 @@ public partial class MainWindow : Window
     }
 
     // ---------------------------------------------------------------- friends
+
+    private async void SyncFriends_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_characters.Any(c => c.IniPath != null))
+        {
+            MessageBox.Show(this, "No character .ini files found. Check the \"Character .ini files\" folder in Settings " +
+                                  "(normally your EverQuest folder, where Name_server.ini files live).", "WhereEQ");
+            return;
+        }
+        var dlg = new SyncFriendsWindow(_characters) { Owner = this, Topmost = Topmost };
+        if (dlg.ShowDialog() == true)
+        {
+            await LoadDataAsync();
+            FriendsSummary.Text = $"Updated {dlg.Updated} friends list(s). " + FriendsSummary.Text;
+        }
+    }
 
     private void RefreshFriends()
     {

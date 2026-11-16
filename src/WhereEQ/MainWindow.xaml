@@ -77,17 +77,29 @@
                                        VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
                         </WrapPanel>
                     </Border>
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Button Content="Hide" Click="HideCharacters_Click" Margin="0,0,8,0"
+                                ToolTip="Hide the selected characters from every tab. Their files are not touched."/>
+                        <Button x:Name="UnhideButton" Content="Unhide" Click="UnhideCharacters_Click" Margin="0,0,8,0"/>
+                        <Button Content="Delete files…" Click="DeleteCharacterFiles_Click" Margin="0,0,16,0"
+                                ToolTip="Send the selected characters' inventory, spellbook, log and .ini files to the Recycle Bin."/>
+                        <CheckBox x:Name="ShowHiddenCheck" Content="Show hidden" VerticalAlignment="Center" Margin="0,0,16,0"
+                                  Click="ShowHidden_Click"/>
+                        <TextBlock x:Name="CharactersHint" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"
+                                   Text="Ctrl/Shift-click to select several. Sort by Last active to find stale characters."/>
+                    </WrapPanel>
                     <DataGrid x:Name="CharactersGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              HeadersVisibility="Column" GridLinesVisibility="None" SelectionMode="Single"
+                              HeadersVisibility="Column" GridLinesVisibility="None" SelectionMode="Extended"
                               SelectionChanged="CharactersGrid_SelectionChanged">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="130"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding NameText}" SortMemberPath="Name" Width="130"/>
+                            <DataGridTextColumn Header="Last active" Binding="{Binding LastActivityText}" SortMemberPath="LastActivity" Width="90"/>
                             <DataGridTextColumn Header="Class" Binding="{Binding ClassText}" Width="110"/>
                             <DataGridTextColumn Header="Lvl" Binding="{Binding LevelText}" Width="50"/>
-                            <DataGridTextColumn Header="Level from" Binding="{Binding LevelSource}" Width="140"/>
-                            <DataGridTextColumn Header="Class from" Binding="{Binding ClassSource}" Width="120"/>
-                            <DataGridTextColumn Header="Zone" Binding="{Binding Zone}" Width="*"/>
-                            <DataGridTextColumn Header="Bound" Binding="{Binding BindText}" Width="*">
+                            <DataGridTextColumn Header="Level from" Binding="{Binding LevelSource}" Width="130"/>
+                            <DataGridTextColumn Header="Class from" Binding="{Binding ClassSource}" Width="105"/>
+                            <DataGridTextColumn Header="Zone" Binding="{Binding Zone}" Width="*" MinWidth="120"/>
+                            <DataGridTextColumn Header="Bound" Binding="{Binding BindText}" Width="*" MinWidth="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
                                         <Setter Property="ToolTip" Value="{Binding BindTip}"/>
@@ -107,6 +119,12 @@
             <!-- ============ FRIENDS ============ -->
             <TabItem Header="Friends">
                 <DockPanel Margin="0,8,0,0">
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Button Content="Sync friends lists…" Click="SyncFriends_Click" Margin="0,0,12,0"
+                                ToolTip="Give your characters the same friends list (edits each Name_server.ini, with a backup)."/>
+                        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"
+                                   Text="Combine everyone's friends and copy the list to each character."/>
+                    </WrapPanel>
                     <TextBlock x:Name="FriendsSummary" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
                                Foreground="{StaticResource MutedBrush}"/>
                     <DataGrid x:Name="FriendsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
