@@ -165,6 +165,7 @@ public partial class MainWindow : Window
         _characters = _allCharacters.Where(c => !c.Hidden).ToList();
         RefreshCharacterFilter();
         RunSearch();
+        RefreshBags();
         RefreshCharacters();
         RefreshSpellCharacters();
         RefreshFriends();
@@ -240,6 +241,53 @@ public partial class MainWindow : Window
     {
         var page = Uri.EscapeDataString(name.Replace('`', '\'').Replace(' ', '_')).Replace("%27", "'");
         Process.Start(new ProcessStartInfo($"https://wiki.project1999.com/{page}") { UseShellExecute = true });
+    }
+
+    // ---------------------------------------------------------------- bags
+
+    private void RefreshBags()
+    {
+        var current = BagsCharacterFilter.SelectedItem as string ?? AllCharacters;
+        var names = new[] { AllCharacters }.Concat(_characters.Where(c => c.Inventory != null).Select(c => c.Name)).ToList();
+        _refreshingBags = true;
+        BagsCharacterFilter.ItemsSource = names;
+        BagsCharacterFilter.SelectedItem = names.Contains(current) ? current : AllCharacters;
+        _refreshingBags = false;
+        ShowBagList();
+    }
+
+    private bool _refreshingBags;
+
+    private void BagsFilter_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_refreshingBags) ShowBagList();
+    }
+
+    private void ShowBagList()
+    {
+        if (BagsGrid == null) return; // during InitializeComponent
+        var who = BagsCharacterFilter.SelectedItem as string;
+        var bags = _characters
+            .Where(c => c.Inventory != null && (who == null || who == AllCharacters || c.Name == who))
+            .SelectMany(c => c.Inventory!.Items.Where(i => i.IsContainer))
+            .Where(i => (i.Area == ItemArea.Inventory && BagsInventory.IsChecked == true) ||
+                        (i.Area == ItemArea.Bank && BagsBank.IsChecked == true))
+            .OrderBy(i => i.Character).ThenBy(i => i.Area).ThenBy(i => SlotNumber(i.RawLocation))
+            .ToList();
+        BagsGrid.ItemsSource = bags;
+
+        if (bags.Count == 0) { BagsSummary.Text = "No bags found."; return; }
+        var perChar = bags.GroupBy(b => b.Character)
+            .Select(g => $"{g.Key}: {g.Count()} bags, {g.Sum(b => b.BagFreeSlots)} of {g.Sum(b => b.BagSlots)} slots free");
+        BagsSummary.Text = string.Join("    ·    ", perChar) + ".  Double-click a bag to open it on the P1999 wiki.";
+    }
+
+    private static int SlotNumber(string rawLocation) =>
+        int.TryParse(new string(rawLocation.Where(char.IsDigit).ToArray()), out var n) ? n : 0;
+
+    private void Bags_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (BagsGrid.SelectedItem is InventoryItem i) OpenWiki(i.Name);
     }
 
     // ---------------------------------------------------------------- characters

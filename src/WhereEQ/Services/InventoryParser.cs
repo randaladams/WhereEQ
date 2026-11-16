@@ -43,11 +43,15 @@ public static partial class InventoryParser
 
         // Pass 1: which top-level slots are containers, and what are they called.
         var containers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var bagSlots = new Dictionary<string, (int total, int free)>(StringComparer.OrdinalIgnoreCase);
         foreach (var r in rows)
         {
             var m = ContainerLocation().Match(r.Loc);
-            if (m.Success && m.Groups["slot"].Success)
-                containers.TryAdd($"{m.Groups["area"].Value}{m.Groups["n"].Value}", "");
+            if (!m.Success || !m.Groups["slot"].Success) continue;
+            var top = $"{m.Groups["area"].Value}{m.Groups["n"].Value}";
+            containers.TryAdd(top, "");
+            var (t, f) = bagSlots.GetValueOrDefault(top);
+            bagSlots[top] = (t + 1, f + (r.Empty ? 1 : 0));
         }
         foreach (var r in rows)
             if (containers.ContainsKey(r.Loc)) containers[r.Loc] = r.Name;
@@ -97,8 +101,11 @@ public static partial class InventoryParser
 
             if (r.Empty) continue;
 
+            var (bagTotal, bagFree) = isContainer ? bagSlots.GetValueOrDefault(r.Loc) : (0, 0);
             inv.Items.Add(new InventoryItem
             {
+                BagSlots = bagTotal,
+                BagFreeSlots = bagFree,
                 Character = character,
                 Name = r.Name,
                 Id = r.Id,

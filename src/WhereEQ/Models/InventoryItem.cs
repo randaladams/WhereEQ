@@ -15,6 +15,10 @@ public sealed class InventoryItem
     /// <summary>Human-readable location, e.g. "Bag 3 (Light Burlap Sack), slot 4".</summary>
     public required string Where { get; init; }
     public bool IsContainer { get; init; }
+    /// <summary>For containers: number of slots inside, and how many are empty.</summary>
+    public int BagSlots { get; init; }
+    public int BagFreeSlots { get; init; }
+    public int BagUsedSlots => BagSlots - BagFreeSlots;
     public DateTime SnapshotTime { get; init; }
 
     public string AreaText => Area.ToString();

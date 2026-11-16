@@ -59,6 +59,31 @@
                 </DockPanel>
             </TabItem>
 
+            <!-- ============ BAGS ============ -->
+            <TabItem Header="Bags">
+                <DockPanel Margin="0,8,0,0">
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <ComboBox x:Name="BagsCharacterFilter" Width="180" Margin="0,0,16,0" SelectionChanged="BagsFilter_Changed"/>
+                        <CheckBox x:Name="BagsInventory" Content="Inventory" IsChecked="True" Margin="0,0,16,0" VerticalAlignment="Center" Click="BagsFilter_Changed"/>
+                        <CheckBox x:Name="BagsBank" Content="Bank" IsChecked="True" VerticalAlignment="Center" Click="BagsFilter_Changed"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="BagsSummary" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
+                               Foreground="{StaticResource MutedBrush}"/>
+                    <DataGrid x:Name="BagsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="None" MouseDoubleClick="Bags_DoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Character" Binding="{Binding Character}" Width="130"/>
+                            <DataGridTextColumn Header="Bag" Binding="{Binding Name}" Width="2*"/>
+                            <DataGridTextColumn Header="Area" Binding="{Binding AreaText}" Width="90"/>
+                            <DataGridTextColumn Header="Where" Binding="{Binding Where}" Width="*"/>
+                            <DataGridTextColumn Header="Slots" Binding="{Binding BagSlots}" Width="60"/>
+                            <DataGridTextColumn Header="Used" Binding="{Binding BagUsedSlots}" Width="60"/>
+                            <DataGridTextColumn Header="Free" Binding="{Binding BagFreeSlots}" Width="60"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
             <!-- ============ CHARACTERS ============ -->
             <TabItem Header="Characters">
                 <DockPanel Margin="0,8,0,0">
