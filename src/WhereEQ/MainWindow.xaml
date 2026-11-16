@@ -71,14 +71,60 @@
                                Foreground="{StaticResource MutedBrush}"/>
                     <DataGrid x:Name="BagsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="None" MouseDoubleClick="Bags_DoubleClick" PreviewMouseRightButtonUp="ItemGrid_RightClick">
+                        <DataGrid.Resources>
+                            <!-- Bank slot status: red = no bag, yellow = bag under 10 slots, green = 10-slot bag.
+                                 Only cell content is styled; restyling DataGridRow breaks the Fluent theme. -->
+                            <Style x:Key="BagStatusText" TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="None">
+                                        <Setter Property="Foreground" Value="{StaticResource MissingBrush}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="Small">
+                                        <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="Full">
+                                        <Setter Property="Foreground" Value="{StaticResource HaveBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Resources>
                         <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="" Width="110" SortMemberPath="Status">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="8,2" Margin="0,2" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="None">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Setter Property="Background" Value="{StaticResource MissingTint}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Small">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Setter Property="Background" Value="{StaticResource WarnTint}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Full">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Setter Property="Background" Value="{StaticResource HaveTint}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding StatusText}" FontSize="12" Style="{StaticResource BagStatusText}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Character" Binding="{Binding Character}" Width="130"/>
-                            <DataGridTextColumn Header="Bag" Binding="{Binding Name}" Width="2*"/>
+                            <DataGridTextColumn Header="Bag" Binding="{Binding BagText}" Width="2*" ElementStyle="{StaticResource BagStatusText}"/>
                             <DataGridTextColumn Header="Area" Binding="{Binding AreaText}" Width="90"/>
                             <DataGridTextColumn Header="Where" Binding="{Binding Where}" Width="*"/>
-                            <DataGridTextColumn Header="Slots" Binding="{Binding BagSlots}" Width="60"/>
-                            <DataGridTextColumn Header="Used" Binding="{Binding BagUsedSlots}" Width="60"/>
-                            <DataGridTextColumn Header="Free" Binding="{Binding BagFreeSlots}" Width="60"/>
+                            <DataGridTextColumn Header="Slots" Binding="{Binding Slots}" Width="60"/>
+                            <DataGridTextColumn Header="Used" Binding="{Binding Used}" Width="60"/>
+                            <DataGridTextColumn Header="Free" Binding="{Binding Free}" Width="60"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>

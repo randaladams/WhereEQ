@@ -25,6 +25,8 @@ public partial class SettingsWindow : Window
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
+        BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
+        BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
         _ready = true;
         UpdateInfo();
     }
@@ -110,6 +112,7 @@ public partial class SettingsWindow : Window
         s.IncludeSubfolders = SubfoldersCheck.IsChecked == true;
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;
+        s.BankSlots = BankSlotsBox.SelectedItem is int b ? b : InventoryParser.DefaultBankSlots;
         Result = s;
         DialogResult = true;
     }

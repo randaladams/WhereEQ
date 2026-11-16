@@ -168,7 +168,7 @@ public sealed class DataStore : IDisposable
                 switch (Kind(path))
                 {
                     case FileKind.Inventory:
-                        var inv = InventoryParser.Parse(path);
+                        var inv = InventoryParser.Parse(path, Settings.BankSlots);
                         lock (_lock) _inventories[path] = inv;
                         return true;
                     case FileKind.Spellbook:

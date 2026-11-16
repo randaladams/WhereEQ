@@ -62,6 +62,17 @@
             <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
                        Foreground="{StaticResource MutedBrush}" Text="Only read logs and .ini files for this server (eqlog_Name_SERVER.txt, Name_SERVER.ini). Blank reads all."/>
         </Grid>
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Bank slots" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <ComboBox x:Name="BankSlotsBox" Grid.Column="1"/>
+            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12"
+                       Foreground="{StaticResource MutedBrush}" Text="Bank slots your server allows (P1999: 8). Higher slots in the inventory file are ignored."/>
+        </Grid>
         <CheckBox x:Name="TopmostCheck" Content="Keep WhereEQ on top of other windows" Margin="0,4,0,0"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">

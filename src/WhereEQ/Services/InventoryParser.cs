@@ -24,7 +24,10 @@ public static partial class InventoryParser
         return dash > 0 ? name[..dash] : name;
     }
 
-    public static CharacterInventory Parse(string path)
+    /// <summary>P1999 (classic client rules) has 8 bank slots; the file lists 16.</summary>
+    public const int DefaultBankSlots = 8;
+
+    public static CharacterInventory Parse(string path, int bankSlots = DefaultBankSlots)
     {
         var character = CharacterFromFile(path);
         var snapshot = File.GetLastWriteTime(path);
@@ -72,6 +75,14 @@ public static partial class InventoryParser
                 var n = m.Groups["n"].Value;
                 var top = $"{m.Groups["area"].Value}{n}";
                 area = kind == "general" ? ItemArea.Inventory : ItemArea.Bank;
+                // Bank slots beyond what the server allows are always empty; don't count them as free space.
+                if (area == ItemArea.Bank && int.Parse(n) > bankSlots) continue;
+                if (area == ItemArea.Bank && !m.Groups["slot"].Success)
+                {
+                    var isBag = containers.ContainsKey(top);
+                    var (bt, bf) = isBag ? bagSlots.GetValueOrDefault(top) : (0, 0);
+                    inv.BankSlots.Add(new BankSlot(int.Parse(n), r.Empty ? null : r.Name, isBag, bt, bf));
+                }
                 var label = kind == "general" ? $"Bag {n}" : $"Bank {n}";
 
                 if (m.Groups["slot"].Success)

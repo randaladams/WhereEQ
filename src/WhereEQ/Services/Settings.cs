@@ -31,6 +31,9 @@ public sealed class Settings
 
     public bool AlwaysOnTop { get; set; }
 
+    /// <summary>Usable bank slots (P1999: 8). Higher-numbered slots in the inventory file are ignored.</summary>
+    public int BankSlots { get; set; } = InventoryParser.DefaultBankSlots;
+
     public bool HasAnyFolder =>
         !string.IsNullOrWhiteSpace(InventoryFolder) || !string.IsNullOrWhiteSpace(SpellbookFolder) || !string.IsNullOrWhiteSpace(LogFolder);
 

@@ -7,5 +7,9 @@
         <SolidColorBrush x:Key="MissingBrush" Color="#E5484D"/>
         <SolidColorBrush x:Key="HaveBrush" Color="#30A46C"/>
         <SolidColorBrush x:Key="MutedBrush" Color="#8B8D98"/>
+        <SolidColorBrush x:Key="WarnBrush" Color="#E2A336"/>
+        <SolidColorBrush x:Key="MissingTint" Color="#33E5484D"/>
+        <SolidColorBrush x:Key="WarnTint" Color="#33E2A336"/>
+        <SolidColorBrush x:Key="HaveTint" Color="#3330A46C"/>
     </Application.Resources>
 </Application>

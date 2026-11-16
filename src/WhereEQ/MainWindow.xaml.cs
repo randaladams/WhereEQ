@@ -66,6 +66,7 @@ public partial class MainWindow : Window
         _settings.IncludeSubfolders = r.IncludeSubfolders;
         _settings.LogServer = r.LogServer;
         _settings.AlwaysOnTop = r.AlwaysOnTop;
+        _settings.BankSlots = r.BankSlots;
         _settings.Save();
         TopmostCheck.IsChecked = r.AlwaysOnTop;
         return true;
@@ -138,6 +139,12 @@ public partial class MainWindow : Window
         if (parts.Length > 2)
             SpellCharacters.SelectedItem = (SpellCharacters.ItemsSource as IEnumerable<SpellCharacterRow>)?.FirstOrDefault(r => r.Name == parts[2]);
         if (parts.Length > 3 && parts[3] == "missing") { ShowMissingSpells.IsChecked = true; ShowSpells(); }
+        if (parts.Length > 2 && Tabs.SelectedIndex == 1)
+        {
+            BagsCharacterFilter.SelectedItem = parts[2];
+            if (parts.Length > 3 && parts[3] == "bank") BagsInventory.IsChecked = false;
+            ShowBagList();
+        }
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         await Task.Delay(500);
         RenderToPng(this, parts[0]);
@@ -237,9 +244,15 @@ public partial class MainWindow : Window
     {
         var dep = e.OriginalSource as DependencyObject;
         while (dep != null && dep is not DataGridRow) dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
-        if (dep is not DataGridRow { Item: InventoryItem item }) return;
+        var name = (dep as DataGridRow)?.Item switch
+        {
+            InventoryItem i => i.Name,
+            BagRow b => b.ItemName,
+            _ => null,
+        };
+        if (name == null) return;
         e.Handled = true;
-        SearchAllCharacters(item.Name);
+        SearchAllCharacters(name);
     }
 
     private void SearchAllCharacters(string itemName)
@@ -284,23 +297,55 @@ public partial class MainWindow : Window
         if (!_refreshingBags) ShowBagList();
     }
 
+    /// <summary>A row on the Bags tab: an inventory bag, or any bank slot (bag, plain item or empty).</summary>
+    public sealed record BagRow(string Character, string? ItemName, string AreaText, string Where,
+                                int? Slots, int? Used, int? Free, int Order, string Status)
+    {
+        /// <summary>"None" (red), "Small" (yellow), "Full" (green), or "" for inventory rows.</summary>
+        public string BagText => ItemName ?? "(empty)";
+        public string StatusText => Status switch
+        {
+            "None" => ItemName == null ? "No bag" : "Not a bag",
+            "Small" => $"{Slots}-slot bag",
+            "Full" => "10-slot bag",
+            _ => "",
+        };
+    }
+
+    private const int BestBagSize = 10;
+
     private void ShowBagList()
     {
         if (BagsGrid == null) return; // during InitializeComponent
         var who = BagsCharacterFilter.SelectedItem as string;
-        var bags = _characters
-            .Where(c => c.Inventory != null && (who == null || who == AllCharacters || c.Name == who))
-            .SelectMany(c => c.Inventory!.Items.Where(i => i.IsContainer))
-            .Where(i => (i.Area == ItemArea.Inventory && BagsInventory.IsChecked == true) ||
-                        (i.Area == ItemArea.Bank && BagsBank.IsChecked == true))
-            .OrderBy(i => i.Character).ThenBy(i => i.Area).ThenBy(i => SlotNumber(i.RawLocation))
-            .ToList();
-        BagsGrid.ItemsSource = bags;
+        var rows = new List<BagRow>();
+        foreach (var c in _characters.Where(c => c.Inventory != null && (who == null || who == AllCharacters || c.Name == who)))
+        {
+            if (BagsInventory.IsChecked == true)
+                rows.AddRange(c.Inventory!.Items.Where(i => i.IsContainer && i.Area == ItemArea.Inventory)
+                    .Select(i => new BagRow(c.Name, i.Name, "Inventory", i.Where, i.BagSlots, i.BagUsedSlots, i.BagFreeSlots,
+                                            SlotNumber(i.RawLocation), "")));
+            if (BagsBank.IsChecked == true)
+                rows.AddRange(c.Inventory!.BankSlots.Select(s => new BagRow(
+                    c.Name, s.Item, "Bank", $"Bank {s.Number}",
+                    s.IsBag ? s.Slots : null, s.IsBag ? s.Slots - s.Free : null, s.IsBag ? s.Free : null,
+                    100 + s.Number,
+                    !s.IsBag ? "None" : s.Slots >= BestBagSize ? "Full" : "Small")));
+        }
+        rows = rows.OrderBy(r => r.Character).ThenBy(r => r.Order).ToList();
+        BagsGrid.ItemsSource = rows;
 
-        if (bags.Count == 0) { BagsSummary.Text = "No bags found."; return; }
-        var perChar = bags.GroupBy(b => b.Character)
-            .Select(g => $"{g.Key}: {g.Count()} bags, {g.Sum(b => b.BagFreeSlots)} of {g.Sum(b => b.BagSlots)} slots free");
-        BagsSummary.Text = string.Join("    ·    ", perChar) + ".  Right-click a bag to find that bag on every character; double-click to open it on the P1999 wiki.";
+        if (rows.Count == 0) { BagsSummary.Text = "No bags found."; return; }
+        var perChar = rows.GroupBy(r => r.Character).Select(g =>
+        {
+            var bags = g.Where(r => r.Slots != null).ToList();
+            var bank = g.Where(r => r.AreaText == "Bank").ToList();
+            var bankNote = bank.Count == 0 ? "" :
+                $" (bank: {bank.Count(r => r.Status == "Full")} full-size, {bank.Count(r => r.Status == "Small")} small, {bank.Count(r => r.Status == "None")} no bag)";
+            return $"{g.Key}: {bags.Count} bags, {bags.Sum(b => b.Free)} of {bags.Sum(b => b.Slots)} slots free{bankNote}";
+        });
+        BagsSummary.Text = string.Join("    ·    ", perChar) +
+                           ".  Right-click a bag to find that bag on every character; double-click to open it on the P1999 wiki.";
     }
 
     private static int SlotNumber(string rawLocation) =>
@@ -308,7 +353,7 @@ public partial class MainWindow : Window
 
     private void Bags_DoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (BagsGrid.SelectedItem is InventoryItem i) OpenWiki(i.Name);
+        if (BagsGrid.SelectedItem is BagRow { ItemName: { } name }) OpenWiki(name);
     }
 
     // ---------------------------------------------------------------- characters
