@@ -6,6 +6,8 @@ eqlog_*.txt
 *-Inventory.txt
 *-Spellbook.txt
 *.ini
+# Sample EQ map files dropped in the project root for testing
+/*.txt
 
 # Build output
 /publish/

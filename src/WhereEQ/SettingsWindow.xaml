@@ -24,6 +24,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Text="Inventory files" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -46,6 +48,12 @@
                      ToolTip="Name_server.ini files (friends lists). Leave blank to use the inventory folder."/>
             <Button Grid.Row="6" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=IniBox}" Click="Browse_Click"/>
             <TextBlock x:Name="IniInfo" Grid.Row="7" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+
+            <TextBlock Grid.Row="8" Text="Map files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox x:Name="MapsBox" Grid.Row="8" Grid.Column="1" TextChanged="Folder_Changed"
+                     ToolTip="The maps folder in your P1999 install. Leave blank to use 'maps' under the inventory folder."/>
+            <Button Grid.Row="8" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=MapsBox}" Click="Browse_Click"/>
+            <TextBlock x:Name="MapsInfo" Grid.Row="9" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
         </Grid>
 
         <CheckBox x:Name="SubfoldersCheck" Content="Also look in subfolders" Margin="0,0,0,16" Click="Folder_Changed"/>

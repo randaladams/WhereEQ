@@ -44,8 +44,15 @@ public partial class MainWindow : Window
             if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
                 ShowSettings(); // first run: ask where the files are
             await LoadDataAsync();
+            if (_settings.Map.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenMap();
         };
-        Closing += (_, _) => { SaveWindow(); _store?.Dispose(); };
+        Closing += (_, _) =>
+        {
+            SaveWindow();
+            // Remember the map was open so it comes back next time, then close it with us.
+            if (_mapWindow != null) { var open = true; _mapWindow.Close(); _settings.Map.Open = open; _settings.Save(); }
+            _store?.Dispose();
+        };
         // Keep "5m ago" style text fresh.
         var tick = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         tick.Tick += (_, _) => RefreshCharacters();
@@ -67,7 +74,9 @@ public partial class MainWindow : Window
         _settings.LogServer = r.LogServer;
         _settings.AlwaysOnTop = r.AlwaysOnTop;
         _settings.BankSlots = r.BankSlots;
+        _settings.MapsFolder = r.MapsFolder;
         _settings.Save();
+        _mapWindow?.ReloadMaps();
         TopmostCheck.IsChecked = r.AlwaysOnTop;
         return true;
     }
@@ -106,6 +115,7 @@ public partial class MainWindow : Window
 
         var store = new DataStore(_settings, _spellDb);
         store.Changed += () => Dispatcher.InvokeAsync(RefreshAll);
+        store.PositionChanged += () => Dispatcher.InvokeAsync(UpdateMap);
         _store = store;
         var sw = Stopwatch.StartNew();
         await store.StartAsync();
@@ -124,6 +134,16 @@ public partial class MainWindow : Window
         var spec = Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT");
         if (string.IsNullOrEmpty(spec)) return;
         var parts = spec.Split('|');
+        if (parts.Length > 1 && parts[1] == "map")
+        {
+            OpenMap();
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            await Task.Delay(800);
+            if (parts.Length > 2 && parts[2] == "fit") _mapWindow!.View.Follow = false;
+            RenderToPng(_mapWindow!, parts[0]);
+            Application.Current.Shutdown();
+            return;
+        }
         if (parts.Length > 1 && parts[1] is "settings" or "sync")
         {
             Window dlg = parts[1] == "sync" ? new SyncFriendsWindow(_characters) { Owner = this }
@@ -166,9 +186,37 @@ public partial class MainWindow : Window
         enc.Save(fs);
     }
 
+    // ---------------------------------------------------------------- map overlay
+
+    private MapWindow? _mapWindow;
+
+    private void Map_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mapWindow != null) { _mapWindow.ApplyLock(false); _mapWindow.Activate(); return; }
+        OpenMap();
+    }
+
+    private void OpenMap()
+    {
+        _mapWindow = new MapWindow(_settings);
+        _mapWindow.Closed += (_, _) => _mapWindow = null;
+        _settings.Map.Open = true;
+        _settings.Save();
+        _mapWindow.Show();
+        UpdateMap();
+    }
+
+    /// <summary>Position-only update: refresh the map without rebuilding the grids.</summary>
+    private void UpdateMap()
+    {
+        if (_mapWindow == null || _store == null) return;
+        _mapWindow.Update(_store.GetCharacters().Where(c => !c.Hidden).ToList());
+    }
+
     private void RefreshAll()
     {
         _allCharacters = _store?.GetCharacters() ?? new();
+        _mapWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
         _characters = _allCharacters.Where(c => !c.Hidden).ToList();
         RefreshCharacterFilter();
         RunSearch();

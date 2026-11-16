@@ -8,6 +8,18 @@ EverQuest client writes and keeps them up to date while you play.
 - **Friends**: friends from all your characters' logs, with level, class and where they were last seen.
 - **Spells**: spells each character is missing for their class and level (lists from the P1999 wiki).
 
+## Map overlay
+
+**🗺 Map** opens a transparent, always-on-top map of your current zone that can sit over the game:
+
+- Your position, heading and recent trail come from `/loc` lines in the log, so bind `/loc` to a key or use a
+  `/loc` macro. The map switches automatically when you zone.
+- Mouse wheel zooms, drag pans, double-click fits the zone. ⚙ sets the backdrop darkness, map opacity, line
+  colors, labels, which character to track, and a manual map pick.
+- 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
+- EverQuest has to run in windowed mode for any overlay to show on top of it.
+- Map files are read from the `maps` folder of your P1999 install (set in Settings).
+
 ## Download
 
 Get **[WhereEQ-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip)**

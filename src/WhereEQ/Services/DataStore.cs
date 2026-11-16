@@ -25,6 +25,8 @@ public sealed class DataStore : IDisposable
 
     /// <summary>Raised (on a background thread) after files were (re)loaded.</summary>
     public event Action? Changed;
+    /// <summary>Raised (on a background thread) when logs only gained /loc or chatter lines (map-only update).</summary>
+    public event Action? PositionChanged;
 
     public DataStore(Settings settings, SpellDatabase spells)
     {
@@ -118,9 +120,18 @@ public sealed class DataStore : IDisposable
     private void Queue(string path)
     {
         if (!Wanted(path)) return;
-        lock (_lock) _pending.Add(path);
-        // EQ writes /outputfile in several chunks; wait for it to settle.
-        _debounce?.Change(750, Timeout.Infinite);
+        int wait;
+        lock (_lock)
+        {
+            if (_pending.Count == 0) _firstPending = DateTime.UtcNow;
+            _pending.Add(path);
+            // EQ writes /outputfile in several chunks, so wait for quiet; but a busy log (combat, /loc spam)
+            // never goes quiet, so never wait more than ~1s after the first change.
+            var waited = (int)(DateTime.UtcNow - _firstPending).TotalMilliseconds;
+            var quiet = Kind(path) == FileKind.Log ? 250 : 750;
+            wait = Math.Max(0, Math.Min(quiet, 1000 - waited));
+        }
+        _debounce?.Change(wait, Timeout.Infinite);
     }
 
     private void Flush()
@@ -128,10 +139,20 @@ public sealed class DataStore : IDisposable
         string[] paths;
         lock (_lock) { paths = _pending.ToArray(); _pending.Clear(); }
         var any = false;
+        _positionOnly = false;
         foreach (var p in paths) any |= LoadFile(p);
         if (paths.Any(p => Kind(p) == FileKind.Log)) SaveLogCache();
         if (any) Changed?.Invoke();
+        else if (_positionOnly) PositionChanged?.Invoke();
     }
+
+    private bool _positionOnly;
+    private DateTime _firstPending;
+
+    /// <summary>The log facts the tabs show; if these don't change, only the map needs to refresh.</summary>
+    private static string Signature(LogState s) =>
+        $"{s.Level}|{s.Class}|{s.Zone}|{s.BindZone}|{s.Guild}|{s.GuildSeen.HasValue}|{s.Friends.Count}|" +
+        $"{s.Friends.Select(f => f.LastOnline ?? DateTime.MinValue).DefaultIfEmpty().Max():O}";
 
     private void Remove(string path)
     {
@@ -186,8 +207,11 @@ public sealed class DataStore : IDisposable
                             if (!LogScanner.TryParseFileName(path, out var name, out var server)) return false;
                             st = new LogState { Path = path, Character = name, Server = server };
                         }
+                        var before = Signature(st);
                         var changed = LogScanner.Update(st);
                         lock (_lock) _logs[path] = st;
+                        // Only new /loc lines or chatter? Then just the map needs updating, not every grid.
+                        if (changed && Signature(st) == before) { _positionOnly = true; return false; }
                         return changed;
                     case FileKind.Ini:
                         CharacterIniParser.TryParseFileName(path, out var iniName, out _);

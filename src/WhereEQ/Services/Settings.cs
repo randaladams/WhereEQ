@@ -9,6 +9,27 @@ public sealed class CharacterOverride
     public int? Level { get; set; }
 }
 
+public sealed class MapOverlaySettings
+{
+    public bool Open { get; set; }
+    public double? Left { get; set; }
+    public double? Top { get; set; }
+    public double Width { get; set; } = 420;
+    public double Height { get; set; } = 420;
+    /// <summary>Darkness of the window backdrop, 0 (fully see-through) to 1.</summary>
+    public double Backdrop { get; set; } = 0.35;
+    /// <summary>Opacity of the map drawing itself.</summary>
+    public double MapOpacity { get; set; } = 0.9;
+    /// <summary>"Bright" (lightened map colors), "Original", or "White".</summary>
+    public string LineStyle { get; set; } = "Bright";
+    public bool ShowLabels { get; set; } = true;
+    public bool Follow { get; set; } = true;
+    /// <summary>Click-through: mouse goes to the game underneath. Toggle with Ctrl+Alt+M.</summary>
+    public bool Locked { get; set; }
+    /// <summary>Character to track; null = whoever logged a /loc most recently.</summary>
+    public string? Character { get; set; }
+}
+
 /// <summary>User settings, stored in %LocalAppData%\WhereEQ\settings.json.</summary>
 public sealed class Settings
 {
@@ -31,6 +52,12 @@ public sealed class Settings
 
     public bool AlwaysOnTop { get; set; }
 
+    /// <summary>EverQuest map files (&lt;P1999 folder&gt;\maps). Blank = "maps" under the inventory folder.</summary>
+    public string? MapsFolder { get; set; }
+
+    /// <summary>Map overlay window state.</summary>
+    public MapOverlaySettings Map { get; set; } = new();
+
     /// <summary>Usable bank slots (P1999: 8). Higher-numbered slots in the inventory file are ignored.</summary>
     public int BankSlots { get; set; } = InventoryParser.DefaultBankSlots;
 
@@ -38,6 +65,18 @@ public sealed class Settings
         !string.IsNullOrWhiteSpace(InventoryFolder) || !string.IsNullOrWhiteSpace(SpellbookFolder) || !string.IsNullOrWhiteSpace(LogFolder);
 
     public Settings Clone() => (Settings)MemberwiseClone();
+
+    /// <summary>The maps folder to use: the setting, else "maps" next to the inventory files (the P1999 folder).</summary>
+    public string? EffectiveMapsFolder
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(MapsFolder)) return MapsFolder;
+            if (string.IsNullOrWhiteSpace(InventoryFolder)) return null;
+            var guess = Path.Combine(InventoryFolder, "maps");
+            return Directory.Exists(guess) ? guess : null;
+        }
+    }
     public double? WindowLeft { get; set; }
     public double? WindowTop { get; set; }
     public double? WindowWidth { get; set; }
@@ -73,6 +112,7 @@ public sealed class Settings
                 {
                     s.Overrides = new(s.Overrides ?? new(), StringComparer.OrdinalIgnoreCase);
                     s.HiddenCharacters ??= new();
+                    s.Map ??= new();
                     if (!string.IsNullOrWhiteSpace(s.DataFolder) && !s.HasAnyFolder)
                     {
                         s.InventoryFolder = s.SpellbookFolder = s.LogFolder = s.DataFolder;

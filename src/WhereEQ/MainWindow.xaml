@@ -15,7 +15,11 @@
             <TextBlock Text="Watching:" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <TextBlock x:Name="FolderText" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                        Foreground="{StaticResource MutedBrush}"/>
-            <Button Grid.Column="2" Content="Settings…" Click="Settings_Click" Margin="8,0"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0">
+                <Button Content="🗺 Map" Click="Map_Click" Margin="0,0,8,0"
+                        ToolTip="Open the transparent map overlay (Ctrl+Alt+M toggles click-through)"/>
+                <Button Content="Settings…" Click="Settings_Click"/>
+            </StackPanel>
             <CheckBox x:Name="TopmostCheck" Grid.Column="3" Content="Always on top" VerticalAlignment="Center"
                       Checked="Topmost_Changed" Unchecked="Topmost_Changed"/>
         </Grid>

@@ -22,6 +22,7 @@ public partial class SettingsWindow : Window
         SpellbookBox.Text = settings.SpellbookFolder ?? "";
         LogBox.Text = settings.LogFolder ?? "";
         IniBox.Text = settings.IniFolder ?? "";
+        MapsBox.Text = settings.MapsFolder ?? "";
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
@@ -62,6 +63,15 @@ public partial class SettingsWindow : Window
             "These are Name_server.ini in the EverQuest folder (they hold friends lists).",
             p => CharacterIniParser.TryParseFileName(p, out _, out _));
 
+        var mapsGuess = string.IsNullOrWhiteSpace(InventoryBox.Text) ? null : Path.Combine(InventoryBox.Text, "maps");
+        var mapsFolder = string.IsNullOrWhiteSpace(MapsBox.Text) ? mapsGuess : MapsBox.Text;
+        var mapsPrefix = string.IsNullOrWhiteSpace(MapsBox.Text) ? "Using 'maps' under the inventory folder. " : "";
+        var maps = MapData.Available(mapsFolder);
+        MapsInfo.Text = mapsFolder == null ? "Not set. Point this at the maps folder in your P1999 install." :
+            !Directory.Exists(mapsFolder) ? mapsPrefix + "Folder not found. Point this at the maps folder in your P1999 install." :
+            maps.Count == 0 ? mapsPrefix + "No map files (zone.txt) found here." :
+            $"{mapsPrefix}{maps.Count} zone maps: {string.Join(", ", maps.Take(8))}{(maps.Count > 8 ? ", …" : "")}";
+
         // Offer the servers found in the log folder.
         var current = ServerBox.Text;
         var servers = Find(LogBox.Text, "eqlog_*.txt", sub)
@@ -97,7 +107,7 @@ public partial class SettingsWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var missing = new[] { InventoryBox.Text, SpellbookBox.Text, LogBox.Text, IniBox.Text }
+        var missing = new[] { InventoryBox.Text, SpellbookBox.Text, LogBox.Text, IniBox.Text, MapsBox.Text }
             .Where(f => !string.IsNullOrWhiteSpace(f) && !Directory.Exists(f)).ToList();
         if (missing.Count > 0 &&
             MessageBox.Show(this, "These folders don't exist:\n\n" + string.Join("\n", missing) + "\n\nSave anyway?",
@@ -109,6 +119,7 @@ public partial class SettingsWindow : Window
         s.SpellbookFolder = Clean(SpellbookBox.Text);
         s.LogFolder = Clean(LogBox.Text);
         s.IniFolder = Clean(IniBox.Text);
+        s.MapsFolder = Clean(MapsBox.Text);
         s.IncludeSubfolders = SubfoldersCheck.IsChecked == true;
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;

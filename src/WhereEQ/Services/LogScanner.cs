@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,10 +19,12 @@ public sealed class FriendInfo
     public string? Zone { get; set; }
 }
 
+public sealed record TrailPoint(double X, double Y, DateTime T);
+
 public sealed class LogState
 {
     /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 5;
     public int Version { get; set; }
 
     public string Path { get; set; } = "";
@@ -34,6 +36,21 @@ public sealed class LogState
     public string? Class { get; set; }
     public string? Zone { get; set; }
     public DateTime? LastLine { get; set; }
+
+    /// <summary>Last /loc ("Your Location is Y, X, Z"), in map coordinates (see MapData.FromLoc), and its zone.</summary>
+    public double? MapX { get; set; }
+    public double? MapY { get; set; }
+    public double? LocZ { get; set; }
+    public DateTime? LocSeen { get; set; }
+    public string? LocZone { get; set; }
+    /// <summary>From "You think you are heading NorthEast." (sense heading).</summary>
+    public string? Heading { get; set; }
+    public DateTime? HeadingSeen { get; set; }
+
+    /// <summary>Recent /loc points in the current zone (map coordinates), oldest first. Saved with the log state
+    /// so the trail survives a restart.</summary>
+    public List<TrailPoint> Trail { get; set; } = new();
+    public const int TrailMax = 300;
 
     /// <summary>Current guild (null = not in a guild, when <see cref="GuildSeen"/> is set).</summary>
     public string? Guild { get; set; }
@@ -123,6 +140,8 @@ public static partial class LogScanner
             state.Friends.Clear();
             state.BindZone = null; state.BindSeen = null; state.BindHow = null;
             state.Guild = null; state.GuildSeen = null;
+            state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
+            state.Heading = null; state.HeadingSeen = null; state.Trail.Clear();
             state.InFriendsList = false;
         }
         if (info.Length < state.Offset) state.Offset = 0; // log was rotated or truncated
@@ -150,6 +169,20 @@ public static partial class LogScanner
             // /friends output: header, dashes, who-style lines, then "There is/are ..." ends it.
             if (state.InFriendsList && (msg.StartsWith("There ") || msg.StartsWith("Your Location") || msg.StartsWith("You ")))
                 state.InFriendsList = false;
+
+            // /loc is by far the most common line when a /loc macro or mapping tool is running: handle it first.
+            if (msg.StartsWith("Your Location is "))
+            {
+                if (TryParseLoc(msg.AsSpan("Your Location is ".Length), out var ly, out var lx, out var lz))
+                {
+                    var p = MapData.FromLoc(ly, lx);
+                    state.MapX = p.X; state.MapY = p.Y; state.LocZ = lz;
+                    state.LocSeen = ts; state.LocZone = state.Zone;
+                    state.Trail.Add(new TrailPoint(p.X, p.Y, ts ?? DateTime.Now));
+                    if (state.Trail.Count > LogState.TrailMax) state.Trail.RemoveRange(0, state.Trail.Count - LogState.TrailMax);
+                }
+                continue;
+            }
 
             // Cheap prefix checks before regexes; this loop runs over hundreds of thousands of lines.
             if (msg.StartsWith('[') || msg.StartsWith("AFK [") || msg.StartsWith("<LINKDEAD>"))
@@ -239,13 +272,37 @@ public static partial class LogScanner
             {
                 var z = ZoneLine().Match(msg);
                 // Skip "You have entered an area where levitation effects do not function." etc.
-                if (z.Success && !msg.StartsWith("You have entered an area")) state.Zone = z.Groups["zone"].Value;
+                if (z.Success && !msg.StartsWith("You have entered an area"))
+                {
+                    state.Zone = z.Groups["zone"].Value;
+                    state.Trail.Clear(); // locs from the previous zone don't belong on this map
+                }
+            }
+            else if (msg.StartsWith("You think you are heading "))
+            {
+                state.Heading = msg["You think you are heading ".Length..].TrimEnd('.', ' ');
+                state.HeadingSeen = ts;
             }
         }
 
         var changed = consumed != state.Offset;
         state.Offset = consumed;
         return changed;
+    }
+
+    /// <summary>Parses "2670.49, 879.69, -32.22" (Y, X, Z).</summary>
+    private static bool TryParseLoc(ReadOnlySpan<char> s, out double y, out double x, out double z)
+    {
+        y = x = z = 0;
+        var c1 = s.IndexOf(',');
+        if (c1 < 0) return false;
+        var rest = s[(c1 + 1)..];
+        var c2 = rest.IndexOf(',');
+        if (c2 < 0) return false;
+        var inv = CultureInfo.InvariantCulture;
+        return double.TryParse(s[..c1].Trim(), NumberStyles.Float, inv, out y)
+            && double.TryParse(rest[..c2].Trim(), NumberStyles.Float, inv, out x)
+            && double.TryParse(rest[(c2 + 1)..].Trim(), NumberStyles.Float, inv, out z);
     }
 
     private static bool EndsWithNewline(FileStream fs)
