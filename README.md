@@ -10,7 +10,8 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Download
 
-Get **WhereEQ-win-x64.zip** from the [latest release](../../releases/latest), unzip it anywhere and run
+Get **[WhereEQ-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip)**
+(from the [latest release](https://github.com/randaladams/WhereEQ/releases/latest)), unzip it anywhere and run
 `WhereEQ.exe`. Nothing else needs to be installed. Windows may warn that the app is unrecognized
 (it isn't code-signed): choose **More info → Run anyway**.
 
@@ -23,9 +24,11 @@ On first run the Settings window asks where your files are:
 | `Name-Inventory.txt` | `/outputfile inventory` | EverQuest folder |
 | `Name-Spellbook.txt` | `/outputfile spellbook` | EverQuest folder |
 | `eqlog_Name_server.txt` | `/log on` | `EverQuest\Logs` |
+| `Name_server.ini` | the client (friends list) | EverQuest folder |
 
 From the logs WhereEQ picks up level and class (`/who` yourself, level-ups), zone, bind point
-(`/charinfo` or binding) and friends (`/friend`, `/friends`).
+(`/charinfo` or binding) and when friends were last seen online (`/friends`, `/who`). The friends list
+itself comes from each character's `.ini` file.
 
 ## Building
 

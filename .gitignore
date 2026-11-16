@@ -5,6 +5,7 @@
 eqlog_*.txt
 *-Inventory.txt
 *-Spellbook.txt
+*.ini
 
 # Build output
 /publish/

@@ -59,6 +59,7 @@ public partial class MainWindow : Window
         _settings.InventoryFolder = r.InventoryFolder;
         _settings.SpellbookFolder = r.SpellbookFolder;
         _settings.LogFolder = r.LogFolder;
+        _settings.IniFolder = r.IniFolder;
         _settings.IncludeSubfolders = r.IncludeSubfolders;
         _settings.LogServer = r.LogServer;
         _settings.AlwaysOnTop = r.AlwaysOnTop;
@@ -277,25 +278,37 @@ public partial class MainWindow : Window
 
     private void RefreshFriends()
     {
-        // Friends lists are per character; merge them, keeping the most recent sighting of each friend.
-        var withFriends = _characters.Where(c => c.Log?.Friends.Count > 0).ToList();
+        // Who is a friend: each character's Name_server.ini [Friends] list, or its log when there's no .ini.
+        // What we know about them: the most recent sighting in any character's log (/friends or /who).
+        var sightings = _characters
+            .SelectMany(c => c.Log?.Friends ?? new List<FriendInfo>())
+            .GroupBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(f => f.LastOnline ?? DateTime.MinValue).First(),
+                          StringComparer.OrdinalIgnoreCase);
+
+        var withFriends = _characters.Where(c => c.FriendNames.Any()).ToList();
         var rows = withFriends
-            .SelectMany(c => c.Log!.Friends.Select(f => (owner: c.Name, f)))
-            .GroupBy(x => x.f.Name, StringComparer.OrdinalIgnoreCase)
+            .SelectMany(c => c.FriendNames.Select(name => (owner: c.Name, name)))
+            .GroupBy(x => x.name, StringComparer.OrdinalIgnoreCase)
             .Select(g =>
             {
-                var latest = g.OrderByDescending(x => x.f.LastOnline ?? DateTime.MinValue).First().f;
-                return new FriendRow(latest.Name, latest.Level, latest.Class, latest.Race, latest.Guild,
-                    latest.LastOnline, latest.Zone, string.Join(", ", g.Select(x => x.owner).Distinct()));
+                sightings.TryGetValue(g.Key, out var s);
+                var owners = string.Join(", ", g.Select(x => x.owner).Distinct());
+                return new FriendRow(s?.Name ?? g.First().name, s?.Level, s?.Class, s?.Race, s?.Guild,
+                                     s?.LastOnline, s?.Zone, owners);
             })
             .OrderByDescending(r => r.LastOnline ?? DateTime.MinValue).ThenBy(r => r.Name)
             .ToList();
         FriendsGrid.ItemsSource = rows;
-        var noLogs = _characters.Count(c => c.Log == null);
+
+        var fromIni = _characters.Count(c => c.IniFriends != null);
+        var fromLog = withFriends.Count(c => c.IniFriends == null);
+        var unknown = _characters.Count(c => c.FriendsSource == "");
         FriendsSummary.Text = rows.Count == 0
-            ? "No friends found in the logs yet. Friends appear when you add one (/friend Name) or type /friends in game."
-            : $"{rows.Count} friends from {withFriends.Count} character log(s). Level, class and zone come from the last /friends or /who that listed them." +
-              (noLogs > 0 ? $"  {noLogs} character(s) have no log, so their friends aren't known." : "");
+            ? "No friends found yet. Friends come from each character's Name_server.ini in the EverQuest folder, or from /friend and /friends in the logs."
+            : $"{rows.Count} friends · lists from {fromIni} .ini file(s)" + (fromLog > 0 ? $" and {fromLog} log(s)" : "") +
+              ". Level, class and zone come from the last /friends or /who that listed them." +
+              (unknown > 0 ? $"  {unknown} character(s) have no .ini or log friends." : "");
     }
 
     // ---------------------------------------------------------------- spells

@@ -21,6 +21,9 @@ public sealed class Settings
     public string? SpellbookFolder { get; set; }
     /// <summary>Where eqlog_Name_server.txt files are (usually the EQ "Logs" folder).</summary>
     public string? LogFolder { get; set; }
+    /// <summary>Where Name_server.ini files are (EverQuest folder; holds each character's friends list).
+    /// Blank = same as <see cref="InventoryFolder"/>.</summary>
+    public string? IniFolder { get; set; }
     /// <summary>Also look in subfolders of the folders above.</summary>
     public bool IncludeSubfolders { get; set; } = true;
     /// <summary>Only read logs for this server (the part after the name in eqlog_Name_SERVER.txt). Blank = all.</summary>

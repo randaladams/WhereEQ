@@ -10,6 +10,14 @@ public sealed class Character
     public List<SpellEntry>? Spellbook { get; set; }
     public DateTime? SpellbookTime { get; set; }
     public LogState? Log { get; set; }
+    /// <summary>Friends list from Name_server.ini (authoritative when present).</summary>
+    public List<string>? IniFriends { get; set; }
+    public DateTime? IniTime { get; set; }
+
+    /// <summary>This character's friends: the .ini list if we have it, otherwise what the log shows.</summary>
+    public IEnumerable<string> FriendNames =>
+        IniFriends ?? Log?.Friends.Select(f => f.Name) ?? Enumerable.Empty<string>();
+    public string FriendsSource => IniFriends != null ? ".ini" : Log?.Friends.Count > 0 ? "log" : "";
     public CharacterOverride? Override { get; set; }
     /// <summary>Class guessed from the spellbook when nothing better is known.</summary>
     public string? GuessedClass { get; set; }

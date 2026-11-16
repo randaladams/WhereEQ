@@ -21,6 +21,7 @@ public partial class SettingsWindow : Window
         InventoryBox.Text = settings.InventoryFolder ?? "";
         SpellbookBox.Text = settings.SpellbookFolder ?? "";
         LogBox.Text = settings.LogFolder ?? "";
+        IniBox.Text = settings.IniFolder ?? "";
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
@@ -39,6 +40,7 @@ public partial class SettingsWindow : Window
         box.Text = dlg.FolderName;
 
         // Convenience: the first folder picked also fills any empty ones (they're often the same EQ folder).
+        // The .ini box is left alone: blank already means "same as inventory".
         foreach (var other in new[] { InventoryBox, SpellbookBox, LogBox })
             if (other != box && string.IsNullOrWhiteSpace(other.Text)) other.Text = dlg.FolderName;
     }
@@ -52,6 +54,11 @@ public partial class SettingsWindow : Window
         InventoryInfo.Text = Describe(InventoryBox.Text, "*-Inventory.txt", "inventory file", sub, "In game: /outputfile inventory");
         SpellbookInfo.Text = Describe(SpellbookBox.Text, "*-Spellbook.txt", "spellbook file", sub, "In game: /outputfile spellbook");
         LogInfo.Text = Describe(LogBox.Text, "eqlog_*.txt", "log file", sub, "In game: /log on (logs go to EverQuest\\Logs)");
+        var iniFolder = string.IsNullOrWhiteSpace(IniBox.Text) ? InventoryBox.Text : IniBox.Text;
+        var iniPrefix = string.IsNullOrWhiteSpace(IniBox.Text) ? "Using the inventory folder. " : "";
+        IniInfo.Text = iniPrefix + Describe(iniFolder, "*_*.ini", "character .ini file", sub,
+            "These are Name_server.ini in the EverQuest folder (they hold friends lists).",
+            p => CharacterIniParser.TryParseFileName(p, out _, out _));
 
         // Offer the servers found in the log folder.
         var current = ServerBox.Text;
@@ -62,11 +69,12 @@ public partial class SettingsWindow : Window
         ServerBox.Text = current;
     }
 
-    private static string Describe(string folder, string pattern, string noun, bool sub, string hint)
+    private static string Describe(string folder, string pattern, string noun, bool sub, string hint,
+                                   Func<string, bool>? filter = null)
     {
         if (string.IsNullOrWhiteSpace(folder)) return $"Not set. {hint}";
         if (!Directory.Exists(folder)) return "Folder not found.";
-        var files = Find(folder, pattern, sub);
+        var files = Find(folder, pattern, sub).Where(filter ?? (_ => true)).ToList();
         if (files.Count == 0) return $"No {noun}s found here yet. {hint}";
         var names = files.Select(Path.GetFileNameWithoutExtension).Take(6);
         return $"{files.Count} {noun}{(files.Count == 1 ? "" : "s")}: {string.Join(", ", names)}{(files.Count > 6 ? ", …" : "")}";
@@ -87,7 +95,7 @@ public partial class SettingsWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var missing = new[] { InventoryBox.Text, SpellbookBox.Text, LogBox.Text }
+        var missing = new[] { InventoryBox.Text, SpellbookBox.Text, LogBox.Text, IniBox.Text }
             .Where(f => !string.IsNullOrWhiteSpace(f) && !Directory.Exists(f)).ToList();
         if (missing.Count > 0 &&
             MessageBox.Show(this, "These folders don't exist:\n\n" + string.Join("\n", missing) + "\n\nSave anyway?",
@@ -98,6 +106,7 @@ public partial class SettingsWindow : Window
         s.InventoryFolder = Clean(InventoryBox.Text);
         s.SpellbookFolder = Clean(SpellbookBox.Text);
         s.LogFolder = Clean(LogBox.Text);
+        s.IniFolder = Clean(IniBox.Text);
         s.IncludeSubfolders = SubfoldersCheck.IsChecked == true;
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;

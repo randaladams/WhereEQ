@@ -15,6 +15,7 @@ public sealed class DataStore : IDisposable
     private readonly Dictionary<string, (List<SpellEntry> spells, DateTime time)> _spellbooks = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, LogState> _logs = new(StringComparer.OrdinalIgnoreCase); // active logs, by path
     private Dictionary<string, LogState> _cache = new(StringComparer.OrdinalIgnoreCase);  // remembered read positions
+    private readonly Dictionary<string, (string character, List<string> friends, DateTime time)> _inis = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _pending = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<FileSystemWatcher> _watchers = new();
     private Timer? _debounce;
@@ -40,6 +41,7 @@ public sealed class DataStore : IDisposable
             FileKind.Inventory => Settings.InventoryFolder,
             FileKind.Spellbook => Settings.SpellbookFolder,
             FileKind.Log => Settings.LogFolder,
+            FileKind.Ini => string.IsNullOrWhiteSpace(Settings.IniFolder) ? Settings.InventoryFolder : Settings.IniFolder,
             _ => null,
         };
         return !string.IsNullOrWhiteSpace(f) && Directory.Exists(f) ? Path.GetFullPath(f) : null;
@@ -56,9 +58,13 @@ public sealed class DataStore : IDisposable
             ? (dir + Path.DirectorySeparatorChar).StartsWith(folder.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             : dir.Equals(folder.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
         if (!inFolder) return false;
-        if (kind == FileKind.Log && !string.IsNullOrWhiteSpace(Settings.LogServer))
+        var wantServer = Settings.LogServer?.Trim();
+        if (kind == FileKind.Log && !string.IsNullOrEmpty(wantServer))
             return LogScanner.TryParseFileName(path, out _, out var server) &&
-                   server.Equals(Settings.LogServer.Trim(), StringComparison.OrdinalIgnoreCase);
+                   server.Equals(wantServer, StringComparison.OrdinalIgnoreCase);
+        if (kind == FileKind.Ini)
+            return CharacterIniParser.TryParseFileName(path, out _, out var iniServer) &&
+                   (string.IsNullOrEmpty(wantServer) || iniServer.Equals(wantServer, StringComparison.OrdinalIgnoreCase));
         return true;
     }
 
@@ -68,10 +74,11 @@ public sealed class DataStore : IDisposable
         foreach (var f in Enumerate(FileKind.Inventory, "*-Inventory.txt")) LoadFile(f);
         foreach (var f in Enumerate(FileKind.Spellbook, "*-Spellbook.txt")) LoadFile(f);
         foreach (var f in Enumerate(FileKind.Log, "eqlog_*.txt")) LoadFile(f);
+        foreach (var f in Enumerate(FileKind.Ini, "*_*.ini")) LoadFile(f);
         SaveLogCache();
 
         _debounce = new Timer(_ => Flush(), null, Timeout.Infinite, Timeout.Infinite);
-        var folders = new[] { FileKind.Inventory, FileKind.Spellbook, FileKind.Log }
+        var folders = new[] { FileKind.Inventory, FileKind.Spellbook, FileKind.Log, FileKind.Ini }
             .Select(FolderFor).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase);
         foreach (var folder in folders)
         {
@@ -133,11 +140,12 @@ public sealed class DataStore : IDisposable
             _inventories.Remove(path);
             _spellbooks.Remove(path);
             _logs.Remove(path);
+            _inis.Remove(path);
         }
         Changed?.Invoke();
     }
 
-    private enum FileKind { Inventory, Spellbook, Log, Other }
+    private enum FileKind { Inventory, Spellbook, Log, Ini, Other }
 
     private static FileKind Kind(string path)
     {
@@ -145,6 +153,7 @@ public sealed class DataStore : IDisposable
         if (n.EndsWith("-Inventory.txt", StringComparison.OrdinalIgnoreCase)) return FileKind.Inventory;
         if (n.EndsWith("-Spellbook.txt", StringComparison.OrdinalIgnoreCase)) return FileKind.Spellbook;
         if (n.StartsWith("eqlog_", StringComparison.OrdinalIgnoreCase) && n.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) return FileKind.Log;
+        if (CharacterIniParser.TryParseFileName(path, out _, out _)) return FileKind.Ini;
         return FileKind.Other;
     }
 
@@ -180,6 +189,11 @@ public sealed class DataStore : IDisposable
                         var changed = LogScanner.Update(st);
                         lock (_lock) _logs[path] = st;
                         return changed;
+                    case FileKind.Ini:
+                        CharacterIniParser.TryParseFileName(path, out var iniName, out _);
+                        var friends = CharacterIniParser.ReadFriends(path);
+                        lock (_lock) _inis[path] = (iniName, friends, File.GetLastWriteTime(path));
+                        return true;
                     default:
                         return false;
                 }
@@ -241,6 +255,13 @@ public sealed class DataStore : IDisposable
             {
                 var c = Get(log.Character);
                 if (c.Log == null || (log.LastLine ?? DateTime.MinValue) > (c.Log.LastLine ?? DateTime.MinValue)) c.Log = log;
+            }
+            // The EQ folder keeps .ini files for every character ever played; only attach them to characters we
+            // already know from inventory/spellbook/log files so old characters don't clutter the list.
+            foreach (var (character, friends, time) in _inis.Values)
+            {
+                if (!chars.TryGetValue(character, out var c)) continue;
+                if (c.IniTime == null || time > c.IniTime) { c.IniFriends = friends; c.IniTime = time; }
             }
             foreach (var c in chars.Values)
             {

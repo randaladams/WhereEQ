@@ -22,6 +22,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Text="Inventory files" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -38,6 +40,12 @@
             <TextBox x:Name="LogBox" Grid.Row="4" Grid.Column="1" TextChanged="Folder_Changed"/>
             <Button Grid.Row="4" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=LogBox}" Click="Browse_Click"/>
             <TextBlock x:Name="LogInfo" Grid.Row="5" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+
+            <TextBlock Grid.Row="6" Text="Character .ini files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox x:Name="IniBox" Grid.Row="6" Grid.Column="1" TextChanged="Folder_Changed"
+                     ToolTip="Name_server.ini files (friends lists). Leave blank to use the inventory folder."/>
+            <Button Grid.Row="6" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=IniBox}" Click="Browse_Click"/>
+            <TextBlock x:Name="IniInfo" Grid.Row="7" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
         </Grid>
 
         <CheckBox x:Name="SubfoldersCheck" Content="Also look in subfolders" Margin="0,0,0,16" Click="Folder_Changed"/>
@@ -49,10 +57,10 @@
                 <ColumnDefinition Width="220"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Log server" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBlock Text="Server" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <ComboBox x:Name="ServerBox" Grid.Column="1" IsEditable="True"/>
             <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
-                       Foreground="{StaticResource MutedBrush}" Text="Only read logs for this server (eqlog_Name_SERVER.txt). Blank reads all."/>
+                       Foreground="{StaticResource MutedBrush}" Text="Only read logs and .ini files for this server (eqlog_Name_SERVER.txt, Name_SERVER.ini). Blank reads all."/>
         </Grid>
         <CheckBox x:Name="TopmostCheck" Content="Keep WhereEQ on top of other windows" Margin="0,4,0,0"/>
 
