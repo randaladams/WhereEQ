@@ -1,0 +1,21 @@
+# Personal game data: never commit (logs contain private chat)
+/Logs/
+/Inventory/
+/Spellbook/
+eqlog_*.txt
+*-Inventory.txt
+*-Spellbook.txt
+
+# Build output
+/publish/
+bin/
+obj/
+*.zip
+
+# IDE / tooling
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.claude/

@@ -1,0 +1,75 @@
+# P1999 wiki spell list for Bard (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Bard, 2026-11-16
+1	Chant of Battle	Cla
+2	Chords of Dissonance	Cla
+3	Jaxan's Jig o' Vigor	Cla
+4	Lyssa's Locating Lyric	Cla
+5	Selo's Accelerando	Cla
+6	Hymn of Restoration	Cla
+7	Jonthan's Whistling Warsong	Cla
+8	Kelin's Lugubrious Lament	Cla
+9	Elemental Rhythms	Cla
+10	Anthem De Arms	Cla
+11	Cinda's Charismatic Carillon	Cla
+12	Brusco's Boastful Bellow	Cla
+13	Purifying Rhythms	Cla
+14	Lyssa's Cataloging Libretto	Cla
+15	Kelin's Lucid Lullaby	Cla
+16	Tarew's Aquatic Ayre	Cla
+17	Guardian Rhythms	Cla
+18	Denon's Disruptive Discord	Cla
+19	Shauri's Sonorous Clouding	Cla
+20	Largo's Melodic Binding	Cla
+20	Cassindra's Chant of Clarity	Vel
+21	Melanie's Mellifluous Motion	Cla
+22	Alenia's Disenchanting Melody	Cla
+23	Selo's Consonant Chain	Cla
+24	Lyssa's Veracious Concord	Cla
+25	Psalm of Warmth	Cla
+26	Angstlich's Appalling Screech	Cla
+27	Solon's Song of the Sirens	Cla
+28	Crission's Pixie Strike	Cla
+29	Psalm of Vitality	Cla
+30	Fufil's Curtailing Chant	Cla
+31	Agilmente's Aria of Eagles	Cla
+32	Cassindra's Chorus of Clarity	Cla
+33	Psalm of Cooling	Cla
+34	Cantana of Soothing	Vel
+34	Lyssa's Solidarity of Vision	Cla
+35	Denon's Dissension	Cla
+36	Vilia's Verses of Celerity	Cla
+37	Psalm of Purity	Cla
+38	Tuyen's Chant of Flame	Cla
+39	Solon's Bewitching Bravura	Kun
+40	Syvelian's Anti-Magic Aria	Cla
+41	Psalm of Mystic Shielding	Cla
+42	McVaxius' Berserker Crescendo	Cla
+43	Denon's Desperate Dirge	Cla
+44	Cassindra's Elegy	Cla
+45	Jonthan's Provocation	Kun
+46	Tuyen's Chant of Frost	Cla
+47	Niv's Melody of Preservation	Cla
+48	Selo's Chords of Cessation	Cla
+49	Shield of Song	Kun
+50	Verses of Victory	Cla
+50	Melody of Ervaj	Vel
+51	Selo's Song of Travel	Kun
+51	Largo's Absonant Binding	Kun
+52	Nillipus' March of the Wee	Kun
+53	Song of Twilight	Kun
+53	Song of Dawn	Kun
+54	Vilia's Chorus of Celerity	Kun
+54	Selo's Assonant Strane	Kun
+55	Cantana of Replenishment	Kun
+55	Brusco's Bombastic Bellow	Kun
+55	Occlusion of Sound	Vel
+56	Song of Highsun	Kun
+56	Song of Midnight	Kun
+57	McVaxius' Rousing Rondo	Kun
+57	Cassindra's Insipid Ditty	Kun
+58	Niv's Harmonic	Kun
+58	Jonthan's Inspiration	Kun
+59	Denon's Bereavement	Kun
+59	Solon's Charismatic Concord	Kun
+60	Kazumi's Note of Preservation	Kun
+60	Angstlich's Assonance	Kun
+60	Composition of Ervaj	Vel

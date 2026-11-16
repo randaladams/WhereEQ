@@ -1,0 +1,204 @@
+# P1999 wiki spell list for Druid (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Druid, 2026-11-16
+1	Burst of Flame	Cla
+1	Dance of the Fireflies	Cla
+1	Endure Fire	Cla
+1	Flame Lick	Cla
+1	Lull Animal	Cla
+1	Minor Healing	Cla
+1	Panic Animal	Cla
+1	Sense Animals	Cla
+1	Skin Like Wood	Cla
+1	Snare	Cla
+5	Burst of Fire	Cla
+5	Camouflage	Cla
+5	Cure Disease	Cla
+5	Cure Poison	Cla
+5	Gate	Cla
+5	Grasping Roots	Cla
+5	Harmony	Cla
+5	Invoke Lightning	Cla
+5	Ward Summoned	Cla
+5	Whirling Wind	Cla
+9	Endure Cold	Cla
+9	Enduring Breath	Cla
+9	Firefist	Cla
+9	Ignite	Cla
+9	Invisibility versus Animals	Cla
+9	Light Healing	Cla
+9	Shield of Thistles	Cla
+9	Starshine	Cla
+9	Strength of Earth	Cla
+9	Thistlecoat	Cla
+9	Treeform	Cla
+14	Befriend Animal	Cla
+14	Bind Affinity	Cla
+14	Cascade of Hail	Cla
+14	Expulse Summoned	Cla
+14	Halo of Light	Cla
+14	Invigor	Cla
+14	Levitate	Cla
+14	See Invisible	Cla
+14	Skin Like Rock	Cla
+14	Spirit of Wolf	Cla
+14	Stinging Swarm	Cla
+14	Summon Drink	Cla
+14	Summon Food	Cla
+19	Barbcoat	Cla
+19	Calm Animal	Cla
+19	Cancel Magic	Cla
+19	Careless Lightning	Cla
+19	Dizzying Wind	Cla
+19	Endure Disease	Cla
+19	Endure Poison	Cla
+19	Feral Spirit	Cla
+19	Healing	Cla
+19	Ring of Butcher	Cla
+19	Ring of Commons	Cla
+19	Ring of Karana	Cla
+19	Ring of Surefall Glade	Vel
+19	Ring of Toxxulia	Cla
+19	Shield of Barbs	Cla
+19	Superior Camouflage	Cla
+19	Terrorize Animal	Cla
+24	Charm Animals	Cla
+24	Creeping Crud	Cla
+24	Dismiss Summoned	Cla
+24	Ensnaring Roots	Cla
+24	Pogonip	Cla
+24	Resist Fire	Cla
+24	Ring of Feerrott	Cla
+24	Ring of Lavastorm	Cla
+24	Ring of Ro	Cla
+24	Ring of Steamfont	Cla
+24	Ring of the Combines	Vel
+24	Scale of Wolf	Kun
+24	Skin Like Steel	Cla
+24	Spirit of Cheetah	Cla
+24	Sunbeam	Cla
+24	Tremor	Cla
+24	Wolf Form	Cla
+29	Beguile Plants	Kun
+29	Bramblecoat	Cla
+29	Circle of Butcher	Cla
+29	Circle of Commons	Cla
+29	Circle of Karana	Cla
+29	Circle of Surefall Glade	Vel
+29	Circle of Toxxulia	Cla
+29	Combust	Cla
+29	Counteract Disease	Cla
+29	Counteract Poison	Cla
+29	Ensnare	Cla
+29	Extinguish Fatigue	Cla
+29	Greater Healing	Cla
+29	Imbue Emerald	Kun
+29	Imbue Plains Pebble	Kun
+29	Immolate	Cla
+29	Ring of Misty	Cla
+29	Shield of Brambles	Cla
+29	Succor: East	Cla
+34	Beguile Animals	Cla
+34	Circle of Feerrott	Cla
+34	Circle of Iceclad	Vel
+34	Circle of Lavastorm	Cla
+34	Circle of Ro	Cla
+34	Circle of Steamfont	Cla
+34	Circle of the Combines	Kun
+34	Drones of Doom	Cla
+34	Earthquake	Cla
+34	Endure Magic	Cla
+34	Expel Summoned	Cla
+34	Fury of Air	Vel
+34	Greater Wolf Form	Cla
+34	Lightning Strike	Cla
+34	Regeneration	Cla
+34	Resist Cold	Cla
+34	Ring of Great Divide	Vel
+34	Ring of Iceclad	Vel
+34	Strength of Stone	Cla
+34	Succor: Butcher	Cla
+39	Avalanche	Cla
+39	Circle of Great Divide	Vel
+39	Circle of Misty	Cla
+39	Enveloping Roots	Cla
+39	Firestrike	Cla
+39	Pack Regeneration	Cla
+39	Pack Spirit	Cla
+39	Ring of Cobalt Scar	Vel
+39	Ring of Wakening Lands	Vel
+39	Ro's Fiery Sundering	Vel
+39	Share Wolf Form	Cla
+39	Shield of Spikes	Cla
+39	Skin Like Diamond	Cla
+39	Spikecoat	Cla
+39	Succor: Ro	Cla
+39	Wind of the North	Kun
+39	Wind of the South	Kun
+44	Allure of the Wild	Cla
+44	Banish Summoned	Cla
+44	Calefaction	Kun
+44	Chloroplast	Cla
+44	Circle of Cobalt Scar	Vel
+44	Circle of Wakening Lands	Vel
+44	Drifting Death	Cla
+44	Fixation of Ro	Vel
+44	Form of the Great Wolf	Cla
+44	Nullify Magic	Cla
+44	Resist Disease	Cla
+44	Resist Poison	Cla
+44	Savage Spirit	Cla
+44	Storm Strength	Cla
+44	Succor: Lavastorm	Cla
+49	Engulfing Roots	Cla
+49	Fire	Cla
+49	Ice	Cla
+49	Lightning Blast	Cla
+49	Pack Chloroplast	Cla
+49	Resist Magic	Cla
+49	Shield of Thorns	Cla
+49	Skin Like Nature	Cla
+49	Starfire	Cla
+49	Succor: North	Cla
+49	Thorncoat	Cla
+50	Improved Superior Camouflage	Vel
+51	Circle of Winter	Kun
+51	Legacy of Spike	Kun
+51	Repulse Animal	Kun
+51	Superior Healing	Vel
+51	Upheaval	Kun
+52	Breath of Ro	Kun
+52	Call of Karana	Kun
+52	Circle of Summer	Kun
+52	Egress	Kun
+53	Glamour of Tunare	Kun
+53	Spirit of Scale	Kun
+53	Winged Death	Kun
+54	Blizzard	Kun
+54	Form of the Howler	Kun
+54	Regrowth	Kun
+54	Scoriae	Kun
+55	Annul Magic	Kun
+55	Chloroblast	Vel
+55	Exile Summoned	Kun
+55	Girdle of Karana	Kun
+55	Nature Walkers Behest	Vel
+55	Tunare's Request	Kun
+56	Bladecoat	Kun
+56	Breath of Karana	Kun
+56	Engorging Roots	Kun
+56	Wake of Karana	Kun
+57	Bonds of Tunare	Kun
+57	Frost	Kun
+57	Natureskin	Kun
+57	Succor	Kun
+58	Fist of Karana	Kun
+58	Regrowth of the Grove	Kun
+58	Shield of Blades	Kun
+59	Legacy of Thorn	Kun
+59	Spirit of Oak	Kun
+59	Wildfire	Kun
+60	Banishment	Kun
+60	Entrapping Roots	Kun
+60	Form of the Hunter	Kun
+60	Mask of the Hunter	Kun
+60	Nature's Touch	Vel
+60	Protection of the Glades	Vel

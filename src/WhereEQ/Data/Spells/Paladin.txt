@@ -1,0 +1,70 @@
+# P1999 wiki spell list for Paladin (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Paladin, 2026-11-16
+9	Courage	Cla
+9	Cure Poison	Cla
+9	Flash of Light	Cla
+9	Minor Healing	Cla
+9	Spook the Dead	Cla
+9	True North	Cla
+9	Yaulp	Cla
+15	Cure Disease	Cla
+15	Hammer of Wrath	Cla
+15	Holy Armor	Cla
+15	Light Healing	Cla
+15	Lull	Cla
+15	Sense the Dead	Cla
+15	Ward Undead	Cla
+22	Center	Cla
+22	Endure Poison	Cla
+22	Halo of Light	Cla
+22	Invigor	Cla
+22	Invisibility versus Undead	Cla
+22	Reckless Strength	Cla
+22	Root	Cla
+30	Endure Magic	Vel
+30	Expulse Undead	Cla
+30	Hammer of Striking	Cla
+30	Healing	Cla
+30	Soothe	Cla
+30	Spirit Armor	Cla
+30	Stun	Cla
+30	Symbol of Transal	Cla
+39	Cancel Magic	Cla
+39	Counteract Poison	Cla
+39	Daring	Cla
+39	Divine Purpose	Vel
+39	Endure Disease	Cla
+39	Greater Healing	Cla
+39	Guard	Cla
+39	Symbol of Ryltan	Cla
+39	Yaulp II	Cla
+49	Armor of Faith	Kun
+49	Calm	Cla
+49	Dismiss Undead	Cla
+49	Divine Might	Kun
+49	Holy Might	Cla
+49	Revive	Cla
+49	Symbol of Pinzarn	Cla
+49	Valor	Cla
+50	Flame of Light	Vel
+51	Pacify	Kun
+51	Resist Disease	Kun
+52	Force	Kun
+52	Frenzied Strength	Kun
+53	Divine Glory	Vel
+54	Enstill	Kun
+54	Expel Undead	Kun
+55	Divine Aura	Kun
+55	Divine Favor	Kun
+55	Resist Magic	Vel
+55	Wave of Healing	Vel
+56	Counteract Disease	Kun
+56	Yaulp III	Kun
+57	Superior Healing	Kun
+58	Nullify Magic	Kun
+58	Symbol of Naltron	Kun
+59	Celestial Cleansing	Vel
+59	Resurrection	Kun
+60	Divine Strength	Vel
+60	Resolution	Kun
+60	Shield of Words	Kun
+60	Yaulp IV	Vel

@@ -1,0 +1,74 @@
+# P1999 wiki spell list for Ranger (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Ranger, 2026-11-16
+9	Endure Fire	Cla
+9	Flame Lick	Cla
+9	Glimpse	Cla
+9	Lull Animal	Cla
+9	Minor Healing	Cla
+9	Skin Like Wood	Cla
+9	Snare	Cla
+15	Burst of Fire	Cla
+15	Camouflage	Cla
+15	Cure Poison	Cla
+15	Dance of the Fireflies	Cla
+15	Feet like Cat	Cla
+15	Grasping Roots	Cla
+15	Invoke Lightning	Cla
+15	Thistlecoat	Cla
+22	Bind Sight	Cla
+22	Endure Cold	Cla
+22	Enduring Breath	Cla
+22	Firefist	Cla
+22	Harmony	Cla
+22	Ignite	Cla
+22	Light Healing	Cla
+22	Panic Animal	Cla
+22	Skin Like Rock	Cla
+22	Ward Summoned	Cla
+30	Barbcoat	Cla
+30	Cancel Magic	Cla
+30	Eyes of the Cat	Cla
+30	Invigor	Cla
+30	Shield of Thistles	Cla
+30	Spirit of Wolf	Cla
+30	Stinging Swarm	Cla
+30	Strength of Earth	Cla
+39	Bramblecoat	Cla
+39	Call of Sky	Vel
+39	Calm Animal	Cla
+39	Careless Lightning	Cla
+39	Dismiss Summoned	Cla
+39	Healing	Cla
+39	Levitate	Cla
+39	See Invisible	Cla
+39	Skin Like Steel	Cla
+49	Call of Flame	Cla
+49	Ensnaring Roots	Cla
+49	Immolate	Cla
+49	Resist Fire	Cla
+49	Shield of Brambles	Cla
+49	Spikecoat	Cla
+49	Superior Camouflage	Vel
+49	Wolf Form	Cla
+50	Call of Earth	Vel
+51	Ensnare	Cla
+51	Jolt	Kun
+51	Strength of Nature	Vel
+52	Extinguish Fatigue	Cla
+52	Firestrike	Cla
+53	Storm Strength	Cla
+54	Drones of Doom	Cla
+54	Skin Like Diamond	Cla
+55	Call of Fire	Vel
+55	Chloroplast	Cla
+55	Cinder Jolt	Vel
+55	Resist Cold	Cla
+56	Chill Sight	Cla
+56	Greater Wolf Form	Cla
+57	Greater Healing	Cla
+58	Nullify Magic	Cla
+58	Shield of Spikes	Cla
+59	Calefaction	Kun
+59	Skin Like Nature	Cla
+60	Call of the Predator	Vel
+60	Enveloping Roots	Cla
+60	Thorncoat	Cla

@@ -1,0 +1,184 @@
+# P1999 wiki spell list for Wizard (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Wizard, 2026-11-16
+1	Frost Bolt	Cla
+1	Minor Shielding	Cla
+1	Numbing Cold	Cla
+1	Shock of Frost	Cla
+1	Sphere of Light	Cla
+1	True North	Cla
+4	Fade	Cla
+4	Gate	Cla
+4	Glimpse	Cla
+4	Icestrike	Cla
+4	O'Keils Radiation	Cla
+4	Root	Cla
+4	See Invisible	Cla
+4	Shock of Fire	Cla
+8	Column of Frost	Cla
+8	Eye of Zomm	Cla
+8	Fingers of Fire	Cla
+8	Fire Bolt	Cla
+8	Lesser Shielding	Cla
+8	Sense Summoned	Cla
+8	Shadow Step	Cla
+8	Shock of Ice	Cla
+12	Bind Affinity	Cla
+12	Cancel Magic	Cla
+12	Firestorm	Cla
+12	Frost Spiral of Al'Kabor	Cla
+12	Gaze	Cla
+12	Halo of Light	Cla
+12	Resistant Skin	Cla
+12	Shock of Lightning	Cla
+16	Bind Sight	Cla
+16	Flame Shock	Cla
+16	Heat Sight	Cla
+16	Identify	Cla
+16	Invisibility	Cla
+16	Lightning Bolt	Cla
+16	Pillar of Fire	Cla
+16	Project Lightning	Cla
+16	Shielding	Cla
+16	Shieldskin	Cla
+20	Elemental Shield	Cla
+20	Enstill	Cla
+20	Fay Gate	Cla
+20	Fire Spiral of Al'Kabor	Cla
+20	Force Shock	Cla
+20	North Gate	Cla
+20	Sight	Cla
+20	Tishan's Clash	Cla
+20	Tox Gate	Cla
+24	Cast Force	Cla
+24	Cazic Gate	Cla
+24	Column of Lightning	Cla
+24	Combine Gate	Kun
+24	Common Gate	Cla
+24	Frost Shock	Cla
+24	Leatherskin	Cla
+24	Levitate	Cla
+24	Lightning Storm	Cla
+24	Major Shielding	Cla
+24	Nek Gate	Cla
+24	Ro Gate	Cla
+24	West Gate	Cla
+29	Bonds of Force	Cla
+29	Energy Storm	Cla
+29	Evacuate: North	Cla
+29	Fay Portal	Cla
+29	Imbue Fire Opal	Kun
+29	Inferno Shock	Cla
+29	Magnify	Cla
+29	North Portal	Cla
+29	Shock Spiral of Al'Kabor	Cla
+29	Thunder Strike	Cla
+29	Tox Portal	Cla
+29	Yonder	Cla
+34	Cazic Portal	Cla
+34	Circle of Force	Cla
+34	Combine Portal	Kun
+34	Evacuate: Fay	Cla
+34	Great Divide Gate	C2.0
+34	Greater Shielding	Cla
+34	Harvest	Hol
+34	Ice Shock	Cla
+34	Iceclad Gate	Vel
+34	Iceclad Portal	Vel
+34	Lava Storm	Cla
+34	Nek Portal	Cla
+34	Nullify Magic	Cla
+34	O'Keils Flickering Flame	Vel
+34	Steelskin	Cla
+34	Thunderclap	Cla
+39	Chill Sight	Cla
+39	Cobalt Scar Gate	C2.0
+39	Common Portal	Cla
+39	Concussion	Kun
+39	Evacuate: Ro	Cla
+39	Force Spiral of Al'Kabor	Cla
+39	Great Divide Portal	Vel
+39	Immobilize	Cla
+39	Invisibility to Undead	Vel
+39	Lightning Shock	Cla
+39	Markar's Relocation	Kun
+39	Ro Portal	Cla
+39	Shifting Sight	Cla
+39	Tishan's Relocation	Kun
+39	Translocate: Combine	Vel
+39	Translocate: Fay	Vel
+39	Translocate: North	Vel
+39	Translocate: Tox	Vel
+39	Wakening Lands Gate	Vel
+39	West Portal	Cla
+44	Arch Shielding	Cla
+44	Cobalt Scar Portal	Vel
+44	Conflagration	Cla
+44	Diamondskin	Cla
+44	Elemental Armor	Cla
+44	Enticement of Flame	Vel
+44	Evacuate: Nek	Cla
+44	Force Strike	Cla
+44	Frost Storm	Cla
+44	Gravity Flux	Cla
+44	Translocate: Cazic	Vel
+44	Translocate: Common	Vel
+44	Translocate: West	Vel
+44	Translocate: Nek	Vel
+44	Translocate: Ro	Vel
+44	Wakening Lands Portal	Vel
+46	Alter Plane: Hate	Cla
+46	Alter Plane: Sky	Cla
+49	Evacuate: West	Cla
+49	Ice Comet	Cla
+49	Markar's Clash	Cla
+49	Paralyzing Earth	Cla
+49	Rend	Cla
+49	Supernova	Cla
+49	Translocate: Cobalt Scar	Vel
+49	Translocate: Great Divide	Vel
+49	Translocate: Iceclad	Vel
+49	Translocate: Wakening Lands	Vel
+49	Wrath of Al'Kabor	Cla
+50	Translocate	Vel
+51	Atol's Spectral Shackles	Kun
+51	Draught of Fire	Kun
+51	Pillar of Frost	Kun
+51	Tishan's Discord	Kun
+52	Abscond	Kun
+52	Lure of Frost	Kun
+52	Manaskin	Kun
+52	Tears of Druzzil	Kun
+52	Translocate: Group	Vel
+53	Annul Magic	Kun
+53	Inferno of Al'Kabor	Kun
+53	Jyll's Static Pulse	Kun
+54	Pillar of Lightning	Kun
+54	Shield of the Magi	Kun
+54	Thunderbold	Kun
+54	Voltaic Draught	Kun
+55	Draught of Jiva	Kun
+55	Improved Invisibility	Vel
+55	Lure of Flame	Kun
+55	Plainsight	Kun
+55	Tears of Solusek	Kun
+56	Jyll's Zephyr of Ice	Kun
+56	Markar's Discord	Kun
+56	Retribution of Al'Kabor	Kun
+57	Draught of Ice	Kun
+57	Evacuate	Kun
+57	Eye of Tallon	Kun
+57	Pillar of Flame	Kun
+58	Fetter	Kun
+58	Lure of Lightning	Kun
+58	Manasink	Kun
+58	Tears of Prexus	Kun
+59	Flaming Sword of Xuzl	Kun
+59	Invert Gravity	Kun
+59	Jyll's Wave of Heat	Kun
+59	Vengeance of Al'Kabor	Kun
+60	Disintegrate	Kun
+60	Hsagra's Wrath	Vel
+60	Ice Spear of Solist	Vel
+60	Lure of Ice	Kun
+60	Porlos' Fury	Vel
+60	Sunstrike	Kun
+60	Winds of Gelid	Kun

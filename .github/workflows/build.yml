@@ -1,0 +1,55 @@
+name: Build
+
+# Every push to main builds a self-contained Windows exe and publishes it as the "latest" release,
+# so it can be downloaded from https://github.com/<owner>/WhereEQ/releases/latest without signing in.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      VERSION: 0.1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          dotnet publish src/WhereEQ/WhereEQ.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none `
+            -p:Version=$env:VERSION -o out/WhereEQ
+          Copy-Item packaging/README.txt out/WhereEQ/
+          Compress-Archive -Path out/WhereEQ -DestinationPath WhereEQ-win-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhereEQ-win-x64-${{ env.VERSION }}
+          path: out/WhereEQ
+
+      - name: Publish "latest" release
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest WhereEQ-win-x64.zip \
+            --target "$GITHUB_SHA" \
+            --title "WhereEQ $VERSION (latest build)" \
+            --notes "Automatic build of ${GITHUB_SHA::7} from main. Download WhereEQ-win-x64.zip, unzip, run WhereEQ.exe." \
+            --prerelease

@@ -1,0 +1,177 @@
+# P1999 wiki spell list for Magician (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Magician, 2026-11-16
+1	Burst of Flame	Cla
+1	Flare	Cla
+1	Minor Shielding	Cla
+1	Reclaim Energy	Cla
+1	Summon Dagger	Cla
+1	Summon Drink	Cla
+1	Summon Food	Cla
+1	True North	Cla
+4	Burn	Cla
+4	Elementalkin: Air	Cla
+4	Elementalkin: Earth	Cla
+4	Elementalkin: Fire	Cla
+4	Elementalkin: Water	Cla
+4	Fire Flux	Cla
+4	Gate	Cla
+4	Sense Summoned	Cla
+4	Summon Bandages	Cla
+4	Summon Wisp	Cla
+8	Dimensional Pocket	Cla
+8	Elementaling: Air	Cla
+8	Elementaling: Earth	Cla
+8	Elementaling: Fire	Cla
+8	Elementaling: Water	Cla
+8	Eye of Zomm	Cla
+8	Flame Bolt	Cla
+8	Invisibility	Cla
+8	Lesser Shielding	Cla
+8	Renew Elements	Kun
+8	Shield of Fire	Cla
+8	Shock of Blades	Cla
+8	Staff of Tracing	?
+12	Bind Affinity	Cla
+12	Burnout	Cla
+12	Cancel Magic	Cla
+12	Column of Fire	Cla
+12	Elemental: Air	Cla
+12	Elemental: Earth	Cla
+12	Elemental: Fire	Cla
+12	Elemental: Water	Cla
+12	Rain of Blades	Cla
+12	Summon Fang	Cla
+12	Ward Summoned	Cla
+16	Identify	Cla
+16	Minor Summoning: Air	Cla
+16	Minor Summoning: Earth	Cla
+16	Minor Summoning: Fire	Cla
+16	Minor Summoning: Water	Cla
+16	Phantom Leather	Cla
+16	See Invisible	Cla
+16	Shielding	Cla
+16	Shock of Flame	Cla
+16	Staff of Warding	Cla
+16	Summon Heatstone	Cla
+16	Summon Throwing Dagger	Cla
+20	Bolt of Flame	Cla
+20	Elemental Shield	Cla
+20	Expulse Summoned	Cla
+20	Lesser Summoning: Air	Cla
+20	Lesser Summoning: Earth	Cla
+20	Lesser Summoning: Fire	Cla
+20	Lesser Summoning: Water	Cla
+20	Rain of Fire	Cla
+20	Renew Summoning	Sky
+20	Shield of Flame	Cla
+20	Spear of Warding	Cla
+20	Summon Arrows	Cla
+20	Summon Waterstone	Cla
+24	Cornucopia	Cla
+24	Everfount	Cla
+24	Flame Flux	Cla
+24	Major Shielding	Cla
+24	Malaise	Cla
+24	Shock of Spikes	Cla
+24	Staff of Runes	Cla
+24	Summoning: Air	Cla
+24	Summoning: Earth	Cla
+24	Summoning: Fire	Cla
+24	Summoning: Water	Cla
+29	Burnout II	Cla
+29	Dismiss Summoned	Cla
+29	Expedience	Vel
+29	Greater Summoning: Air	Cla
+29	Greater Summoning: Earth	Cla
+29	Greater Summoning: Fire	Cla
+29	Greater Summoning: Water	Cla
+29	Inferno Shield	Cla
+29	Phantom Chain	Cla
+29	Rain of Spikes	Cla
+29	Summon Coldstone	Cla
+29	Sword of Runes	Cla
+34	Blaze	Cla
+34	Cinder Bolt	Cla
+34	Dimensional Hole	Cla
+34	Greater Shielding	Cla
+34	Minor Conjuration: Air	Cla
+34	Minor Conjuration: Earth	Cla
+34	Minor Conjuration: Fire	Cla
+34	Minor Conjuration: Water	Cla
+34	Monster Summoning I	Vel
+34	Nullify Magic	Cla
+34	Staff of Symbols	Cla
+34	Summon Shard of the Core	Vel
+39	Barrier of Combustion	Cla
+39	Dagger of Symbols	Cla
+39	Expel Summoned	Cla
+39	Flame Arc	Cla
+39	Lesser Conjuration: Air	Cla
+39	Lesser Conjuration: Earth	Cla
+39	Lesser Conjuration: Fire	Cla
+39	Lesser Conjuration: Water	Cla
+39	Rain of Lava	Cla
+39	Summon Companion	Vel
+39	Summon Ring of Flight	Cla
+44	Arch Shielding	Cla
+44	Conjuration: Air	Cla
+44	Conjuration: Earth	Cla
+44	Conjuration: Fire	Cla
+44	Conjuration: Water	Cla
+44	Elemental Armor	Cla
+44	Elemental Maelstrom	Vel
+44	Malaisement	Cla
+44	Modulating Rod	Sky
+44	Phantom Plate	Cla
+44	Shock of Swords	Cla
+46	Summon Orb	Kun
+49	Banish Summoned	Cla
+49	Burnout III	Cla
+49	Greater Conjuration: Air	Cla
+49	Greater Conjuration: Earth	Cla
+49	Greater Conjuration: Fire	Cla
+49	Greater Conjuration: Water	Cla
+49	Lava Bolt	Cla
+49	Rain of Swords	Cla
+49	Shield of Lava	Cla
+50	Monster Summoning II	Vel
+51	Gift of Xev	Kun
+51	Malosi	Kun
+51	Scintillation	Kun
+51	Vocarate: Earth	Kun
+52	Bristlebane's Bundle	Kun
+52	Char	Kun
+52	Phantom Armor	Kun
+52	Vocarate: Fire	Kun
+53	Annul Magic	Kun
+53	Boon of Immolation	Kun
+53	Quiver of Marr	Kun
+53	Vocarate: Air	Vel
+54	Bandoleer of Luclin	Kun
+54	Scars of Sigil	Kun
+54	Shield of the Magi	Kun
+54	Vocarate: Water	Vel
+55	Burnout IV	Vel
+55	Call of the Hero	Kun
+55	Pouch of Quellious	Kun
+55	Rage of Zomm	Kun
+55	Sirocco	Kun
+55	Wrath of the Elements	Vel
+56	Cadeau of Flame	Kun
+56	Dyzil's Deafening Decoy	Kun
+56	Exile Summoned	Kun
+56	Muzzle of Mardu	Kun
+57	Eye of Tallon	Kun
+57	Greater Vocaration: Earth	Kun
+57	Shock of Steel	Kun
+58	Greater Vocaration: Fire	Kun
+58	Malosini	Kun
+58	Velocity	Kun
+59	Greater Vocaration: Air	Kun
+59	Manastorm	Kun
+59	Seeking Flame of Seukor	Kun
+59	Valiant Companion	Vel
+60	Aegis of Ro	Kun
+60	Banishment	Kun
+60	Greater Vocaration: Water	Kun
+60	Mala	Kun
+60	Monster Summoning III	Vel

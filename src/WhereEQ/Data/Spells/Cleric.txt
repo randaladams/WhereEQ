@@ -1,0 +1,160 @@
+# P1999 wiki spell list for Cleric (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Cleric, 2026-11-16
+1	Courage	Cla
+1	Cure Poison	Cla
+1	Divine Aura	Cla
+1	Flash of Light	Cla
+1	Lull	Cla
+1	Minor Healing	Cla
+1	Spook the Dead	Cla
+1	Strike	Cla
+1	True North	Cla
+1	Yaulp	Cla
+5	Cure Blindness	Cla
+5	Cure Disease	Cla
+5	Furor	Cla
+5	Gate	Cla
+5	Holy Armor	Cla
+5	Light Healing	Cla
+5	Reckless Strength	Cla
+5	Stun	Cla
+5	Summon Drink	Cla
+5	Ward Undead	Cla
+9	Center	Cla
+9	Endure Fire	Cla
+9	Endure Poison	Cla
+9	Fear	Cla
+9	Hammer of Wrath	Cla
+9	Invigor	Cla
+9	Root	Cla
+9	Sense the Dead	Cla
+9	Soothe	Cla
+9	Summon Food	Cla
+9	Word of Pain	Cla
+14	Bind Affinity	Cla
+14	Cancel Magic	Cla
+14	Endure Cold	Cla
+14	Endure Disease	Cla
+14	Expulse Undead	Cla
+14	Halo of Light	Cla
+14	Healing	Cla
+14	Invisibility versus Undead	Cla
+14	Sense Summoned	Cla
+14	Smite	Cla
+14	Symbol of Transal	Cla
+19	Calm	Cla
+19	Daring	Cla
+19	Endure Magic	Cla
+19	Extinguish Fatigue	Cla
+19	Holy Might	Cla
+19	Spirit Armor	Cla
+19	Ward Summoned	Cla
+19	Word of Shadow	Cla
+19	Yaulp II	Cla
+24	Bravery	Cla
+24	Counteract Poison	Cla
+24	Dismiss Undead	Cla
+24	Greater Healing	Cla
+24	Hammer of Striking	Cla
+24	Inspire Fear	Cla
+24	Symbol of Ryltan	Cla
+24	Wave of Fear	Cla
+29	Abundant Drink	Cla
+29	Counteract Disease	Cla
+29	Divine Barrier	Cla
+29	Enstill	Cla
+29	Expulse Summoned	Cla
+29	Guard	Cla
+29	Imbue Amber	Kun
+29	Imbue Black Pearl	Kun
+29	Imbue Black Sapphire	Kun
+29	Imbue Diamond	Kun
+29	Imbue Emerald	Kun
+29	Imbue Opal	Kun
+29	Imbue Peridot	Kun
+29	Imbue Plains Pebble	Kun
+29	Imbue Rose Quartz	Kun
+29	Imbue Ruby	Kun
+29	Imbue Sapphire	Kun
+29	Imbue Topaz	Kun
+29	Panic the Dead	Cla
+29	Revive	Cla
+29	Word of Spirit	Cla
+29	Wrath	Cla
+34	Abundant Food	Cla
+34	Armor of Protection	Vel
+34	Atone	Cla
+34	Blinding Luminance	Cla
+34	Expel Undead	Cla
+34	Force	Cla
+34	Frenzied Strength	Cla
+34	Resist Fire	Cla
+34	Resist Poison	Cla
+34	Superior Healing	Cla
+34	Symbol of Pinzarn	Cla
+34	Tremor	Cla
+34	Valor	Cla
+34	Word of Health	Cla
+39	Armor of Faith	Cla
+39	Complete Healing	Cla
+39	Dismiss Summoned	Cla
+39	Invoke Fear	Cla
+39	Nullify Magic	Cla
+39	Pacify	Cla
+39	Resist Cold	Cla
+39	Resist Disease	Cla
+39	Resuscitate	Cla
+39	Turning of the Unnatural	Vel
+39	Word of Souls	Cla
+44	Banish Undead	Cla
+44	Celestial Healing	Vel
+44	Earthquake	Cla
+44	Hammer of Requital	Cla
+44	Resist Magic	Cla
+44	Resolution	Cla
+44	Retribution	Cla
+44	Symbol of Naltron	Cla
+44	Yaulp III	Cla
+49	Abolish Poison	Cla
+49	Expel Summoned	Cla
+49	Immobilize	Cla
+49	Resurrection	Cla
+49	Shield of Words	Cla
+49	Sound of Force	Cla
+49	Word Divine	Cla
+49	Word of Healing	Cla
+50	Improved Invis to Undead	Vel
+51	Death Pact	Kun
+51	Dread of Night	Kun
+51	Remedy	Kun
+51	Sunskin	Kun
+52	Heroic Bond	Kun
+52	Heroism	Kun
+52	Upheaval	Kun
+52	Word of Vigor	Kun
+53	Annul Magic	Kun
+53	Divine Light	Kun
+53	Yaulp IV	Kun
+54	Reckoning	Kun
+54	Symbol of Marzin	Kun
+54	Unswerving Hammer	Kun
+55	Exile Undead	Kun
+55	Fortitude	Kun
+55	Stun Command	Vel
+55	Wake of Tranquility	Kun
+56	Banish Summoned	Kun
+56	Mark of Karn	Kun
+56	Paralyzing Earth	Kun
+56	Reviviscence	Kun
+57	Aegis	Kun
+57	Bulwark of Faith	Kun
+57	Trepidation	Kun
+57	Word of Restoration	Kun
+58	Antidote	Kun
+58	Enforced Reverence	Kun
+58	Naltron's Mark	Kun
+59	Celestial Elixir	Kun
+59	The Unspoken Word	Kun
+60	Aegolism	Vel
+60	Banishment of Shadows	Kun
+60	Divine Intervention	Kun
+60	Word of Redemption	Kun

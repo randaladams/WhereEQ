@@ -1,0 +1,172 @@
+# P1999 wiki spell list for Necromancer (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Necromancer, 2026-11-16
+1	Cavorting Bones	Cla
+1	Coldlight	Cla
+1	Disease Cloud	Cla
+1	Invisibility versus Undead	Cla
+1	Lifetap	Cla
+1	Locate Corpse	Cla
+1	Minor Shielding	Cla
+1	Reclaim Energy	Cla
+1	Sense the Dead	Cla
+1	Siphon Strength	Cla
+4	Clinging Darkness	Cla
+4	Endure Cold	Cla
+4	Fear	Cla
+4	Gate	Cla
+4	Grim Aura	Cla
+4	Leering Corpse	Cla
+4	Lifespike	Cla
+4	Numb the Dead	Cla
+4	Poison Bolt	Cla
+4	True North	Cla
+8	Bone Walk	Cla
+8	Dark Empathy	Cla
+8	Dark Pact	Cla
+8	Deadeye	Cla
+8	Gather Shadows	Cla
+8	Impart Strength	Cla
+8	Lesser Shielding	Cla
+8	Mend Bones	Cla
+8	Shadow Step	Cla
+8	Vampiric Embrace	Cla
+8	Ward Undead	Cla
+12	Bind Affinity	Cla
+12	Convoke Shadow	Cla
+12	Endure Disease	Cla
+12	Engulfing Darkness	Cla
+12	Heat Blood	Cla
+12	Leach	Pai
+12	Lifedraw	Cla
+12	Scent of Dusk	Pai
+12	Sight Graft	Cla
+12	Spook the Dead	Cla
+12	Wave of Enfeeblement	Cla
+16	Banshee Aura	Cla
+16	Cancel Magic	Cla
+16	Cure Disease	Cla
+16	Feign Death	Cla
+16	Heart Flutter	Cla
+16	Hungry Earth	Cla
+16	Infectious Cloud	Cla
+16	Restless Bones	Cla
+16	Shielding	Cla
+16	Shieldskin	Cla
+16	Spirit Armor	Cla
+16	Voice Graft	Cla
+20	Allure of Death	Cla
+20	Animate Dead	Cla
+20	Dominate Undead	Cla
+20	Expulse Undead	Cla
+20	Harmshield	Cla
+20	Identify	Cla
+20	Shadow Compact	Pai
+20	Shadow Vortex	Cla
+20	Siphon Life	Cla
+20	Track Corpse	Kun
+20	Word of Shadow	Cla
+24	Breath of the Dead	Cla
+24	Haunting Corpse	Cla
+24	Intensify Death	Cla
+24	Leatherskin	Cla
+24	Major Shielding	Cla
+24	Rapacious Subvention	Pai
+24	Resist Cold	Cla
+24	Rest the Dead	Cla
+24	Scent of Shadow	Pai
+24	Screaming Terror	Fea
+24	Shadow Sight	Cla
+24	Shock of Poison	Cla
+29	Boil Blood	Cla
+29	Dismiss Undead	Cla
+29	Dooming Darkness	Cla
+29	Panic the Dead	Cla
+29	Renew Bones	Cla
+29	Spirit Tap	Cla
+29	Summon Dead	Cla
+29	Vampiric Curse	Cla
+29	Word of Spirit	Cla
+34	Beguile Undead	Cla
+34	Call of Bones	Cla
+34	Greater Shielding	Cla
+34	Invoke Fear	Cla
+34	Invoke Shadow	Cla
+34	Resist Disease	Cla
+34	Root	Cla
+34	Steelskin	Cla
+34	Surge of Enfeeblement	Cla
+34	Torbas' Acid Blast	Vel
+34	Venom of the Snake	Cla
+39	Augment Death	Cla
+39	Chilling Embrace	Vel
+39	Counteract Disease	Cla
+39	Drain Spirit	Cla
+39	Expel Undead	Cla
+39	Malignant Dead	Cla
+39	Nullify Magic	Cla
+39	Scent of Darkness	Pai
+39	Scourge	Cla
+39	Summon Corpse	Cla
+39	Word of Souls	Cla
+44	Arch Shielding	Cla
+44	Asystole	Pai
+44	Cackling Bones	Cla
+44	Corporeal Empathy	Vel
+44	Covetous Subversion	Pai
+44	Dead Man Floating	Cla
+44	Diamondskin	Cla
+44	Ignite Bones	Cla
+44	Incinerate Bones	C2.0
+44	Pact of Shadow	Cla
+44	Summon Companion	Vel
+49	Banish Undead	Cla
+49	Bond of Death	Cla
+49	Cajole Undead	Cla
+49	Cascading Darkness	Cla
+49	Dead Men Floating	C2.0
+49	Drain Soul	Cla
+49	Ignite Blood	Cla
+49	Invoke Death	Cla
+49	Lich	Cla
+49	Paralyzing Earth	Cla
+50	Improved Invis to Undead	Vel
+51	Dread of Night	Kun
+51	Envenomed Bolt	Kun
+51	Sacrifice	Kun
+51	Splurt	Kun
+52	Defoliation	Kun
+52	Manaskin	Kun
+52	Plague	Kun
+52	Scent of Terris	Kun
+53	Annul Magic	Kun
+53	Convergence	Kun
+53	Enstill	Kun
+53	Minion of Shadows	Kun
+54	Deflux	Kun
+54	Shadowbond	Kun
+54	Shield of the Magi	Kun
+54	Thrall of Bones	Kun
+55	Augmentation of Death	Vel
+55	Chill Bones	Kun
+55	Conglaciation of Bone	Vel
+55	Infusion	Kun
+55	Levant	Kun
+55	Skin of the Shadow	Kun
+56	Cessation of Cor	Kun
+56	Sedulous Subversion	Kun
+56	Servant of Bones	Kun
+56	Trepidation	Kun
+57	Conjure Corpse	Kun
+57	Exile Undead	Kun
+57	Vexing Mordinia	Kun
+58	Immobilize	Kun
+58	Pyrocruor	Kun
+58	Quivering Veil of Xarn	Kun
+59	Devouring Darkness	Kun
+59	Emissary of Thule	Kun
+59	Touch of Night	Kun
+60	Arch Lich	Vel
+60	Banishment of Shadows	Kun
+60	Demi Lich	Kun
+60	Enslave Death	Kun
+60	Gangrenous Touch of Zum'uul	C2.0
+60	Trucidation	Kun

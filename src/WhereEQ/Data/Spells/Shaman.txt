@@ -1,0 +1,177 @@
+# P1999 wiki spell list for Shaman (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Shaman, 2026-11-16
+1	Burst of Flame	Cla
+1	Cure Disease	Cla
+1	Dexterous Aura	Cla
+1	Endure Cold	Cla
+1	Flash of Light	Cla
+1	Inner Fire	Cla
+1	Minor Healing	Cla
+1	Strengthen	Cla
+1	True North	Cla
+5	Cure Poison	Cla
+5	Drowsy	Cla
+5	Endure Fire	Cla
+5	Feet like Cat	Cla
+5	Fleeting Fury	Cla
+5	Frost Rift	Cla
+5	Gate	Cla
+5	Scale Skin	Cla
+5	Sicken	Cla
+5	Spirit Pouch	Cla
+5	Summon Drink	Cla
+9	Cure Blindness	Cla
+9	Endure Disease	Cla
+9	Light Healing	Cla
+9	Sense Animals	Cla
+9	Serpent Sight	Cla
+9	Spirit of Bear	Cla
+9	Spirit of Wolf	Cla
+9	Spirit Sight	Cla
+9	Summon Food	Cla
+9	Tainted Breath	Cla
+14	Bind Affinity	Cla
+14	Burst of Strength	Cla
+14	Disempower	Cla
+14	Endure Poison	Cla
+14	Enduring Breath	Cla
+14	Invisibility versus Animals	Cla
+14	Levitate	Cla
+14	Root	Cla
+14	Spirit of Snake	Cla
+14	Spirit Strike	Cla
+14	Turtle Skin	Cla
+14	Walking Sleep	Cla
+19	Affliction	Cla
+19	Cancel Magic	Cla
+19	Endure Magic	Cla
+19	Frenzy	Cla
+19	Healing	Cla
+19	Infectious Cloud	Cla
+19	Insidious Fever	Cla
+19	Malise	Cla
+19	Shrink	Fea
+19	Spirit of Cat	Cla
+19	Spirit Strength	Cla
+19	Vision	Cla
+24	Cannibalize	Cla
+24	Counteract Disease	Cla
+24	Creeping Vision	Cla
+24	Envenomed Breath	Cla
+24	Frost Strike	Cla
+24	Invigor	Cla
+24	Poison Storm	Cla
+24	Protect	Cla
+24	Regeneration	Cla
+24	Resist Cold	Cla
+24	Spirit of Cheetah	Cla
+24	Spirit of Monkey	Cla
+24	Spirit of Ox	Cla
+24	Scale of Wolf	Kun
+29	Alluring Aura	Cla
+29	Befriend Animal	Cla
+29	Counteract Poison	Cla
+29	Greater Healing	Cla
+29	Imbue Amber	Kun
+29	Imbue Ivory	Kun
+29	Imbue Jade	Kun
+29	Imbue Sapphire	Kun
+29	Invisibility	Cla
+29	Listless Power	Cla
+29	Quickness	Cla
+29	Raging Strength	Cla
+29	Resist Fire	Cla
+29	Rising Dexterity	Cla
+29	Tagar's Insects	Cla
+29	Ultravision	Cla
+34	Charm Animals	Kun
+34	Companion Spirit	Cla
+34	Enstill	Cla
+34	Fury	Cla
+34	Health	Cla
+34	Malisement	Cla
+34	Nimble	Cla
+34	Resist Disease	Cla
+34	Scourge	Cla
+34	Shifting Shield	Cla
+34	Shock of the Tainted	Vel
+34	Talisman of Tnarg	Cla
+34	Winter's Roar	Cla
+39	Assiduous Vision	Cla
+39	Blinding Luminance	Cla
+39	Cannibalize II	Kun
+39	Chloroplast	Cla
+39	Deftness	Cla
+39	Extinguish Fatigue	Cla
+39	Furious Strength	Cla
+39	Gale of Poison	Cla
+39	Glamour	Cla
+39	Insidious Malady	Cla
+39	Resist Poison	Cla
+39	Togor's Insects	Cla
+39	Tumultuous Strength	Vel
+39	Venom of the Snake	Cla
+39	Vigilant Spirit	Cla
+44	Agility	Cla
+44	Alacrity	Cla
+44	Blast of Poison	Vel
+44	Blizzard Blast	Cla
+44	Guardian	Cla
+44	Guardian Spirit	Cla
+44	Incapacitate	Cla
+44	Nullify Magic	Cla
+44	Resist Magic	Cla
+44	Stamina	Cla
+44	Summon Companion	Vel
+44	Talisman of Altuna	Cla
+49	Abolish Disease	Cla
+49	Charisma	Cla
+49	Dexterity	Cla
+49	Envenomed Bolt	Cla
+49	Frenzied Spirit	Cla
+49	Malosi	Cla
+49	Plague	Cla
+49	Rage	Cla
+49	Strength	Cla
+50	Spirit Quickening	Vel
+51	Superior Healing	Vel
+51	Immobilize	Kun
+51	Talisman of Jasinth	Kun
+51	Turgur's Insects	Kun
+52	Insidious Decay	Kun
+52	Regrowth	Kun
+52	Spirit of Scale	Kun
+53	Cripple	Kun
+53	Deliriously Nimble	Kun
+53	Talisman of Shadoo	Kun
+54	Cannibalize III	Kun
+54	Ice Strike	Kun
+54	Riotous Health	Kun
+54	Shroud of the Spirits	Kun
+55	Annul Magic	Kun
+55	Chloroblast	Vel
+55	Form of the Great Bear	Vel
+55	Spirit of the Howler	Kun
+55	Talisman of Kragg	Kun
+55	Torrent of Poison	Kun
+56	Acumen	Kun
+56	Bane of Nife	Kun
+56	Celerity	Kun
+56	Paralyzing Earth	Kun
+57	Malosini	Kun
+57	Maniacal Strength	Kun
+57	Talisman of the Brute	Kun
+57	Talisman of the Cat	Kun
+58	Cannibalize IV	War
+58	Mortal Deftness	Kun
+58	Talisman of the Rhino	Kun
+58	Talisman of the Serpent	Kun
+58	Tigir's Insects	Kun
+59	Pox of Bertoxxulous	Kun
+59	Talisman of the Raptor	Kun
+59	Unfailing Reverence	Kun
+59	Voice of the Berserker	Kun
+60	Avatar	Kun
+60	Focus of Spirit	Vel
+60	Malo	Kun
+60	Primal Avatar	Vel
+60	Torpor	Kun

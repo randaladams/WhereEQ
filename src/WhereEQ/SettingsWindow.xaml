@@ -1,0 +1,64 @@
+<Window x:Class="WhereEQ.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WhereEQ Settings" Width="760" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <StackPanel Margin="20">
+
+        <TextBlock Text="File locations" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12"
+                   Text="Each kind of file can live in its own folder, or they can all share one. WhereEQ watches these folders and updates as files change."/>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Inventory files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox x:Name="InventoryBox" Grid.Row="0" Grid.Column="1" TextChanged="Folder_Changed"/>
+            <Button Grid.Row="0" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=InventoryBox}" Click="Browse_Click"/>
+            <TextBlock x:Name="InventoryInfo" Grid.Row="1" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+
+            <TextBlock Grid.Row="2" Text="Spellbook files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox x:Name="SpellbookBox" Grid.Row="2" Grid.Column="1" TextChanged="Folder_Changed"/>
+            <Button Grid.Row="2" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=SpellbookBox}" Click="Browse_Click"/>
+            <TextBlock x:Name="SpellbookInfo" Grid.Row="3" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+
+            <TextBlock Grid.Row="4" Text="Log files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox x:Name="LogBox" Grid.Row="4" Grid.Column="1" TextChanged="Folder_Changed"/>
+            <Button Grid.Row="4" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=LogBox}" Click="Browse_Click"/>
+            <TextBlock x:Name="LogInfo" Grid.Row="5" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+        </Grid>
+
+        <CheckBox x:Name="SubfoldersCheck" Content="Also look in subfolders" Margin="0,0,0,16" Click="Folder_Changed"/>
+
+        <TextBlock Text="Options" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Log server" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <ComboBox x:Name="ServerBox" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
+                       Foreground="{StaticResource MutedBrush}" Text="Only read logs for this server (eqlog_Name_SERVER.txt). Blank reads all."/>
+        </Grid>
+        <CheckBox x:Name="TopmostCheck" Content="Keep WhereEQ on top of other windows" Margin="0,4,0,0"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Save" IsDefault="True" MinWidth="90" Click="Save_Click" Style="{DynamicResource AccentButtonStyle}"/>
+            <Button Content="Cancel" IsCancel="True" MinWidth="90" Margin="8,0,0,0"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

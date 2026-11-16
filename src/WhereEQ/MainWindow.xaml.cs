@@ -1,0 +1,436 @@
+﻿using System.Diagnostics;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using Microsoft.Win32;
+using WhereEQ.Models;
+using WhereEQ.Services;
+
+namespace WhereEQ;
+
+public partial class MainWindow : Window
+{
+    private const string AllCharacters = "All characters";
+
+    private readonly Settings _settings = Settings.Load();
+    private readonly SpellDatabase _spellDb = new(Path.Combine(AppContext.BaseDirectory, "Data", "Spells"));
+    private DataStore? _store;
+    private List<Character> _characters = new();
+    private bool _loading;
+
+    public sealed record SpellRow(int Level, string Name, string Status);
+    public sealed record SpellCharacterRow(string Name, string Summary, Character Character);
+    public sealed record FriendRow(string Name, int? Level, string? Class, string? Race, string? Guild,
+                                   DateTime? LastOnline, string? Zone, string FriendOf)
+    {
+        public string LastOnlineText => LastOnline is { } t ? Character.Ago(t) : "not seen";
+    }
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        var v = typeof(MainWindow).Assembly.GetName().Version;
+        if (v is { Major: > 0 } or { Minor: > 0 }) Title = $"WhereEQ {v.Major}.{v.Minor}.{v.Build}";
+        RestoreWindow();
+        OverrideClass.ItemsSource = new[] { "" }.Concat(EqClass.All).ToList();
+        OverrideLevel.ItemsSource = new[] { "" }.Concat(Enumerable.Range(1, 60).Select(i => i.ToString())).ToList();
+        TopmostCheck.IsChecked = _settings.AlwaysOnTop;
+        Loaded += async (_, _) =>
+        {
+            if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
+                ShowSettings(); // first run: ask where the files are
+            await LoadDataAsync();
+        };
+        Closing += (_, _) => { SaveWindow(); _store?.Dispose(); };
+        // Keep "5m ago" style text fresh.
+        var tick = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        tick.Tick += (_, _) => RefreshCharacters();
+        tick.Start();
+    }
+
+    // ---------------------------------------------------------------- settings / loading
+
+    /// <summary>Opens the settings dialog; returns true if the user saved changes.</summary>
+    private bool ShowSettings()
+    {
+        var dlg = new SettingsWindow(_settings) { Owner = this, Topmost = Topmost };
+        if (dlg.ShowDialog() != true || dlg.Result is not { } r) return false;
+        _settings.InventoryFolder = r.InventoryFolder;
+        _settings.SpellbookFolder = r.SpellbookFolder;
+        _settings.LogFolder = r.LogFolder;
+        _settings.IncludeSubfolders = r.IncludeSubfolders;
+        _settings.LogServer = r.LogServer;
+        _settings.AlwaysOnTop = r.AlwaysOnTop;
+        _settings.Save();
+        TopmostCheck.IsChecked = r.AlwaysOnTop;
+        return true;
+    }
+
+    private async void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        if (ShowSettings()) await LoadDataAsync();
+    }
+
+    private void UpdateFolderText()
+    {
+        static string Short(string? f) => string.IsNullOrWhiteSpace(f) ? "(not set)" : f;
+        var folders = new[] { _settings.InventoryFolder, _settings.SpellbookFolder, _settings.LogFolder };
+        FolderText.Text = folders.Distinct(StringComparer.OrdinalIgnoreCase).Count() == 1
+            ? Short(folders[0])
+            : $"Inventory: {Short(_settings.InventoryFolder)}   ·   Spellbooks: {Short(_settings.SpellbookFolder)}   ·   Logs: {Short(_settings.LogFolder)}";
+        FolderText.ToolTip = $"Inventory: {Short(_settings.InventoryFolder)}\nSpellbooks: {Short(_settings.SpellbookFolder)}\nLogs: {Short(_settings.LogFolder)}" +
+                             (string.IsNullOrWhiteSpace(_settings.LogServer) ? "" : $"\nServer: {_settings.LogServer}");
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _store?.Dispose();
+        _store = null;
+        UpdateFolderText();
+        if (!_settings.HasAnyFolder)
+        {
+            _characters = new();
+            RefreshAll();
+            StatusText.Text = "No folders set. Click Settings… to choose where your inventory, spellbook and log files are.";
+            return;
+        }
+
+        StatusText.Text = "Reading files… (the first read of a large log can take a few seconds)";
+        _loading = true;
+
+        var store = new DataStore(_settings, _spellDb);
+        store.Changed += () => Dispatcher.InvokeAsync(RefreshAll);
+        _store = store;
+        var sw = Stopwatch.StartNew();
+        await store.StartAsync();
+        _loading = false;
+        RefreshAll();
+        StatusText.Text += $"  ·  loaded in {sw.Elapsed.TotalSeconds:0.0}s";
+        await DevSnapshotAsync();
+    }
+
+    /// <summary>
+    /// Dev aid: WHEREEQ_SNAPSHOT="C:\out.png|3|Charname" renders the window (tab index, optional spell character)
+    /// to a PNG and exits. Lets UI changes be checked without a screen.
+    /// </summary>
+    private async Task DevSnapshotAsync()
+    {
+        var spec = Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT");
+        if (string.IsNullOrEmpty(spec)) return;
+        var parts = spec.Split('|');
+        if (parts.Length > 1 && parts[1] == "settings")
+        {
+            var dlg = new SettingsWindow(_settings) { Owner = this };
+            dlg.Show();
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            await Task.Delay(500);
+            RenderToPng(dlg, parts[0]);
+            Application.Current.Shutdown();
+            return;
+        }
+        if (parts.Length > 1 && int.TryParse(parts[1], out var tab)) Tabs.SelectedIndex = tab;
+        if (parts.Length > 2)
+            SpellCharacters.SelectedItem = (SpellCharacters.ItemsSource as IEnumerable<SpellCharacterRow>)?.FirstOrDefault(r => r.Name == parts[2]);
+        if (parts.Length > 3 && parts[3] == "missing") { ShowHave.IsChecked = false; ShowSpells(); }
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        await Task.Delay(500);
+        RenderToPng(this, parts[0]);
+        Application.Current.Shutdown();
+    }
+
+    private static void RenderToPng(Window w, string path)
+    {
+        var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap((int)w.ActualWidth, (int)w.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+        // The window's Mica backdrop isn't captured; paint a dark base so light text stays readable.
+        var bg = new System.Windows.Media.DrawingVisual();
+        using (var dc = bg.RenderOpen())
+            dc.DrawRectangle(new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x20, 0x20, 0x20)), null, new Rect(0, 0, w.ActualWidth, w.ActualHeight));
+        bmp.Render(bg);
+        bmp.Render(w);
+        var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+        enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+        using var fs = File.Create(path);
+        enc.Save(fs);
+    }
+
+    private void RefreshAll()
+    {
+        _characters = _store?.GetCharacters() ?? new();
+        RefreshCharacterFilter();
+        RunSearch();
+        RefreshCharacters();
+        RefreshSpellCharacters();
+        RefreshFriends();
+
+        var inv = _characters.Count(c => c.Inventory != null);
+        var books = _characters.Count(c => c.Spellbook != null);
+        var logs = _characters.Count(c => c.Log != null);
+        var spellNote = _spellDb.IsEmpty ? "  ·  no spell reference data installed" : $"  ·  spell lists for {_spellDb.Classes.Count} classes";
+        StatusText.Text = $"{_characters.Count} characters  ·  {inv} inventories  ·  {books} spellbooks  ·  {logs} logs{spellNote}  ·  updated {DateTime.Now:HH:mm:ss}";
+    }
+
+    // ---------------------------------------------------------------- find item
+
+    private void RefreshCharacterFilter()
+    {
+        var current = CharacterFilter.SelectedItem as string ?? AllCharacters;
+        var names = new[] { AllCharacters }.Concat(_characters.Where(c => c.Inventory != null).Select(c => c.Name)).ToList();
+        CharacterFilter.ItemsSource = names;
+        CharacterFilter.SelectedItem = names.Contains(current) ? current : AllCharacters;
+    }
+
+    private void Search_Changed(object sender, RoutedEventArgs e) => RunSearch();
+
+    private void RunSearch()
+    {
+        if (ResultsGrid == null) return; // during InitializeComponent
+        var who = CharacterFilter.SelectedItem as string;
+        var terms = SearchBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var items = _characters
+            .Where(c => c.Inventory != null && (who == null || who == AllCharacters || c.Name == who))
+            .SelectMany(c => c.Inventory!.Items)
+            .Where(i => AreaVisible(i.Area))
+            .Where(i => ShowBags.IsChecked == true || !i.IsContainer || terms.Length > 0)
+            .Where(i => terms.Length == 0 || terms.Any(t => Matches(i, t)))
+            .OrderBy(i => i.Name).ThenBy(i => i.Character).ThenBy(i => i.Area)
+            .ToList();
+
+        ResultsGrid.ItemsSource = items;
+
+        if (terms.Length == 0)
+        {
+            SearchSummary.Text = $"{items.Count} items. Type part of an item name (or several, separated by commas). Double-click a row to open it on the P1999 wiki.";
+            return;
+        }
+
+        var totals = items.GroupBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(g => $"{g.Key} ×{g.Sum(i => i.Count)} (" +
+                         string.Join(", ", g.GroupBy(i => i.Character).Select(cg => $"{cg.Key} {cg.Sum(i => i.Count)}")) + ")")
+            .Take(8);
+        SearchSummary.Text = items.Count == 0 ? "Not found on any character." : string.Join("    ", totals);
+    }
+
+    private bool AreaVisible(ItemArea a) => a switch
+    {
+        ItemArea.Equipped => AreaEquipped.IsChecked == true,
+        ItemArea.Inventory or ItemArea.Cursor => AreaInventory.IsChecked == true,
+        ItemArea.Bank => AreaBank.IsChecked == true,
+        _ => true,
+    };
+
+    private static bool Matches(InventoryItem i, string term) =>
+        i.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+        (int.TryParse(term, out var id) && i.Id == id);
+
+    private void Results_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (ResultsGrid.SelectedItem is InventoryItem i) OpenWiki(i.Name);
+    }
+
+    private static void OpenWiki(string name)
+    {
+        var page = Uri.EscapeDataString(name.Replace('`', '\'').Replace(' ', '_')).Replace("%27", "'");
+        Process.Start(new ProcessStartInfo($"https://wiki.project1999.com/{page}") { UseShellExecute = true });
+    }
+
+    // ---------------------------------------------------------------- characters
+
+    private void RefreshCharacters()
+    {
+        if (_loading) return;
+        var selected = (CharactersGrid.SelectedItem as Character)?.Name;
+        CharactersGrid.ItemsSource = _characters.ToList();
+        if (selected != null) CharactersGrid.SelectedItem = _characters.FirstOrDefault(c => c.Name == selected);
+    }
+
+    private void CharactersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CharactersGrid.SelectedItem is not Character c) return;
+        OverrideName.Text = c.Name;
+        OverrideClass.SelectedItem = c.Override?.Class ?? "";
+        OverrideLevel.SelectedItem = c.Override?.Level?.ToString() ?? "";
+    }
+
+    private void OverrideSave_Click(object sender, RoutedEventArgs e)
+    {
+        if (CharactersGrid.SelectedItem is not Character c) return;
+        int? level = int.TryParse(OverrideLevel.SelectedItem as string, out var l) ? l : null;
+        var cls = OverrideClass.SelectedItem as string;
+        _settings.Overrides[c.Name] = new CharacterOverride { Class = string.IsNullOrEmpty(cls) ? null : cls, Level = level };
+        _settings.Save();
+        RefreshAll();
+    }
+
+    private void OverrideClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (CharactersGrid.SelectedItem is not Character c) return;
+        _settings.Overrides.Remove(c.Name);
+        _settings.Save();
+        OverrideClass.SelectedItem = "";
+        OverrideLevel.SelectedItem = "";
+        RefreshAll();
+    }
+
+    // ---------------------------------------------------------------- friends
+
+    private void RefreshFriends()
+    {
+        // Friends lists are per character; merge them, keeping the most recent sighting of each friend.
+        var withFriends = _characters.Where(c => c.Log?.Friends.Count > 0).ToList();
+        var rows = withFriends
+            .SelectMany(c => c.Log!.Friends.Select(f => (owner: c.Name, f)))
+            .GroupBy(x => x.f.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(g =>
+            {
+                var latest = g.OrderByDescending(x => x.f.LastOnline ?? DateTime.MinValue).First().f;
+                return new FriendRow(latest.Name, latest.Level, latest.Class, latest.Race, latest.Guild,
+                    latest.LastOnline, latest.Zone, string.Join(", ", g.Select(x => x.owner).Distinct()));
+            })
+            .OrderByDescending(r => r.LastOnline ?? DateTime.MinValue).ThenBy(r => r.Name)
+            .ToList();
+        FriendsGrid.ItemsSource = rows;
+        var noLogs = _characters.Count(c => c.Log == null);
+        FriendsSummary.Text = rows.Count == 0
+            ? "No friends found in the logs yet. Friends appear when you add one (/friend Name) or type /friends in game."
+            : $"{rows.Count} friends from {withFriends.Count} character log(s). Level, class and zone come from the last /friends or /who that listed them." +
+              (noLogs > 0 ? $"  {noLogs} character(s) have no log, so their friends aren't known." : "");
+    }
+
+    // ---------------------------------------------------------------- spells
+
+    private void RefreshSpellCharacters()
+    {
+        var selected = (SpellCharacters.SelectedItem as SpellCharacterRow)?.Name;
+        var rows = _characters
+            .Where(c => c.Spellbook != null || (c.Class != null && EqClass.CastsSpells(c.Class)))
+            .Select(c => new SpellCharacterRow(c.Name, SpellSummary(c), c))
+            .ToList();
+        SpellCharacters.ItemsSource = rows;
+        SpellCharacters.SelectedItem = rows.FirstOrDefault(r => r.Name == selected) ?? rows.FirstOrDefault();
+    }
+
+    private string SpellSummary(Character c)
+    {
+        var head = $"{c.ClassText} {c.LevelText}";
+        if (c.Spellbook == null) return $"{head} · no spellbook file";
+        if (c.Class == null || c.Level == null || _spellDb.For(c.Class).Count == 0) return $"{head} · {c.Spellbook.Count} spells";
+        var missing = BuildSpellRows(c).Count(r => r.Status == "Missing");
+        return missing == 0 ? $"{head} · complete" : $"{head} · {missing} missing";
+    }
+
+    private void SpellCharacters_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowSpells();
+    private void SpellFilter_Click(object sender, RoutedEventArgs e) => ShowSpells();
+
+    private void ShowSpells()
+    {
+        if (SpellCharacters.SelectedItem is not SpellCharacterRow row)
+        {
+            SpellHeader.Text = "";
+            SpellSubHeader.Text = "No characters with spellbooks yet. In game, type /outputfile spellbook.";
+            SpellsGrid.ItemsSource = null;
+            return;
+        }
+        var c = row.Character;
+        SpellHeader.Text = $"{c.Name} — {c.ClassText} {c.LevelText}";
+
+        if (c.Spellbook == null)
+        {
+            SpellSubHeader.Text = $"No spellbook file for {c.Name}. Log in and type /outputfile spellbook.";
+            SpellsGrid.ItemsSource = null;
+            return;
+        }
+        if (c.Class == null)
+        {
+            SpellSubHeader.Text = "Class unknown. Set it on the Characters tab, or /who yourself in game so it shows in the log.";
+            SpellsGrid.ItemsSource = c.Spellbook.Select(s => new SpellRow(s.Level, s.Name, "In book")).ToList();
+            return;
+        }
+        if (_spellDb.For(c.Class).Count == 0)
+        {
+            SpellSubHeader.Text = $"No reference spell list for {c.Class} (expected Data\\Spells\\{c.Class}.txt). Showing the spellbook only.";
+            SpellsGrid.ItemsSource = c.Spellbook.Select(s => new SpellRow(s.Level, s.Name, "In book")).ToList();
+            return;
+        }
+
+        var all = BuildSpellRows(c);
+        var missing = all.Count(r => r.Status == "Missing");
+        var eligible = all.Count(r => r.Status is "Missing" or "Have");
+        SpellSubHeader.Text =
+            $"Level from {c.LevelSource}, class from {c.ClassSource}.  " +
+            (missing == 0 ? $"All {eligible} spells up to level {c.Level} are scribed." : $"Missing {missing} of {eligible} spells up to level {c.Level}.") +
+            $"  Spellbook saved {c.SpellbookAge}. Double-click a spell to open the wiki.";
+
+        SpellsGrid.ItemsSource = all
+            .Where(r => r.Status != "Have" || ShowHave.IsChecked == true)
+            .Where(r => r.Status != "Future" || ShowFuture.IsChecked == true)
+            .ToList();
+    }
+
+    private List<SpellRow> BuildSpellRows(Character c)
+    {
+        var book = c.Spellbook!.Select(s => FileUtil.NormalizeSpellName(s.Name)).ToHashSet();
+        var reference = _spellDb.For(c.Class!);
+        var level = c.Level ?? 0;
+        var rows = reference.Select(s =>
+        {
+            var have = book.Contains(FileUtil.NormalizeSpellName(s.Name));
+            var status = have ? "Have" : s.Level <= level ? "Missing" : "Future";
+            return new SpellRow(s.Level, s.Name, status);
+        }).ToList();
+
+        // Spells in the book that the reference list doesn't know about (data gaps or name mismatches).
+        var known = reference.Select(s => FileUtil.NormalizeSpellName(s.Name)).ToHashSet();
+        rows.AddRange(c.Spellbook!.Where(s => !known.Contains(FileUtil.NormalizeSpellName(s.Name)))
+                                  .Select(s => new SpellRow(s.Level, s.Name, "Not in list")));
+        return rows.OrderBy(r => r.Level).ThenBy(r => r.Name).ToList();
+    }
+
+    private void Spells_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (SpellsGrid.SelectedItem is SpellRow r) OpenWiki(r.Name);
+    }
+
+    // ---------------------------------------------------------------- window
+
+    private void Topmost_Changed(object sender, RoutedEventArgs e)
+    {
+        Topmost = TopmostCheck.IsChecked == true;
+        _settings.AlwaysOnTop = Topmost;
+        _settings.Save();
+    }
+
+    private void RestoreWindow()
+    {
+        if (_settings.WindowWidth is > 200 && _settings.WindowHeight is > 200)
+        {
+            Width = _settings.WindowWidth.Value;
+            Height = _settings.WindowHeight.Value;
+        }
+        if (_settings.WindowLeft is { } l && _settings.WindowTop is { } t &&
+            l > SystemParameters.VirtualScreenLeft - 50 && l < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 100 &&
+            t > SystemParameters.VirtualScreenTop - 50 && t < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 100)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = l;
+            Top = t;
+        }
+        else
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+    }
+
+    private void SaveWindow()
+    {
+        if (WindowState == WindowState.Normal)
+        {
+            _settings.WindowLeft = Left;
+            _settings.WindowTop = Top;
+            _settings.WindowWidth = Width;
+            _settings.WindowHeight = Height;
+        }
+        _settings.Save();
+    }
+}

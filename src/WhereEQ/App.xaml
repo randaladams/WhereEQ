@@ -1,0 +1,11 @@
+﻿<Application x:Class="WhereEQ.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ThemeMode="System"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="MissingBrush" Color="#E5484D"/>
+        <SolidColorBrush x:Key="HaveBrush" Color="#30A46C"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8B8D98"/>
+    </Application.Resources>
+</Application>

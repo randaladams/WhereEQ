@@ -1,0 +1,71 @@
+# P1999 wiki spell list for Shadow_Knight (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Shadow_Knight, 2026-11-16
+9	Disease Cloud	Cla
+9	Invisibility versus Undead	Cla
+9	Leering Corpse	Cla
+9	Lifetap	Cla
+9	Locate Corpse	Cla
+9	Sense the Dead	Cla
+9	Siphon Strength	Cla
+15	Bone Walk	Cla
+15	Clinging Darkness	Cla
+15	Endure Cold	Cla
+15	Fear	Cla
+15	Lifespike	Cla
+15	Numb the Dead	Cla
+15	Shadow Step	Cla
+22	Convoke Shadow	Cla
+22	Dark Empathy	Cla
+22	Deadeye	Cla
+22	Engulfing Darkness	Cla
+22	Grim Aura	Vel
+22	Spook the Dead	Cla
+22	Vampiric Embrace	Cla
+22	Ward Undead	Cla
+29	Strengthen Death	Vel
+30	Endure Disease	Cla
+30	Feign Death	Cla
+30	Gather Shadows	Cla
+30	Heat Blood	Cla
+30	Lifedraw	Cla
+30	Restless Bones	Cla
+30	Wave of Enfeeblement	Cla
+34	Shieldskin	Cla
+39	Animate Dead	Cla
+39	Cancel Magic	Cla
+39	Expulse Undead	Cla
+39	Heart Flutter	Cla
+39	Resist Cold	Cla
+39	Shadow Vortex	Cla
+39	Shroud of Hate	Vel
+49	Breath of the Dead	Cla
+49	Dismiss Undead	Cla
+49	Dooming Darkness	Cla
+49	Invoke Fear	Cla
+49	Life Leech	Cla
+49	Shadow Sight	Cla
+49	Summon Dead	Cla
+49	Word of Spirit	Cla
+50	Shroud of Pain	Vel
+51	Siphon Life	Kun
+51	Summon Corpse	Vel
+52	Malignant Dead	Kun
+52	Summon Companion	Vel
+52	Rest the Dead	Kun
+53	Boil Blood	Kun
+54	Banshee Aura	Kun
+54	Panic the Dead	Kun
+55	Bobbing Corpse	Kun
+55	Expel Undead	Kun
+55	Shroud of Death	Vel
+55	Shroud of Undeath	Vel
+55	Spirit Tap	Kun
+56	Steelskin	Kun
+57	Drain Spirit	Kun
+57	Vampiric Curse	Kun
+58	Cackling Bones	Kun
+58	Nullify Magic	Kun
+59	Cascading Darkness	Kun
+59	Diamondskin	Vel
+60	Asystole	Kun
+60	Drain Soul	Vel
+60	Death Peace	Vel

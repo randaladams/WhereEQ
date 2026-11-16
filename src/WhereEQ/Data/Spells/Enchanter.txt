@@ -1,0 +1,213 @@
+# P1999 wiki spell list for Enchanter (level<TAB>spell<TAB>era). Source: wiki.project1999.com/Enchanter, 2026-11-16
+1	Lull	Cla
+1	Minor Illusion	Cla
+1	Minor Shielding	Cla
+1	Pendril's Animation	Cla
+1	Reclaim Energy	Cla
+1	Shallow Breath	Cla
+1	Strengthen	Cla
+1	Taper Enchantment	Cla
+1	True North	Cla
+1	Weaken	Cla
+4	Color Flux	Cla
+4	Enfeeblement	Cla
+4	Fear	Cla
+4	Gate	Cla
+4	Haze	Cla
+4	Illusion: Half-Elf	Cla
+4	Illusion: Human	Cla
+4	Invisibility	Cla
+4	Juli's Animation	Cla
+4	Mesmerize	Cla
+4	Suffocating Sphere	Cla
+4	Tashan	Cla
+8	Alliance	Cla
+8	Bind Sight	Cla
+8	Cancel Magic	Cla
+8	Chaotic Feedback	Cla
+8	Enchant Clay	War
+8	Enchant Silver	Cla
+8	Eye of Confusion	Cla
+8	Illusion: Gnome	Cla
+8	Illusion: Wood Elf	Cla
+8	Lesser Shielding	Cla
+8	Mircyl's Animation	Cla
+8	Root	Cla
+8	See Invisible	Cla
+8	Sentinel	Cla
+8	Soothe	Cla
+12	Bind Affinity	Cla
+12	Charm	Cla
+12	Choke	Cla
+12	Ebbing Strength	Cla
+12	Enduring Breath	Cla
+12	Illusion: Dark Elf	Cla
+12	Illusion: Erudite	Cla
+12	Illusion: Halfling	Cla
+12	Illusion: High Elf	Cla
+12	Kilan's Animation	Cla
+12	Languid Pace	Cla
+12	Memory Blur	Cla
+12	Mist	Cla
+12	Serpent Sight	Cla
+12	Thicken Mana	Cla
+12	Whirl Till You Hurl	Cla
+16	Breeze	Hol
+16	Chase the Moon	Cla
+16	Disempower	Cla
+16	Enchant Electrum	Cla
+16	Enthrall	Cla
+16	Identify	Cla
+16	Illusion: Barbarian	Cla
+16	Illusion: Dwarf	Cla
+16	Illusion: Tree	Cla
+16	Invisibility versus Undead	Cla
+16	Levitate	Cla
+16	Mesmerization	Cla
+16	Quickness	Cla
+16	Rune I	Cla
+16	Sanity Warp	Cla
+16	Shalee's Animation	Cla
+16	Shielding	Cla
+20	Benevolence	Cla
+20	Berserker Strength	Cla
+20	Calm	Cla
+20	Cloud	Cla
+20	Color Shift	Cla
+20	Crystallize Mana	Cla
+20	Endure Magic	Cla
+20	Feckless Might	Cla
+20	Illusion: Iksar	Kun
+20	Illusion: Ogre	Cla
+20	Illusion: Troll	Cla
+20	Shifting Sight	Cla
+20	Sisna's Animation	Cla
+20	Sympathetic Aura	Cla
+20	Tashani	Cla
+24	Alacrity	Cla
+24	Beguile	Cla
+24	Chaos Flux	Cla
+24	Enchant Gold	Cla
+24	Illusion: Earth Elemental	Cla
+24	Illusion: Skeleton	Cla
+24	Invigor	Cla
+24	Major Shielding	Cla
+24	Rune II	Cla
+24	Sagar's Animation	Cla
+24	Strip Enchantment	Cla
+24	Tepid Deeds	Cla
+29	Augmentation	Cla
+29	Clarify Mana	Cla
+29	Clarity	Cla
+29	Curse of the Simple Mind	Cla
+29	Dyn's Dizzying Draught	Cla
+29	Enstill	Cla
+29	Feedback	Cla
+29	Illusion: Air Elemental	Cla
+29	Illusion: Water Elemental	Cla
+29	Listless Power	Cla
+29	Nullify Magic	Cla
+29	Obscure	Cla
+29	Suffocate	Cla
+29	Uleen's Animation	Cla
+29	Ultravision	Cla
+34	Anarchy	Cla
+34	Boltran's Animation	Cla
+34	Cast Sight	Cla
+34	Enchant Platinum	Cla
+34	Entrance	Cla
+34	Gift of Magic	Vel
+34	Greater Shielding	Cla
+34	Illusion: Fire Elemental	Cla
+34	Insipid Weakness	Cla
+34	Mana Sieve	Cla
+34	Radiant Visage	Cla
+34	Rune III	Cla
+39	Aanya's Animation	Cla
+39	Cajoling Whispers	Cla
+39	Celerity	Cla
+39	Distill Mana	Cla
+39	Gravity Flux	Cla
+39	Illusion: Dry Bone	Cla
+39	Illusion: Spirit Wolf	Cla
+39	Immobilize	Cla
+39	Insight	Cla
+39	Invoke Fear	Cla
+39	Mind Wipe	Cla
+39	Pacify	Cla
+39	Rampage	Cla
+39	Resist Magic	Cla
+39	Shade	Cla
+39	Wandering Mind	Vel
+44	Arch Shielding	Cla
+44	Boon of the Garou	Vel
+44	Brilliance	Cla
+44	Color Skew	Cla
+44	Discordant Mind	Cla
+44	Enchant Velium	Vel
+44	Extinguish Fatigue	Cla
+44	Illusion: Werewolf	Cla
+44	Incapacitate	Cla
+44	Pillage Enchantment	Cla
+44	Rune IV	Cla
+44	Shiftless Deeds	Cla
+44	Summon Companion	Vel
+44	Tashania	Cla
+44	Weakness	Cla
+44	Yegoreff's Animation	Cla
+49	Adorning Grace	Cla
+49	Allure	Cla
+49	Berserker Spirit	Cla
+49	Blanket of Forgetfulness	Cla
+49	Dazzle	Cla
+49	Enchant Adamantite	Epi
+49	Enchant Brellium	Epi
+49	Enchant Mithril	Epi
+49	Enchant Steel	Epi
+49	Gasping Embrace	Cla
+49	Group Resist Magic	Cla
+49	Kintaz's Animation	Cla
+49	Paralyzing Earth	Cla
+49	Purify Mana	Cla
+49	Reoccurring Amnesia	Cla
+49	Shadow	Cla
+49	Swift Like The Wind	Cla
+50	Improved Invisibility	Vel
+51	Collaboration	Kun
+51	Theft of Thought	Kun
+51	Wake of Tranquility	Kun
+52	Boon of the Clear Mind	Kun
+52	Color Slant	Kun
+52	Fascination	Kun
+52	Rune V	Kun
+53	Aanya's Quickening	Kun
+53	Boltran's Agacerie	Kun
+53	Cripple	Kun
+53	Recant Magic	Kun
+54	Clarity II	Kun
+54	Dementia	Kun
+54	Glamour of Kintaz	Kun
+54	Shield of the Magi	Kun
+55	Gift of Insight	Vel
+55	Largarn's Lamentation	Kun
+55	Memory Flux	Kun
+55	Wind of Tashani	Kun
+55	Zumaik's Animation	Kun
+56	Augment	Kun
+56	Overwhelming Splendor	Kun
+56	Torment of Argli	Kun
+56	Trepidation	Kun
+57	Enlightenment	Kun
+57	Forlorn Deeds	Kun
+57	Tashanian	Kun
+57	Umbra	Kun
+58	Bedlam	Kun
+58	Fetter	Kun
+58	Wonderous Rapidity	Kun
+59	Asphyxiate	Kun
+59	Gift of Pure Thought	Kun
+59	Rapture	Kun
+60	Dictate	Kun
+60	Gift of Brilliance	Vel
+60	Visions of Grandeur	Kun
+60	Wind of Tishanian	Kun

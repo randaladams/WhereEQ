@@ -1,0 +1,239 @@
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace WhereEQ.Services;
+
+/// <summary>What we know about a character from their eqlog file. Persisted so big logs are read only once.</summary>
+public sealed class FriendInfo
+{
+    public string Name { get; set; } = "";
+    public DateTime? Added { get; set; }
+    /// <summary>Last time this friend showed up in a /friends (or /who) listing.</summary>
+    public DateTime? LastOnline { get; set; }
+    public int? Level { get; set; }
+    public string? Class { get; set; }
+    public string? Race { get; set; }
+    public string? Guild { get; set; }
+    public string? Zone { get; set; }
+}
+
+public sealed class LogState
+{
+    /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
+    public const int CurrentVersion = 2;
+    public int Version { get; set; }
+
+    public string Path { get; set; } = "";
+    public string Character { get; set; } = "";
+    public string Server { get; set; } = "";
+    public long Offset { get; set; }
+    public int? Level { get; set; }
+    public DateTime? LevelSeen { get; set; }
+    public string? Class { get; set; }
+    public string? Zone { get; set; }
+    public DateTime? LastLine { get; set; }
+
+    public string? BindZone { get; set; }
+    public DateTime? BindSeen { get; set; }
+    /// <summary>"/charinfo" when the game named the zone, "bound here" when inferred from the current zone.</summary>
+    public string? BindHow { get; set; }
+
+    public List<FriendInfo> Friends { get; set; } = new();
+    /// <summary>True while reading the lines of a /friends listing.</summary>
+    public bool InFriendsList { get; set; }
+
+    public FriendInfo Friend(string name)
+    {
+        var f = Friends.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (f == null) Friends.Add(f = new FriendInfo { Name = name });
+        return f;
+    }
+}
+
+/// <summary>
+/// Incrementally reads eqlog_&lt;Name&gt;_&lt;server&gt;.txt from the last offset and extracts level, class and zone.
+/// Sources (later lines win):
+///   [Tue Nov 10 15:16:42 2026] [51 Rake] Yourname (Halfling)            (/who of yourself)
+///   You have gained a level! Welcome to level 51!
+///   You have lost a level ... level 50
+///   You have entered East Commonlands.
+/// </summary>
+public static partial class LogScanner
+{
+    [GeneratedRegex(@"^eqlog_(?<name>[^_]+)_(?<server>.+)$", RegexOptions.IgnoreCase)]
+    private static partial Regex LogFileName();
+
+    [GeneratedRegex(@"^\[(?<ts>[^\]]+)\] (?<msg>.*)$")]
+    private static partial Regex Line();
+
+    // [53 Wanderer] Somefriend (Wood Elf) <Some Guild>  ZONE: cobaltscar
+    // [ANONYMOUS] Someone  <Some Guild>
+    [GeneratedRegex(@"^(?:AFK |<LINKDEAD>)?\s*\[(?:(?<lvl>\d+) (?<cls>[A-Za-z ]+?)|ANONYMOUS)\] (?<name>\w+)(?: \((?<race>[A-Za-z ]+)\))?(?:\s+<(?<guild>[^>]+)>)?(?:\s+ZONE: (?<zone>\S+))?")]
+    private static partial Regex WhoLine();
+
+    [GeneratedRegex(@"^You are currently bound in: (?<zone>.+?)\.?$")]
+    private static partial Regex BoundIn();
+
+    [GeneratedRegex(@"^(?<name>\w+) is (?<no>no longer|now) your friend\.$")]
+    private static partial Regex FriendChange();
+
+    [GeneratedRegex(@"^You have gained a level! Welcome to level (?<lvl>\d+)!")]
+    private static partial Regex LevelUp();
+
+    [GeneratedRegex(@"^You (?:have )?lost a level.*?level (?<lvl>\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex LevelDown();
+
+    [GeneratedRegex(@"^You have entered (?<zone>.+)\.$")]
+    private static partial Regex ZoneLine();
+
+    public static bool TryParseFileName(string path, out string character, out string server)
+    {
+        var m = LogFileName().Match(System.IO.Path.GetFileNameWithoutExtension(path));
+        character = m.Success ? m.Groups["name"].Value : "";
+        server = m.Success ? m.Groups["server"].Value : "";
+        return m.Success;
+    }
+
+    /// <summary>Reads any new lines since <paramref name="state"/>.Offset. Returns true if anything changed.</summary>
+    public static bool Update(LogState state)
+    {
+        var info = new FileInfo(state.Path);
+        if (!info.Exists) return false;
+        if (state.Version != LogState.CurrentVersion)
+        {
+            // Parser learned new things: re-read from the start, keeping nothing stale.
+            state.Version = LogState.CurrentVersion;
+            state.Offset = 0;
+            state.Friends.Clear();
+            state.BindZone = null; state.BindSeen = null; state.BindHow = null;
+            state.InFriendsList = false;
+        }
+        if (info.Length < state.Offset) state.Offset = 0; // log was rotated or truncated
+        if (info.Length == state.Offset) return false;
+
+        using var fs = new FileStream(state.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        fs.Seek(state.Offset, SeekOrigin.Begin);
+        using var sr = new StreamReader(fs, Encoding.Latin1, false, 1 << 16);
+
+        long consumed = state.Offset;
+        string? line;
+        var name = state.Character;
+        while ((line = sr.ReadLine()) != null)
+        {
+            // Latin1 is 1 byte per char; +2 for CRLF (EQ always writes CRLF). Only commit complete lines.
+            if (sr.EndOfStream && !EndsWithNewline(fs)) break;
+            consumed += line.Length + 2;
+
+            var m = Line().Match(line);
+            if (!m.Success) continue;
+            var msg = m.Groups["msg"].Value;
+            var ts = ParseTimestamp(m.Groups["ts"].Value);
+            if (ts != null) state.LastLine = ts;
+
+            // /friends output: header, dashes, who-style lines, then "There is/are ..." ends it.
+            if (state.InFriendsList && (msg.StartsWith("There ") || msg.StartsWith("Your Location") || msg.StartsWith("You ")))
+                state.InFriendsList = false;
+
+            // Cheap prefix checks before regexes; this loop runs over hundreds of thousands of lines.
+            if (msg.StartsWith('[') || msg.StartsWith("AFK [") || msg.StartsWith("<LINKDEAD>"))
+            {
+                var w = WhoLine().Match(msg);
+                if (w.Success)
+                {
+                    var who = w.Groups["name"].Value;
+                    var hasLevel = w.Groups["lvl"].Success;
+                    if (who.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (hasLevel)
+                        {
+                            state.Level = int.Parse(w.Groups["lvl"].Value);
+                            state.LevelSeen = ts;
+                            state.Class = Models.EqClass.Normalize(w.Groups["cls"].Value) ?? state.Class;
+                        }
+                    }
+                    else if (state.InFriendsList || state.Friends.Any(f => f.Name.Equals(who, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        // A friend seen online (in /friends, or in any /who once we know they're a friend).
+                        var f = state.Friend(who);
+                        f.LastOnline = ts;
+                        if (hasLevel)
+                        {
+                            f.Level = int.Parse(w.Groups["lvl"].Value);
+                            f.Class = Models.EqClass.Normalize(w.Groups["cls"].Value) ?? f.Class;
+                        }
+                        if (w.Groups["race"].Success) f.Race = w.Groups["race"].Value;
+                        if (w.Groups["guild"].Success) f.Guild = w.Groups["guild"].Value;
+                        f.Zone = w.Groups["zone"].Success ? w.Groups["zone"].Value : (state.InFriendsList ? null : state.Zone);
+                    }
+                }
+            }
+            else if (msg.StartsWith("Friends currently on EverQuest"))
+            {
+                state.InFriendsList = true;
+            }
+            else if (msg.EndsWith(" your friend."))
+            {
+                var fc = FriendChange().Match(msg);
+                if (fc.Success)
+                {
+                    var who = fc.Groups["name"].Value;
+                    if (fc.Groups["no"].Value == "now")
+                    {
+                        var f = state.Friend(who);
+                        f.Name = who; // keep the latest capitalization
+                        f.Added ??= ts;
+                    }
+                    else
+                    {
+                        state.Friends.RemoveAll(f => f.Name.Equals(who, StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+            }
+            else if (msg.StartsWith("You are currently bound in: "))
+            {
+                var b = BoundIn().Match(msg);
+                if (b.Success) { state.BindZone = b.Groups["zone"].Value; state.BindSeen = ts; state.BindHow = "/charinfo"; }
+            }
+            else if (msg == "You feel yourself bind to the area.")
+            {
+                if (state.Zone != null) { state.BindZone = state.Zone; state.BindSeen = ts; state.BindHow = "bound here"; }
+            }
+            else if (msg.StartsWith("You have gained a level"))
+            {
+                var l = LevelUp().Match(msg);
+                if (l.Success) { state.Level = int.Parse(l.Groups["lvl"].Value); state.LevelSeen = ts; }
+            }
+            else if (msg.Contains("lost a level", StringComparison.OrdinalIgnoreCase))
+            {
+                var l = LevelDown().Match(msg);
+                if (l.Success) { state.Level = int.Parse(l.Groups["lvl"].Value); state.LevelSeen = ts; }
+            }
+            else if (msg.StartsWith("You have entered "))
+            {
+                var z = ZoneLine().Match(msg);
+                // Skip "You have entered an area where levitation effects do not function." etc.
+                if (z.Success && !msg.StartsWith("You have entered an area")) state.Zone = z.Groups["zone"].Value;
+            }
+        }
+
+        var changed = consumed != state.Offset;
+        state.Offset = consumed;
+        return changed;
+    }
+
+    private static bool EndsWithNewline(FileStream fs)
+    {
+        if (fs.Length == 0) return true;
+        var pos = fs.Position;
+        fs.Seek(-1, SeekOrigin.End);
+        var b = fs.ReadByte();
+        fs.Seek(pos, SeekOrigin.Begin);
+        return b == '\n';
+    }
+
+    // "Tue Nov 10 15:16:42 2026"
+    public static DateTime? ParseTimestamp(string s) =>
+        DateTime.TryParseExact(s, "ddd MMM dd HH:mm:ss yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var d) ? d : null;
+}
