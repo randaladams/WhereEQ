@@ -77,11 +77,13 @@ public static partial class InventoryParser
                 area = kind == "general" ? ItemArea.Inventory : ItemArea.Bank;
                 // Bank slots beyond what the server allows are always empty; don't count them as free space.
                 if (area == ItemArea.Bank && int.Parse(n) > bankSlots) continue;
-                if (area == ItemArea.Bank && !m.Groups["slot"].Success)
+                if (!m.Groups["slot"].Success)
                 {
+                    // Record every top-level inventory/bank slot (empty, plain item, or bag) for the Bags tab.
                     var isBag = containers.ContainsKey(top);
                     var (bt, bf) = isBag ? bagSlots.GetValueOrDefault(top) : (0, 0);
-                    inv.BankSlots.Add(new BankSlot(int.Parse(n), r.Empty ? null : r.Name, isBag, bt, bf));
+                    var slot = new BankSlot(int.Parse(n), r.Empty ? null : r.Name, isBag, bt, bf);
+                    (area == ItemArea.Bank ? inv.BankSlots : inv.GeneralSlots).Add(slot);
                 }
                 var label = kind == "general" ? $"Bag {n}" : $"Bank {n}";
 

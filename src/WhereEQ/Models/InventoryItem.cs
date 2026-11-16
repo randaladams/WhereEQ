@@ -24,13 +24,15 @@ public sealed class InventoryItem
     public string AreaText => Area.ToString();
 }
 
-/// <summary>One top-level bank slot: empty (<see cref="Item"/> null), a bag, or a plain item.</summary>
+/// <summary>One top-level inventory or bank slot: empty (<see cref="Item"/> null), a bag, or a plain item.</summary>
 public sealed record BankSlot(int Number, string? Item, bool IsBag, int Slots, int Free);
 
 public sealed class CharacterInventory
 {
     /// <summary>Every usable bank slot in order, including empty ones.</summary>
     public List<BankSlot> BankSlots { get; } = new();
+    /// <summary>Every general inventory slot (General1-8) in order, including empty ones.</summary>
+    public List<BankSlot> GeneralSlots { get; } = new();
     public required string Character { get; init; }
     public required string FilePath { get; init; }
     public DateTime SnapshotTime { get; init; }

@@ -322,15 +322,9 @@ public partial class MainWindow : Window
         foreach (var c in _characters.Where(c => c.Inventory != null && (who == null || who == AllCharacters || c.Name == who)))
         {
             if (BagsInventory.IsChecked == true)
-                rows.AddRange(c.Inventory!.Items.Where(i => i.IsContainer && i.Area == ItemArea.Inventory)
-                    .Select(i => new BagRow(c.Name, i.Name, "Inventory", i.Where, i.BagSlots, i.BagUsedSlots, i.BagFreeSlots,
-                                            SlotNumber(i.RawLocation), "")));
+                rows.AddRange(c.Inventory!.GeneralSlots.Select(s => SlotRow(c.Name, s, "Inventory", $"Inventory slot {s.Number}", 0)));
             if (BagsBank.IsChecked == true)
-                rows.AddRange(c.Inventory!.BankSlots.Select(s => new BagRow(
-                    c.Name, s.Item, "Bank", $"Bank {s.Number}",
-                    s.IsBag ? s.Slots : null, s.IsBag ? s.Slots - s.Free : null, s.IsBag ? s.Free : null,
-                    100 + s.Number,
-                    !s.IsBag ? "None" : s.Slots >= BestBagSize ? "Full" : "Small")));
+                rows.AddRange(c.Inventory!.BankSlots.Select(s => SlotRow(c.Name, s, "Bank", $"Bank {s.Number}", 100)));
         }
         rows = rows.OrderBy(r => r.Character).ThenBy(r => r.Order).ToList();
         BagsGrid.ItemsSource = rows;
@@ -339,14 +333,24 @@ public partial class MainWindow : Window
         var perChar = rows.GroupBy(r => r.Character).Select(g =>
         {
             var bags = g.Where(r => r.Slots != null).ToList();
-            var bank = g.Where(r => r.AreaText == "Bank").ToList();
-            var bankNote = bank.Count == 0 ? "" :
-                $" (bank: {bank.Count(r => r.Status == "Full")} full-size, {bank.Count(r => r.Status == "Small")} small, {bank.Count(r => r.Status == "None")} no bag)";
-            return $"{g.Key}: {bags.Count} bags, {bags.Sum(b => b.Free)} of {bags.Sum(b => b.Slots)} slots free{bankNote}";
+            string Tally(string area)
+            {
+                var a = g.Where(r => r.AreaText == area).ToList();
+                return a.Count == 0 ? "" :
+                    $"{area.ToLowerInvariant()} {a.Count(r => r.Status == "Full")}/{a.Count(r => r.Status == "Small")}/{a.Count(r => r.Status == "None")}";
+            }
+            var tallies = string.Join(", ", new[] { Tally("Inventory"), Tally("Bank") }.Where(t => t.Length > 0));
+            return $"{g.Key}: {bags.Sum(b => b.Free)} of {bags.Sum(b => b.Slots)} bag slots free ({tallies})";
         });
         BagsSummary.Text = string.Join("    ·    ", perChar) +
-                           ".  Right-click a bag to find that bag on every character; double-click to open it on the P1999 wiki.";
+                           ".  Counts are 10-slot / smaller / no bag.  Right-click a bag to find it on every character; double-click to open it on the P1999 wiki.";
     }
+
+    private static BagRow SlotRow(string character, BankSlot s, string area, string where, int orderBase) => new(
+        character, s.Item, area, where,
+        s.IsBag ? s.Slots : null, s.IsBag ? s.Slots - s.Free : null, s.IsBag ? s.Free : null,
+        orderBase + s.Number,
+        !s.IsBag ? "None" : s.Slots >= BestBagSize ? "Full" : "Small");
 
     private static int SlotNumber(string rawLocation) =>
         int.TryParse(new string(rawLocation.Where(char.IsDigit).ToArray()), out var n) ? n : 0;
