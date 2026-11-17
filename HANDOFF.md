@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.18** (✕/🔔 work while locked; overlays drag without Windows Snap) after 0.1.17 (timer ✕/🔔
+- Status: build **0.1.19** (faction/xp deaths as count-up timers) after 0.1.18 (✕/🔔 work while locked; overlays
+  drag without Windows Snap), 0.1.17 (timer ✕/🔔
   per row, side button strip, map trail show/clear), 0.1.16
   (timers as a small transparent overlay; first version 0.1.15) and 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
   button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
@@ -84,7 +85,9 @@ Format notes learned from real data:
   buttons, so they stay clickable); click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
   "You have slain X!" / "X has been slain by Y!", skipping chat, player deaths and Eye of Zomm). Kills arrive via
   `PositionChanged` (not in `Signature`), so tabs don't rebuild on every kill. Same mob + zone within 5 s in two
-  logs = one kill. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
+  logs = one kill. Experience/faction lines with no matching "slain" line within 2 s become unnamed deaths
+  (`KillRecord.Kind` "xp"/"faction", count-up timers; `LogScanner.FlushPending`); a group with "You receive … from
+  <NPC>" or a multi-word speaker "says" is a quest turn-in and is skipped. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
 - `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
   `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
 - `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile

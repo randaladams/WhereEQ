@@ -31,6 +31,9 @@ EverQuest client writes and keeps them up to date while you play.
 - A timer starts whenever your log says `You have slain a fire beetle!`. Tick **Kills by others** to also time
   mobs that others or pets kill (`... has been slain by Somebody!`). A death you're too far away to see isn't
   in your log, so it can't be timed.
+- Some kills have no "slain" line but still give experience or change faction. Those show as
+  **faction death (Faction)** or **xp death** with a blue timer counting *up* from the kill (the mob, and so its
+  respawn time, isn't known). Quest turn-ins (an NPC talking or paying you) are ignored.
 - Respawn times are P1999's (from the P1999 wiki, via [EqTool](https://github.com/smasherprog/EqTool), MIT,
   `src/WhereEQ/Data/SpawnTimes/NOTICE.md`): the zone's usual timer, or a mob's own timer where one is known.
   Zones without data use 6:40, shown as `6:40?`. Timers on P1999 can vary, especially for rare spawns.

@@ -22,8 +22,10 @@ public sealed class FriendInfo
 public sealed record TrailPoint(double X, double Y, DateTime T);
 
 /// <summary>A mob death seen in the log. <see cref="By"/> is null for "You have slain X!", else the killer
-/// from "X has been slain by Killer!" (another player, a pet, ...). <see cref="Zone"/> is the log's zone name.</summary>
-public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By);
+/// from "X has been slain by Killer!" (another player, a pet, ...). <see cref="Zone"/> is the log's zone name.
+/// <see cref="Kind"/> is "faction" or "xp" for a death with no "slain" line, noticed only from a faction change or
+/// experience (the mob's name isn't known, so there's no respawn time).</summary>
+public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By, string? Kind = null);
 
 public sealed class LogState
 {
@@ -59,6 +61,13 @@ public sealed class LogState
     /// <summary>Recent mob deaths (newest last), for spawn timers.</summary>
     public List<KillRecord> Kills { get; set; } = new();
     public const int KillsMax = 300;
+
+    // Faction/experience lines within a couple of seconds, waiting to be matched against "slain" lines.
+    public DateTime? PendingTime { get; set; }
+    public int PendingXp { get; set; }
+    public int PendingSlain { get; set; }
+    public bool PendingQuest { get; set; }
+    public string? PendingFaction { get; set; }
 
     /// <summary>Current guild (null = not in a guild, when <see cref="GuildSeen"/> is set).</summary>
     public string? Guild { get; set; }
@@ -150,6 +159,7 @@ public static partial class LogScanner
             state.Guild = null; state.GuildSeen = null;
             state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
             state.Heading = null; state.HeadingSeen = null; state.Trail.Clear(); state.Kills.Clear();
+            state.PendingTime = null;
             state.InFriendsList = false;
         }
         if (info.Length < state.Offset) state.Offset = 0; // log was rotated or truncated
@@ -192,12 +202,40 @@ public static partial class LogScanner
                 continue;
             }
 
+            // A faction/experience group ends once the log has moved on a couple of seconds.
+            if (state.PendingTime is { } pt && ts is { } now && (now - pt).TotalSeconds > PendingSeconds) FlushPending(state);
+
             // Mob deaths (spawn timers). Before the other checks: a mob's name can contain words like "guild".
             if (msg.EndsWith('!') && TryParseKill(msg, name, out var victim, out var killer))
             {
-                state.Kills.Add(new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer));
-                if (state.Kills.Count > LogState.KillsMax) state.Kills.RemoveRange(0, state.Kills.Count - LogState.KillsMax);
+                AddKill(state, new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer));
+                Pending(state, ts).PendingSlain++;
                 continue;
+            }
+            // Deaths without a "slain" line still give experience and/or faction ("Your faction standing with X
+            // got worse."). Quest turn-ins give them too, but come with an NPC talking or paying you.
+            if (msg.StartsWith("You gain") && msg.EndsWith("experience!!"))
+            {
+                Pending(state, ts).PendingXp++;
+                continue;
+            }
+            if (msg.StartsWith("Your faction standing with "))
+            {
+                var ps = Pending(state, ts);
+                var rest = msg["Your faction standing with ".Length..];
+                var sp = rest.IndexOf(' ');
+                var faction = sp > 0 ? rest[..sp] : rest;
+                // The mob's own faction is the one that gets worse; keep the first of those.
+                if (ps.PendingFaction == null || (!rest.Contains("better") && ps.PendingFaction.EndsWith('+')))
+                    ps.PendingFaction = rest.Contains("better") ? faction + "+" : faction;
+                continue;
+            }
+            if ((msg.StartsWith("You receive ") && msg.Contains(" from ") && !msg.Contains(" from the corpse") &&
+                 !msg.Contains(" for the ")) ||
+                (msg.Contains(" says, '") && msg.IndexOf(' ') < msg.IndexOf(" says, '")))
+            {
+                // Quest reward / NPC talking (multi-word speaker = NPC; players are one word).
+                if (state.PendingTime != null || msg.Contains(" says, '")) Pending(state, ts).PendingQuest = true;
             }
 
             // Cheap prefix checks before regexes; this loop runs over hundreds of thousands of lines.
@@ -301,9 +339,54 @@ public static partial class LogScanner
             }
         }
 
+        // Nothing more for a while: settle the last faction/experience group.
+        if (state.PendingTime is { } last && (DateTime.Now - last).TotalSeconds > PendingSeconds + 1) FlushPending(state);
+
         var changed = consumed != state.Offset;
         state.Offset = consumed;
         return changed;
+    }
+
+    private const double PendingSeconds = 2;
+
+    private static void AddKill(LogState state, KillRecord k)
+    {
+        state.Kills.Add(k);
+        if (state.Kills.Count > LogState.KillsMax) state.Kills.RemoveRange(0, state.Kills.Count - LogState.KillsMax);
+    }
+
+    private static LogState Pending(LogState state, DateTime? ts)
+    {
+        if (state.PendingTime == null)
+        {
+            state.PendingTime = ts ?? DateTime.Now;
+            state.PendingXp = state.PendingSlain = 0;
+            state.PendingQuest = false;
+            state.PendingFaction = null;
+        }
+        return state;
+    }
+
+    /// <summary>
+    /// Turns experience/faction lines that no "slain" line explains into unnamed deaths: one per experience
+    /// message beyond the slain count, or one for faction changes alone. Quest turn-ins are skipped.
+    /// </summary>
+    private static void FlushPending(LogState state)
+    {
+        if (state.PendingTime is not { } t) return;
+        if (!state.PendingQuest)
+        {
+            var faction = state.PendingFaction?.TrimEnd('+');
+            var deaths = state.PendingXp > 0 ? state.PendingXp - state.PendingSlain
+                       : state.PendingSlain == 0 && faction != null ? 1 : 0;
+            for (var i = 0; i < deaths; i++)
+            {
+                AddKill(state, faction != null
+                    ? new KillRecord($"faction death ({faction})", state.Zone, t, null, "faction")
+                    : new KillRecord("xp death", state.Zone, t, null, "xp"));
+            }
+        }
+        state.PendingTime = null;
     }
 
     /// <summary>

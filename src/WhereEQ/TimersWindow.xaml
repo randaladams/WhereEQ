@@ -23,6 +23,10 @@
                 <DataTrigger Binding="{Binding State}" Value="Unknown">
                     <Setter Property="Foreground" Value="#BBBBBB"/>
                 </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="CountUp">
+                    <Setter Property="Foreground" Value="#90CAF9"/>
+                    <Setter Property="FontWeight" Value="Normal"/>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="CellStyle" TargetType="TextBlock">
@@ -95,8 +99,19 @@
         <DataTemplate x:Key="RowButtons">
             <StackPanel Orientation="Horizontal" Margin="0,0,4,0" VerticalAlignment="Center">
                 <Button Content="✕" Style="{StaticResource RowButton}" Click="RowRemove_Click" ToolTip="Remove this timer"/>
-                <ToggleButton Content="🔔" Style="{StaticResource RowButton}" IsChecked="{Binding Alert, Mode=TwoWay}"
-                              Click="RowAlert_Click" ToolTip="Beep 30 seconds before it respawns"/>
+                <ToggleButton Content="🔔" IsChecked="{Binding Alert, Mode=TwoWay}"
+                              Click="RowAlert_Click" ToolTip="Beep 30 seconds before it respawns">
+                    <!-- No alert for count-up timers (no respawn time); keep the space so columns line up. -->
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton" BasedOn="{StaticResource RowButton}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasDue}" Value="False">
+                                    <Setter Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
             </StackPanel>
         </DataTemplate>
 

@@ -22,8 +22,8 @@ public partial class TimersWindow : Window
 {
     /// <summary>Within this many seconds, the same mob in the same zone seen in two logs is one kill.</summary>
     private const double SameKillSeconds = 5;
-    /// <summary>Kills with no known respawn stay this long.</summary>
-    private static readonly TimeSpan UnknownKeep = TimeSpan.FromMinutes(30);
+    /// <summary>Kills with no known respawn (count-up timers) stay this long.</summary>
+    private static readonly TimeSpan UnknownKeep = TimeSpan.FromMinutes(60);
     private static readonly int[] KeepChoices = { 1, 5, 15, 60 };
 
     public sealed class TimerRow : INotifyPropertyChanged
@@ -39,16 +39,21 @@ public partial class TimersWindow : Window
         public TimeSpan? Respawn { get; init; }
         public SpawnSource Source { get; init; }
         public bool IsManual { get; init; }
+        /// <summary>Death of an unknown mob (from faction/experience): counts up from the kill.</summary>
+        public bool CountUp { get; init; }
+        public bool HasDue => Respawn != null;
         public DateTime? Due => Respawn is { } r ? Killed + r : null;
 
-        public string RespawnText => Respawn is not { } r ? "none" : Format(r) + (Source == SpawnSource.Guess ? "?" : "");
+        public string RespawnText => CountUp ? "count up" : Respawn is not { } r ? "none" : Format(r) + (Source == SpawnSource.Guess ? "?" : "");
         public string RespawnSourceText => Source switch
         {
             SpawnSource.Yours => "Your saved time for this mob",
             SpawnSource.Npc => "P1999 time for this mob (EqTool / P1999 wiki)",
             SpawnSource.Zone => "Zone's usual respawn time (EqTool / P1999 wiki); some mobs differ",
             SpawnSource.Guess => "No data for this zone: 6:40 is the most common P1999 timer",
-            _ => IsManual ? "Started by hand" : "This zone doesn't respawn",
+            _ => CountUp ? "No \"slain\" message: this death was seen from faction or experience, so the mob and its " +
+                           "respawn time aren't known. Counting time since the kill."
+               : IsManual ? "Started by hand" : "This zone doesn't respawn",
         };
 
         private bool _alert;
@@ -68,7 +73,8 @@ public partial class TimersWindow : Window
         public void Tick(DateTime now)
         {
             string text, state;
-            if (Due is not { } due) { text = "?"; state = "Unknown"; }
+            if (CountUp) { text = "+" + Format(now - Killed); state = "CountUp"; }
+            else if (Due is not { } due) { text = "?"; state = "Unknown"; }
             else if (now >= due) { text = "up " + Format(now - due); state = "Up"; }
             else
             {
@@ -194,11 +200,13 @@ public partial class TimersWindow : Window
             }
             var key = $"{charName}|{k.Time.Ticks}|{k.Name}";
             if (dismissed.Contains(key)) continue;
-            var (respawn, source) = _spawnTimes.Get(zoneShort, k.Name, t.Overrides);
+            var countUp = k.Kind != null;
+            var (respawn, source) = countUp ? (null, SpawnSource.None) : _spawnTimes.Get(zoneShort, k.Name, t.Overrides);
             rows.Add(new TimerRow
             {
                 Key = key, Mob = k.Name, ZoneShort = zoneShort, ZoneText = k.Zone ?? "",
                 Killed = k.Time, By = mine ? charName : k.By!, Mine = mine, Respawn = respawn, Source = source,
+                CountUp = countUp,
             });
         }
         if (!t.IncludeOthers) rows.RemoveAll(r => !r.Mine);
