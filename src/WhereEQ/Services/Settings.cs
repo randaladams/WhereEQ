@@ -23,6 +23,10 @@ public sealed class MapOverlaySettings
     /// <summary>"Bright" (lightened map colors), "Original", or "White".</summary>
     public string LineStyle { get; set; } = "Bright";
     public bool ShowLabels { get; set; } = true;
+    /// <summary>Draw the trail of recent /loc points.</summary>
+    public bool ShowTrail { get; set; } = true;
+    /// <summary>"Clear trail": trail points before this time are not drawn.</summary>
+    public DateTime? TrailClearedAt { get; set; }
     public bool Follow { get; set; } = true;
     /// <summary>Click-through: mouse goes to the game underneath. Toggle with Ctrl+Alt+M.</summary>
     public bool Locked { get; set; }
@@ -62,6 +66,8 @@ public sealed class TimersSettings
     /// <summary>Kills removed one by one (TimersWindow row keys).</summary>
     public List<string> Dismissed { get; set; } = new();
     public List<ManualTimer> Manual { get; set; } = new();
+    /// <summary>Timers (row keys) with the 🔔 alert on.</summary>
+    public List<string> Alerts { get; set; } = new();
     /// <summary>Your own respawn times in seconds, keyed by SpawnTimes.OverrideKey ("zone|mob", lower case).</summary>
     public Dictionary<string, int> Overrides { get; set; } = new();
 }
@@ -155,6 +161,7 @@ public sealed class Settings
                     s.Timers ??= new();
                     s.Timers.Dismissed ??= new();
                     s.Timers.Manual ??= new();
+                    s.Timers.Alerts ??= new();
                     s.Timers.Overrides = new(s.Timers.Overrides ?? new(), StringComparer.OrdinalIgnoreCase);
                     if (!string.IsNullOrWhiteSpace(s.DataFolder) && !s.HasAnyFolder)
                     {

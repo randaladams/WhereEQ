@@ -42,6 +42,7 @@ public partial class MapWindow : Window
         StyleBox.ItemsSource = new[] { "Bright", "Original", "White" };
         StyleBox.SelectedItem = m.LineStyle;
         LabelsCheck.IsChecked = m.ShowLabels;
+        TrailCheck.IsChecked = m.ShowTrail;
         BackdropSlider.Value = m.Backdrop;
         OpacitySlider.Value = m.MapOpacity;
         FollowButton.IsChecked = m.Follow;
@@ -140,8 +141,8 @@ public partial class MapWindow : Window
         var locHere = log?.MapX is { } x && log.MapY is { } y &&
                       (_mapOverride == null ? log.LocZone == log.Zone : ZoneNames.ToShort(log.LocZone) == _mapOverride);
         Point? player = locHere ? new Point(log!.MapX!.Value, log.MapY!.Value) : null;
-        var trail = locHere ? SafeTrail(log!) : new List<Point>();
-        View.SetPlayer(player, locHere ? HeadingOf(log!, trail) : null, trail);
+        var trail = locHere ? SafeTrail(log!, _settings.Map.TrailClearedAt) : new List<Point>();
+        View.SetPlayer(player, locHere ? HeadingOf(log!, trail) : null, _settings.Map.ShowTrail ? trail : new List<Point>());
 
         // Time · loc · heading go on the same line as the zone name (title bar when unlocked, caption when locked).
         var locInfo = map != null && locHere
@@ -193,12 +194,12 @@ public partial class MapWindow : Window
         return inside ? "" : "You're outside this map's area (wrong map, or a map pack with other coordinates).";
     }
 
-    private static List<Point> SafeTrail(LogState log)
+    private static List<Point> SafeTrail(LogState log, DateTime? after)
     {
         // The log reader appends on a background thread; retry if we catch it mid-update.
         for (var i = 0; i < 3; i++)
         {
-            try { return log.Trail.ToArray().Select(t => new Point(t.X, t.Y)).ToList(); }
+            try { return log.Trail.ToArray().Where(t => after == null || t.T > after).Select(t => new Point(t.X, t.Y)).ToList(); }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }
         }
@@ -282,6 +283,21 @@ public partial class MapWindow : Window
         View.ShowLabels = _settings.Map.ShowLabels = LabelsCheck.IsChecked == true;
         View.InvalidateVisual();
         _settings.Save();
+    }
+
+    private void Trail_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.Map.ShowTrail = TrailCheck.IsChecked == true;
+        _settings.Save();
+        Refresh();
+    }
+
+    private void ClearTrail_Click(object sender, RoutedEventArgs e)
+    {
+        // Log timestamps have 1-second resolution: anything up to now is "before".
+        _settings.Map.TrailClearedAt = DateTime.Now;
+        _settings.Save();
+        Refresh();
     }
 
     private void Backdrop_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

@@ -143,6 +143,7 @@ public partial class MainWindow : Window
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             await Task.Delay(800);
             if (parts.Length > 2 && parts[2] == "fit") _mapWindow!.View.Follow = false;
+            if (parts.Length > 2 && parts[2] == "options") { _mapWindow!.OptionsButton.IsChecked = true; _mapWindow.OptionsPanel.Visibility = Visibility.Visible; _mapWindow.UpdateLayout(); }
             RenderToPng(_mapWindow!, parts[0]);
             Application.Current.Shutdown();
             return;

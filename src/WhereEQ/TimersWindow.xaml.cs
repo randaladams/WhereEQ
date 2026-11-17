@@ -50,6 +50,16 @@ public partial class TimersWindow : Window
             _ => IsManual ? "Started by hand" : "This zone doesn't respawn",
         };
 
+        private bool _alert;
+        /// <summary>🔔: beep once when the respawn is 30 seconds away.</summary>
+        public bool Alert
+        {
+            get => _alert;
+            set { if (_alert != value) { _alert = value; Changed(nameof(Alert)); } }
+        }
+        /// <summary>The 30-second beep already played for this timer.</summary>
+        public bool Beeped { get; set; }
+
         public string LeftText { get; private set; } = "";
         /// <summary>Waiting, Soon (under a minute), Up, Unknown.</summary>
         public string State { get; private set; } = "";
@@ -82,7 +92,7 @@ public partial class TimersWindow : Window
     private HwndSource? _hwnd;
     /// <summary>Width before details widened the window, to restore when details are turned off.</summary>
     private double? _compactWidth;
-    private const double DetailsMinWidth = 520;
+    private const double DetailsMinWidth = 600;
 
     public TimersWindow(Settings settings, SpawnTimes spawnTimes)
     {
@@ -155,6 +165,7 @@ public partial class TimersWindow : Window
         var now = DateTime.Now;
         var keepUp = TimeSpan.FromMinutes(t.KeepUpMinutes);
         var dismissed = new HashSet<string>(t.Dismissed);
+        var alerts = new HashSet<string>(t.Alerts);
         var rows = new List<TimerRow>();
 
         // Kills from every character's log, oldest first so duplicates merge into the first one seen.
@@ -204,9 +215,22 @@ public partial class TimersWindow : Window
         t.Manual.RemoveAll(m => m.Start + TimeSpan.FromSeconds(m.Seconds) + TimeSpan.FromHours(2) < now);
         if (t.Dismissed.Count > 500) t.Dismissed.RemoveRange(0, t.Dismissed.Count - 500);
 
-        foreach (var r in rows) r.Tick(now);
+        foreach (var r in rows)
+        {
+            r.Alert = alerts.Contains(r.Key);
+            // Already inside the alert window when the list was built (e.g. at startup): don't beep late.
+            r.Beeped = r.Due is { } d && d - now <= AlertBefore;
+            if (_rows.FirstOrDefault(o => o.Key == r.Key) is { } old) r.Beeped = old.Beeped;
+            r.Tick(now);
+        }
+        // Alerts for timers no longer listed aren't needed.
+        t.Alerts.RemoveAll(k => !rows.Any(r => r.Key == k));
         EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (rows.Select(r => r.Key + r.RespawnText + r.By).SequenceEqual(_rows.Select(r => r.Key + r.RespawnText + r.By))) return;
+        if (rows.Select(r => r.Key + r.RespawnText + r.By).SequenceEqual(_rows.Select(r => r.Key + r.RespawnText + r.By)))
+        {
+            foreach (var (n, o) in rows.Zip(_rows)) o.Alert = n.Alert;
+            return;
+        }
 
         var selected = (List.SelectedItem as TimerRow)?.Key;
         _rows = rows;
@@ -228,11 +252,22 @@ public partial class TimersWindow : Window
 
     private static string ManualKey(ManualTimer m) => $"manual|{m.Start.Ticks}|{m.Name}";
 
+    /// <summary>🔔 timers beep this long before the respawn.</summary>
+    private static readonly TimeSpan AlertBefore = TimeSpan.FromSeconds(30);
+
     private void Tick()
     {
         var now = DateTime.Now;
         var keepUp = TimeSpan.FromMinutes(_settings.Timers.KeepUpMinutes);
-        foreach (var r in _rows) r.Tick(now);
+        foreach (var r in _rows)
+        {
+            r.Tick(now);
+            if (r.Alert && !r.Beeped && r.Due is { } due && due - now <= AlertBefore && due > now)
+            {
+                r.Beeped = true;
+                Beep();
+            }
+        }
         // Drop timers whose "keep for" time ran out.
         if (_rows.Any(r => r.Due is { } due ? due + keepUp <= now : now - r.Killed >= UnknownKeep)) Rebuild();
     }
@@ -254,7 +289,7 @@ public partial class TimersWindow : Window
         OptionsPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         if (!show) return;
         // The panel needs some room; grow a tiny window (it stays that size).
-        if (Width < 280) Width = 280;
+        if (Width < 310) Width = 310;
         if (Height < 340) Height = 340;
     }
 
@@ -306,6 +341,7 @@ public partial class TimersWindow : Window
         _settings.Timers.ClearedBefore = DateTime.Now;
         _settings.Timers.Manual.Clear();
         _settings.Timers.Dismissed.Clear();
+        _settings.Timers.Alerts.Clear();
         _settings.Save();
         Rebuild();
     }
@@ -330,6 +366,36 @@ public partial class TimersWindow : Window
         Rebuild();
     }
 
+    private void RowRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not TimerRow r) return;
+        Remove(r);
+        _settings.Save();
+        Rebuild();
+    }
+
+    private void RowAlert_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not TimerRow r) return;
+        var alerts = _settings.Timers.Alerts;
+        alerts.RemoveAll(k => k == r.Key);
+        if (r.Alert)
+        {
+            alerts.Add(r.Key);
+            // Turned on inside the last 30 seconds: beep now so you know it's armed and close.
+            r.Beeped = false;
+        }
+        _settings.Save();
+        Tick();
+    }
+
+    /// <summary>Short beep, off the UI thread (Console.Beep blocks for its duration).</summary>
+    private static void Beep() => Task.Run(() =>
+    {
+        try { Console.Beep(1200, 120); Console.Beep(1600, 120); }
+        catch { System.Media.SystemSounds.Beep.Play(); }
+    });
+
     private void Remove(TimerRow r)
     {
         if (r.IsManual) _settings.Timers.Manual.RemoveAll(m => ManualKey(m) == r.Key);
@@ -341,10 +407,9 @@ public partial class TimersWindow : Window
         if (List.SelectedItem is not TimerRow r) return;
         var respawn = r.Respawn ?? SpawnTimes.CommonDefault;
         Remove(r);
-        _settings.Timers.Manual.Add(new ManualTimer
-        {
-            Name = r.Mob, Zone = r.ZoneShort, Start = DateTime.Now, Seconds = (int)respawn.TotalSeconds,
-        });
+        var m = new ManualTimer { Name = r.Mob, Zone = r.ZoneShort, Start = DateTime.Now, Seconds = (int)respawn.TotalSeconds };
+        _settings.Timers.Manual.Add(m);
+        if (r.Alert) _settings.Timers.Alerts.Add(ManualKey(m)); // keep the 🔔 on the restarted timer
         _settings.Save();
         Rebuild();
     }

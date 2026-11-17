@@ -15,7 +15,7 @@ EverQuest client writes and keeps them up to date while you play.
 - Your position, heading and recent trail come from `/loc` lines in the log, so bind `/loc` to a key or use a
   `/loc` macro. The map switches automatically when you zone.
 - Mouse wheel zooms, drag pans, double-click fits the zone. ⚙ sets the backdrop darkness, map opacity, line
-  colors, labels, which character to track, and a manual map pick.
+  colors, labels, the trail (show it, or clear it to start over), which character to track, and a manual map pick.
 - 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
 - EverQuest has to run in windowed mode for any overlay to show on top of it (full screen hides every other
   window). Set `WindowedMode=TRUE` in `eqclient.ini` and size the game window to fill the screen.
@@ -34,9 +34,12 @@ EverQuest client writes and keeps them up to date while you play.
   `src/WhereEQ/Data/SpawnTimes/NOTICE.md`): the zone's usual timer, or a mob's own timer where one is known.
   Zones without data use 6:40, shown as `6:40?`. Timers on P1999 can vary, especially for rare spawns.
 - Countdowns turn yellow in the last minute and green ("up") when the mob is due, then drop off after the
-  **Keep up timers** time. Right-click a timer to restart it or remove it (Del).
-- Drag the title bar to move it, the corner to resize. ☰ adds zone, kill time, killer and timer length (and
-  widens the window). 🔒 or **Ctrl+Alt+T** makes it click-through; Ctrl+Alt+T again unlocks it.
+  **Keep up timers** time.
+- In front of each timer: **✕** removes it, **🔔** beeps when the mob is 30 seconds from respawning.
+  Right-click a timer to restart it.
+- The buttons run down the right edge; drag that strip to move the window, the corner to resize. ☰ adds zone,
+  kill time, killer and timer length (and widens the window). 🔒 or **Ctrl+Alt+T** makes it click-through;
+  Ctrl+Alt+T again unlocks it.
 - ⚙ has the options (kills by others, how long "up" timers stay, backdrop darkness) and a box to type a mob
   name and a time (`22`, `6:40` or `8:00:00`): **Start timer** starts one by hand, **Save time** always uses
   that time for that mob in that zone.

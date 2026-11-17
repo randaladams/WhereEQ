@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.16** (spawn timers as a small transparent overlay; first version 0.1.15) pushed after 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
+- Status: build **0.1.17** (timer ✕/🔔 per row, side button strip, map trail show/clear) pushed after 0.1.16
+  (timers as a small transparent overlay; first version 0.1.15) and 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
   button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
 
 ## Hard rules (privacy)
@@ -77,7 +78,8 @@ Format notes learned from real data:
   (`level<TAB>name<TAB>era`).
 - `Data/Maps/*.txt` — 429 P1999 map files bundled from EqTool (MIT, `Data/Maps/NOTICE.md`).
 - `TimersWindow.xaml(.cs)` — spawn timers overlay (transparent like the map; compact = countdown + mob, ☰ =
-  details and wider; click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
+  details and wider; buttons in a strip on the right; per-row ✕ remove and 🔔 alert (beeps 30 s before, keys in
+  `Settings.Timers.Alerts`); click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
   "You have slain X!" / "X has been slain by Y!", skipping chat, player deaths and Eye of Zomm). Kills arrive via
   `PositionChanged` (not in `Signature`), so tabs don't rebuild on every kill. Same mob + zone within 5 s in two
   logs = one kill. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
@@ -90,7 +92,7 @@ Format notes learned from real data:
 `WHEREEQ_SNAPSHOT="<png>|<what>|<arg>|<arg>"` makes the app render a window to PNG and exit
 (`MainWindow.DevSnapshotAsync`). Examples: `out.png|2` (tab index; tabs are 0 Find, 1 Bags, 2 Characters,
 3 Friends, 4 Spells), `out.png|4|Charname|missing`, `out.png|1|Charname|bank`, `out.png|settings`,
-`out.png|sync`, `out.png|map`, `out.png|timers` (`|timers|details`, `|timers|options`).
+`out.png|sync`, `out.png|map`, `out.png|timers` (`|timers|details`, `|timers|options`), `out.png|map|options`.
 
 Map tests used a fake character: write a slice of a real log (zone entry + `/loc` lines) to
 `Logs\eqlog_Testmap_P1999Green.txt`, temporarily set `MapsFolder` and `Map.Character` in `settings.json`
@@ -116,6 +118,4 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 6. Friends tab "Where" shows `/friends` short zone names (e.g. `ecommons`); could map via `ZoneNames.ToLong`.
 7. Map ideas not built: show other characters' last known positions, z-level filtering for multi-level zones,
    per-zone remembered zoom.
-   - **Wanted by the owner (not built yet):** map ⚙ options get a "Trail" on/off checkbox and a "Clear trail"
-     button. Trail = blue line of the last 300 `/loc` points (`LogState.Trail`, drawn in `MapView`).
 8. `HANDOFF.md`/README should be updated when features change.
