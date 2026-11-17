@@ -7,7 +7,7 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.15** (spawn timers window) pushed after 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
+- Status: build **0.1.16** (spawn timers as a small transparent overlay; first version 0.1.15) pushed after 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
   button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
 
 ## Hard rules (privacy)
@@ -76,7 +76,8 @@ Format notes learned from real data:
 - `Services/SpellDatabase.cs` + `Data/Spells/<Class>.txt` — class spell lists scraped from the P1999 wiki
   (`level<TAB>name<TAB>era`).
 - `Data/Maps/*.txt` — 429 P1999 map files bundled from EqTool (MIT, `Data/Maps/NOTICE.md`).
-- `TimersWindow.xaml(.cs)` — spawn timers. Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
+- `TimersWindow.xaml(.cs)` — spawn timers overlay (transparent like the map; compact = countdown + mob, ☰ =
+  details and wider; click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
   "You have slain X!" / "X has been slain by Y!", skipping chat, player deaths and Eye of Zomm). Kills arrive via
   `PositionChanged` (not in `Signature`), so tabs don't rebuild on every kill. Same mob + zone within 5 s in two
   logs = one kill. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
@@ -89,7 +90,7 @@ Format notes learned from real data:
 `WHEREEQ_SNAPSHOT="<png>|<what>|<arg>|<arg>"` makes the app render a window to PNG and exit
 (`MainWindow.DevSnapshotAsync`). Examples: `out.png|2` (tab index; tabs are 0 Find, 1 Bags, 2 Characters,
 3 Friends, 4 Spells), `out.png|4|Charname|missing`, `out.png|1|Charname|bank`, `out.png|settings`,
-`out.png|sync`, `out.png|map`, `out.png|timers`.
+`out.png|sync`, `out.png|map`, `out.png|timers` (`|timers|details`, `|timers|options`).
 
 Map tests used a fake character: write a slice of a real log (zone entry + `/loc` lines) to
 `Logs\eqlog_Testmap_P1999Green.txt`, temporarily set `MapsFolder` and `Map.Character` in `settings.json`
@@ -104,7 +105,7 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 
 1. **Confirm the Skyshrine map fix on the test PC** (0.1.11+). Root cause: the P1999 install's Skyshrine map file
    apparently has no wall lines; the bundled EqTool map is now used as a fallback. Not yet seen in-game.
-2. **Spawn timers are new** (0.1.15): not yet tried in-game. Kill-message wording was checked against the sample
+2. **Spawn timers are new** (0.1.15/0.1.16): not yet tried in-game. Kill-message wording was checked against the sample
    logs; no variance windows (P1999 rare spawns can vary); no sound/flash when a mob is up yet.
 3. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
    multi-monitor DPI. EverQuest must run **windowed** for any overlay to show (exclusive full screen owns the

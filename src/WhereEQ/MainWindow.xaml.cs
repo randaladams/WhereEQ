@@ -151,6 +151,7 @@ public partial class MainWindow : Window
         {
             OpenTimers();
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            if (parts.Length > 2) _timersWindow!.DevShow(parts[2]);
             await Task.Delay(800);
             RenderToPng(_timersWindow!, parts[0]);
             Application.Current.Shutdown();

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 
 namespace WhereEQ.Services;
@@ -45,9 +45,14 @@ public sealed class TimersSettings
     public bool Open { get; set; }
     public double? Left { get; set; }
     public double? Top { get; set; }
-    public double Width { get; set; } = 640;
-    public double Height { get; set; } = 420;
-    public bool Topmost { get; set; } = true;
+    public double Width { get; set; } = 240;
+    public double Height { get; set; } = 200;
+    /// <summary>Darkness of the window backdrop, 0 (fully see-through) to 1.</summary>
+    public double Backdrop { get; set; } = 0.35;
+    /// <summary>Click-through: mouse goes to the game underneath. Toggle with Ctrl+Alt+T.</summary>
+    public bool Locked { get; set; }
+    /// <summary>Details button: show zone, kill time, killer and timer length (wider window).</summary>
+    public bool Details { get; set; }
     /// <summary>Also time mobs killed by other players and pets ("X has been slain by Y!").</summary>
     public bool IncludeOthers { get; set; }
     /// <summary>How long a timer stays in the list after the mob is up again.</summary>

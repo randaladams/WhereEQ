@@ -25,7 +25,7 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Spawn timers
 
-**⏱ Timers** opens a window that counts down to each mob's respawn:
+**⏱ Timers** opens a small, see-through, always-on-top list (like the map) of mobs and when they respawn:
 
 - A timer starts whenever your log says `You have slain a fire beetle!`. Tick **Kills by others** to also time
   mobs that others or pets kill (`... has been slain by Somebody!`). A death you're too far away to see isn't
@@ -34,9 +34,12 @@ EverQuest client writes and keeps them up to date while you play.
   `src/WhereEQ/Data/SpawnTimes/NOTICE.md`): the zone's usual timer, or a mob's own timer where one is known.
   Zones without data use 6:40, shown as `6:40?`. Timers on P1999 can vary, especially for rare spawns.
 - Countdowns turn yellow in the last minute and green ("up") when the mob is due, then drop off after the
-  **Keep for** time. Right-click a timer to restart it or remove it (Del).
-- Type a mob name and a time (`22`, `6:40` or `8:00:00`) at the bottom: **Start timer** starts one by hand,
-  **Save time** always uses that time for that mob in that zone.
+  **Keep up timers** time. Right-click a timer to restart it or remove it (Del).
+- Drag the title bar to move it, the corner to resize. ☰ adds zone, kill time, killer and timer length (and
+  widens the window). 🔒 or **Ctrl+Alt+T** makes it click-through; Ctrl+Alt+T again unlocks it.
+- ⚙ has the options (kills by others, how long "up" timers stay, backdrop darkness) and a box to type a mob
+  name and a time (`22`, `6:40` or `8:00:00`): **Start timer** starts one by hand, **Save time** always uses
+  that time for that mob in that zone.
 
 ## Download
 

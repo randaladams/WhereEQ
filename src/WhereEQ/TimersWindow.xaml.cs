@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using WhereEQ.Models;
 using WhereEQ.Services;
@@ -10,8 +12,10 @@ using WhereEQ.Services;
 namespace WhereEQ;
 
 /// <summary>
-/// Spawn timers: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!") starts a
-/// countdown using the bundled P1999 respawn times. Timers can also be started by hand.
+/// Spawn timers overlay: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!")
+/// starts a countdown using the bundled P1999 respawn times. Small and see-through like the map: compact shows
+/// countdown + mob, the details button adds zone, kill time, killer and timer (wider). Lock (or Ctrl+Alt+T) makes
+/// it click-through.
 /// </summary>
 public partial class TimersWindow : Window
 {
@@ -75,6 +79,10 @@ public partial class TimersWindow : Window
     private List<TimerRow> _rows = new();
     private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
     private bool _updatingUi = true;
+    private HwndSource? _hwnd;
+    /// <summary>Width before details widened the window, to restore when details are turned off.</summary>
+    private double? _compactWidth;
+    private const double DetailsMinWidth = 520;
 
     public TimersWindow(Settings settings, SpawnTimes spawnTimes)
     {
@@ -87,22 +95,36 @@ public partial class TimersWindow : Window
         Height = t.Height;
         if (t.Left is { } l && t.Top is { } top && OnScreen(l, top)) { Left = l; Top = top; }
         else WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Topmost = t.Topmost;
 
         OthersCheck.IsChecked = t.IncludeOthers;
-        TopmostCheck.IsChecked = t.Topmost;
-        KeepBox.ItemsSource = KeepChoices.Select(m => m == 60 ? "1 hour up" : $"{m} min up").ToList();
+        KeepBox.ItemsSource = KeepChoices.Select(m => m == 60 ? "1 hour" : $"{m} min").ToList();
         KeepBox.SelectedIndex = Math.Max(0, Array.IndexOf(KeepChoices, t.KeepUpMinutes));
+        BackdropSlider.Value = t.Backdrop;
+        Backdrop.Opacity = t.Backdrop;
+        DetailsButton.IsChecked = t.Details;
+        List.ItemTemplate = (DataTemplate)Resources[t.Details ? "DetailsTemplate" : "CompactTemplate"];
         _updatingUi = false;
 
         HintText.Text = spawnTimes.IsEmpty
             ? "Spawn time data is missing (Data\\SpawnTimes); every timer uses 6:40."
-            : "Timers start from \"You have slain …\" in your logs. Timer column: ? = guess (6:40). " +
+            : "Timers start from \"You have slain …\" in your logs. ? after a time = guess (6:40). " +
               "Right-click a timer to restart or remove it. Times: P1999 wiki via EqTool (MIT).";
 
         _tick.Tick += (_, _) => Tick();
         _tick.Start();
-        Closed += (_, _) => { _tick.Stop(); SaveState(); };
+        SourceInitialized += (_, _) =>
+        {
+            _hwnd = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            _hwnd?.AddHook(WndProc);
+            RegisterHotKey(_hwnd!.Handle, HotkeyId, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, (uint)KeyInterop.VirtualKeyFromKey(Key.T));
+            ApplyLock(_settings.Timers.Locked);
+        };
+        Closed += (_, _) =>
+        {
+            _tick.Stop();
+            if (_hwnd != null) UnregisterHotKey(_hwnd.Handle, HotkeyId);
+            SaveState();
+        };
         LocationChanged += (_, _) => SaveState();
         SizeChanged += (_, _) => SaveState();
     }
@@ -183,12 +205,13 @@ public partial class TimersWindow : Window
         if (t.Dismissed.Count > 500) t.Dismissed.RemoveRange(0, t.Dismissed.Count - 500);
 
         foreach (var r in rows) r.Tick(now);
+        EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (rows.Select(r => r.Key + r.RespawnText + r.By).SequenceEqual(_rows.Select(r => r.Key + r.RespawnText + r.By))) return;
 
-        var selected = (Grid.SelectedItem as TimerRow)?.Key;
+        var selected = (List.SelectedItem as TimerRow)?.Key;
         _rows = rows;
-        Grid.ItemsSource = rows;
-        if (selected != null) Grid.SelectedItem = rows.FirstOrDefault(r => r.Key == selected);
+        List.ItemsSource = rows;
+        if (selected != null) List.SelectedItem = rows.FirstOrDefault(r => r.Key == selected);
     }
 
     private static KillRecord[] SafeKills(LogState log)
@@ -216,13 +239,58 @@ public partial class TimersWindow : Window
 
     // ------------------------------------------------------------------ UI
 
-    private void Options_Click(object sender, RoutedEventArgs e)
+    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed) DragMove();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Lock_Click(object sender, RoutedEventArgs e) => ApplyLock(true);
+
+    private void OptionsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var show = OptionsButton.IsChecked == true;
+        OptionsPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (!show) return;
+        // The panel needs some room; grow a tiny window (it stays that size).
+        if (Width < 280) Width = 280;
+        if (Height < 340) Height = 340;
+    }
+
+    private void Details_Click(object sender, RoutedEventArgs e)
+    {
+        var on = DetailsButton.IsChecked == true;
+        _settings.Timers.Details = on;
+        List.ItemTemplate = (DataTemplate)Resources[on ? "DetailsTemplate" : "CompactTemplate"];
+        if (on && Width < DetailsMinWidth)
+        {
+            _compactWidth = Width;
+            // Grow to the left if the window would run off the right edge of the screen.
+            var right = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth;
+            if (Left + DetailsMinWidth > right) Left = Math.Max(SystemParameters.VirtualScreenLeft, right - DetailsMinWidth);
+            Width = DetailsMinWidth;
+        }
+        else if (!on && _compactWidth is { } w)
+        {
+            Width = w;
+            _compactWidth = null;
+        }
+        _settings.Save();
+    }
+
+    private void Others_Click(object sender, RoutedEventArgs e)
     {
         if (_updatingUi) return;
         _settings.Timers.IncludeOthers = OthersCheck.IsChecked == true;
-        _settings.Timers.Topmost = Topmost = TopmostCheck.IsChecked == true;
         _settings.Save();
         Rebuild();
+    }
+
+    private void Backdrop_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_updatingUi) return;
+        Backdrop.Opacity = _settings.Timers.Backdrop = e.NewValue;
     }
 
     private void Keep_Changed(object sender, SelectionChangedEventArgs e)
@@ -242,21 +310,21 @@ public partial class TimersWindow : Window
         Rebuild();
     }
 
-    private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (Grid.SelectedItem is not TimerRow r) return;
+        if (List.SelectedItem is not TimerRow r) return;
         MobBox.Text = r.Mob;
         TimeBox.Text = r.Respawn is { } t ? Format(t) : "";
     }
 
-    private void Grid_KeyDown(object sender, KeyEventArgs e)
+    private void List_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Delete) { Remove_Click(sender, e); e.Handled = true; }
     }
 
     private void Remove_Click(object sender, RoutedEventArgs e)
     {
-        if (Grid.SelectedItem is not TimerRow r) return;
+        if (List.SelectedItem is not TimerRow r) return;
         Remove(r);
         _settings.Save();
         Rebuild();
@@ -270,7 +338,7 @@ public partial class TimersWindow : Window
 
     private void Restart_Click(object sender, RoutedEventArgs e)
     {
-        if (Grid.SelectedItem is not TimerRow r) return;
+        if (List.SelectedItem is not TimerRow r) return;
         var respawn = r.Respawn ?? SpawnTimes.CommonDefault;
         Remove(r);
         _settings.Timers.Manual.Add(new ManualTimer
@@ -285,7 +353,7 @@ public partial class TimersWindow : Window
     {
         var name = MobBox.Text.Trim();
         if (name.Length == 0) { MobBox.Focus(); return; }
-        var zone = (Grid.SelectedItem as TimerRow) is { } sel && sel.Mob.Equals(name, StringComparison.OrdinalIgnoreCase)
+        var zone = (List.SelectedItem as TimerRow) is { } sel && sel.Mob.Equals(name, StringComparison.OrdinalIgnoreCase)
             ? sel.ZoneShort : CurrentZone();
         TimeSpan time;
         if (TimeBox.Text.Trim().Length == 0) time = _spawnTimes.Get(zone, name, _settings.Timers.Overrides).Time ?? SpawnTimes.CommonDefault;
@@ -300,7 +368,7 @@ public partial class TimersWindow : Window
         var name = MobBox.Text.Trim();
         if (name.Length == 0) { MobBox.Focus(); return; }
         if (!TryParseTime(TimeBox.Text, out var time)) { BadTime(); return; }
-        var zone = (Grid.SelectedItem as TimerRow) is { } sel && sel.Mob.Equals(name, StringComparison.OrdinalIgnoreCase)
+        var zone = (List.SelectedItem as TimerRow) is { } sel && sel.Mob.Equals(name, StringComparison.OrdinalIgnoreCase)
             ? sel.ZoneShort : CurrentZone();
         _settings.Timers.Overrides[SpawnTimes.OverrideKey(zone, name)] = (int)time.TotalSeconds;
         _settings.Save();
@@ -320,6 +388,56 @@ public partial class TimersWindow : Window
     private string? CurrentZone() =>
         ZoneNames.ToShort(_characters.Where(c => c.Log?.Zone != null)
             .OrderByDescending(c => c.Log!.LastLine ?? DateTime.MinValue).FirstOrDefault()?.Log!.Zone);
+
+    /// <summary>Snapshot hook (WHEREEQ_SNAPSHOT="out.png|timers|details" or "|options").</summary>
+    public void DevShow(string what)
+    {
+        if (what == "details") { DetailsButton.IsChecked = true; Details_Click(this, new RoutedEventArgs()); }
+        if (what == "options") { OptionsButton.IsChecked = true; OptionsButton_Click(this, new RoutedEventArgs()); }
+        UpdateLayout();
+    }
+
+    // ------------------------------------------------------------------ click-through lock + hotkey
+
+    /// <summary>Locked: the window ignores the mouse (clicks reach the game) and hides its controls.</summary>
+    public void ApplyLock(bool locked)
+    {
+        _settings.Timers.Locked = locked;
+        _settings.Save();
+        TitleBar.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        OptionsPanel.Visibility = Visibility.Collapsed;
+        OptionsButton.IsChecked = false;
+        Frame.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        ResizeMode = locked ? ResizeMode.NoResize : ResizeMode.CanResizeWithGrip;
+        if (locked) List.SelectedItem = null;
+
+        if (_hwnd == null) return;
+        var style = GetWindowLong(_hwnd.Handle, GWL_EXSTYLE);
+        style = locked ? style | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE : style & ~WS_EX_TRANSPARENT & ~WS_EX_NOACTIVATE;
+        SetWindowLong(_hwnd.Handle, GWL_EXSTYLE, style);
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_HOTKEY && wParam.ToInt32() == HotkeyId)
+        {
+            ApplyLock(!_settings.Timers.Locked);
+            handled = true;
+        }
+        return IntPtr.Zero;
+    }
+
+    private const int HotkeyId = 0x5754; // "WT"
+    private const int WM_HOTKEY = 0x0312;
+    private const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TRANSPARENT = 0x00000020;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+
+    [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    [DllImport("user32.dll")] private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    [DllImport("user32.dll")] private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
     // ------------------------------------------------------------------ helpers
 
