@@ -7,8 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status at handoff: build **0.1.11** pushed (bundled maps fallback). Its GitHub build was still running when this
-  was written; check https://github.com/randaladams/WhereEQ/actions.
+- Status: build **0.1.13** released (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
+  button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
 
 ## Hard rules (privacy)
 
@@ -96,14 +96,17 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 
 ## Open items / next steps
 
-1. **Confirm the Skyshrine map fix on the test PC** (0.1.11). Root cause: the P1999 install's Skyshrine map file
+1. **Confirm the Skyshrine map fix on the test PC** (0.1.11+). Root cause: the P1999 install's Skyshrine map file
    apparently has no wall lines; the bundled EqTool map is now used as a fallback. Not yet seen in-game.
 2. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
-   multi-monitor DPI. EverQuest must run **windowed** for any overlay to show.
+   multi-monitor DPI. EverQuest must run **windowed** for any overlay to show (exclusive full screen owns the
+   display; the owner's test PC has one monitor; `WindowedMode=TRUE` in `eqclient.ini`).
 3. Friends `.ini` format and the 100-friend cap are assumptions (no real `.ini` seen yet); sync hasn't been run
    against real files.
 4. Guild join/leave message wording is a guess (none in the sample logs); `/who` of self is the reliable source.
 5. Friends tab "Where" shows `/friends` short zone names (e.g. `ecommons`); could map via `ZoneNames.ToLong`.
 6. Map ideas not built: show other characters' last known positions, z-level filtering for multi-level zones,
    per-zone remembered zoom.
+   - **Wanted by the owner (not built yet):** map ⚙ options get a "Trail" on/off checkbox and a "Clear trail"
+     button. Trail = blue line of the last 300 `/loc` points (`LogState.Trail`, drawn in `MapView`).
 7. `HANDOFF.md`/README should be updated when features change.
