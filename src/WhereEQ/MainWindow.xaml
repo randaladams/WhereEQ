@@ -35,11 +35,15 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="SearchBox" FontSize="16" TextChanged="Search_Changed"
                                  ToolTip="Part of an item name, or an item ID. Separate several names with commas."/>
                         <ComboBox x:Name="CharacterFilter" Grid.Column="1" Width="180" Margin="8,0,0,0"
                                   SelectionChanged="Search_Changed"/>
+                        <Button x:Name="ResetSearchButton" Grid.Column="2" Content="Reset" Margin="8,0,0,0" Padding="12,0" VerticalAlignment="Stretch"
+                                Click="ResetSearch_Click"
+                                ToolTip="Clear the search and go back to all characters, Equipped + Inventory + Bank, no bags."/>
                     </Grid>
                     <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                         <CheckBox x:Name="AreaEquipped" Content="Equipped" IsChecked="True" Margin="0,0,16,0" Click="Search_Changed"/>

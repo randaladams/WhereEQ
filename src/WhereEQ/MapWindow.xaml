@@ -14,7 +14,7 @@
 
         <!-- Zone name always shown (small) so you know which map it is, even when locked. -->
         <TextBlock x:Name="ZoneCaption" Margin="8,6,8,0" VerticalAlignment="Top" HorizontalAlignment="Left"
-                   Foreground="White" FontSize="12" FontWeight="SemiBold" IsHitTestVisible="False">
+                   Foreground="White" FontSize="12" FontWeight="SemiBold" IsHitTestVisible="False" TextTrimming="CharacterEllipsis">
             <TextBlock.Effect><DropShadowEffect ShadowDepth="0" BlurRadius="4" Color="Black" Opacity="1"/></TextBlock.Effect>
         </TextBlock>
 
@@ -66,13 +66,14 @@
                 <Slider x:Name="OpacitySlider" Grid.Row="4" Grid.Column="1" Minimum="0.2" Maximum="1" Margin="0,0,0,6"
                         ValueChanged="Opacity_Changed"/>
                 <TextBlock Grid.Row="5" Grid.ColumnSpan="2" TextWrapping="Wrap" FontSize="11" Foreground="#BBBBBB"
-                           Text="Wheel: zoom · Drag: pan · Double-click: fit · 🔒 or Ctrl+Alt+M: click-through. EverQuest must run in windowed mode for the map to show on top."/>
+                           Text="Wheel: zoom · Drag: pan · Double-click: fit · 🔒 or Ctrl+Alt+M: click-through. EverQuest must run windowed for the map to show on top: full-screen EverQuest takes over the whole display and Windows can't draw anything over it. Set WindowedMode=TRUE in eqclient.ini (EverQuest folder) and size the game window to fill the screen."/>
             </Grid>
         </Border>
 
-        <!-- Status line: character, loc age, coordinates. -->
-        <TextBlock x:Name="StatusText" Margin="8,0,24,6" VerticalAlignment="Bottom" HorizontalAlignment="Left"
-                   Foreground="#DDFFFFFF" FontSize="11" IsHitTestVisible="False" TextTrimming="CharacterEllipsis">
+        <!-- Second line under the zone: only for messages (no map, no /loc yet, outside the map).
+             The loc itself (time · coordinates · heading) sits next to the zone name. Top margin set in ApplyLock. -->
+        <TextBlock x:Name="StatusText" Margin="8,24,8,0" VerticalAlignment="Top" HorizontalAlignment="Left"
+                   Foreground="#DDFFFFFF" FontSize="11" IsHitTestVisible="False" TextWrapping="Wrap">
             <TextBlock.Effect><DropShadowEffect ShadowDepth="0" BlurRadius="4" Color="Black" Opacity="1"/></TextBlock.Effect>
         </TextBlock>
     </Grid>

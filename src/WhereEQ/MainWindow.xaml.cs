@@ -245,6 +245,17 @@ public partial class MainWindow : Window
 
     private void Search_Changed(object sender, RoutedEventArgs e) => RunSearch();
 
+    /// <summary>Find item "Reset": empty search, all characters, default areas, no bags.</summary>
+    private void ResetSearch_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        CharacterFilter.SelectedItem = AllCharacters;
+        AreaEquipped.IsChecked = AreaInventory.IsChecked = AreaBank.IsChecked = true;
+        ShowBags.IsChecked = false;
+        RunSearch();
+        SearchBox.Focus();
+    }
+
     private void RunSearch()
     {
         if (ResultsGrid == null) return; // during InitializeComponent

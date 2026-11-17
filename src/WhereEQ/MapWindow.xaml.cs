@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using WhereEQ.Models;
 using WhereEQ.Services;
 
@@ -133,8 +135,6 @@ public partial class MapWindow : Window
         View.Map = map;
 
         var title = zone ?? (shortName != null ? ZoneNames.ToLong(shortName) : "No zone yet");
-        TitleText.Text = c == null ? "WhereEQ Map" : $"{c.Name} · {title}";
-        ZoneCaption.Text = title;
 
         // Only show the dot if the last /loc was taken in the zone this map is for.
         var locHere = log?.MapX is { } x && log.MapY is { } y &&
@@ -143,6 +143,14 @@ public partial class MapWindow : Window
         var trail = locHere ? SafeTrail(log!) : new List<Point>();
         View.SetPlayer(player, locHere ? HeadingOf(log!, trail) : null, trail);
 
+        // Time · loc · heading go on the same line as the zone name (title bar when unlocked, caption when locked).
+        var locInfo = map != null && locHere
+            ? $"{Character.Ago(log!.LocSeen!.Value)} · {-log.MapY!.Value:0}, {-log.MapX!.Value:0}" +
+              (log.Heading != null ? $" · {log.Heading}" : "")
+            : null;
+        SetZoneLine(TitleText, c == null ? "WhereEQ Map" : title, locInfo, c?.Name);
+        SetZoneLine(ZoneCaption, title, locInfo, null);
+
         StatusText.Text =
             map == null ? (shortName == null ? $"No map name known for \"{zone}\". Pick one under ⚙ → Map."
                                              : $"No map for {shortName} in your maps folder or the built-in set.") :
@@ -150,13 +158,30 @@ public partial class MapWindow : Window
                 $"{string.Join(", ", map.Files)}: no map lines could be read ({map.TotalLines} L/P lines" +
                 (map.FirstSkipped != null ? $", e.g. \"{map.FirstSkipped}\"" : "") + ")" :
             !locHere ? "No /loc in this zone yet. Type /loc (or use a /loc hotkey)." :
-            $"{Character.Ago(log!.LocSeen!.Value)} · {-log.MapY!.Value:0}, {-log.MapX!.Value:0}" +
-            (log.Heading != null ? $" · {log.Heading}" : "") + OutsideNote(map, player);
-        StatusText.ToolTip = map == null ? null :
+            OutsideNote(map, player);
+        StatusText.Visibility = string.IsNullOrEmpty(StatusText.Text) ? Visibility.Collapsed : Visibility.Visible;
+        var tip = map == null ? null :
             $"Map ({map.Source}): {string.Join(", ", map.Files)}\n{map.Lines.Count} lines, {map.Labels.Count} labels" +
             (map.SkippedLines > 0 ? $", {map.SkippedLines} lines not understood" : "") +
             (map.Bounds.IsEmpty ? "" : $"\nBounds x {map.Bounds.Left:0}..{map.Bounds.Right:0}, y {map.Bounds.Top:0}..{map.Bounds.Bottom:0}");
+        StatusText.ToolTip = tip;
+        TitleText.ToolTip = tip;
     }
+
+    /// <summary>"Zone  5s ago · 120, -340 · NE  (Name)": zone bold, loc and character in lighter text.</summary>
+    private static void SetZoneLine(TextBlock target, string zone, string? locInfo, string? character)
+    {
+        target.Inlines.Clear();
+        target.Inlines.Add(new Run(zone));
+        if (locInfo != null)
+            target.Inlines.Add(new Run("   " + locInfo) { FontWeight = FontWeights.Normal, Foreground = LocBrush });
+        if (character != null)
+            target.Inlines.Add(new Run("   " + character) { FontWeight = FontWeights.Normal, Foreground = DimBrush });
+    }
+
+    private static readonly Brush LocBrush = Frozen(Color.FromRgb(0xE8, 0xE8, 0xE8));
+    private static readonly Brush DimBrush = Frozen(Color.FromRgb(0xA0, 0xA0, 0xA0));
+    private static Brush Frozen(Color c) { var b = new SolidColorBrush(c); b.Freeze(); return b; }
 
     /// <summary>Warn when the player is nowhere near the map: wrong map, or a map pack with different coordinates.</summary>
     private static string OutsideNote(MapData map, Point? player)
@@ -165,7 +190,7 @@ public partial class MapWindow : Window
         var b = map.Bounds;
         var margin = Math.Max(b.Width, b.Height) * 0.25 + 100;
         var inside = p.X > b.Left - margin && p.X < b.Right + margin && p.Y > b.Top - margin && p.Y < b.Bottom + margin;
-        return inside ? "" : " · you're outside this map's area";
+        return inside ? "" : "You're outside this map's area (wrong map, or a map pack with other coordinates).";
     }
 
     private static List<Point> SafeTrail(LogState log)
@@ -282,6 +307,7 @@ public partial class MapWindow : Window
         OptionsPanel.Visibility = Visibility.Collapsed;
         OptionsButton.IsChecked = false;
         ZoneCaption.Visibility = locked ? Visibility.Visible : Visibility.Collapsed;
+        StatusText.Margin = new Thickness(8, locked ? 24 : 34, 8, 0);
         Frame.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         ResizeMode = locked ? ResizeMode.NoResize : ResizeMode.CanResizeWithGrip;
 
