@@ -53,6 +53,8 @@ public partial class MapWindow : Window
         View.LineStyle = m.LineStyle;
         View.ShowLabels = m.ShowLabels;
         View.Follow = m.Follow;
+        // Own drag instead of DragMove: Windows Snap would maximize/tile the overlay at screen edges.
+        WindowDrag.Attach(TitleBar, this);
         View.UserPanned += () => { FollowButton.IsChecked = false; _settings.Map.Follow = false; };
 
         SourceInitialized += (_, _) =>
@@ -225,11 +227,6 @@ public partial class MapWindow : Window
     }
 
     // ------------------------------------------------------------------ UI
-
-    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed) DragMove();
-    }
 
     private void Follow_Click(object sender, RoutedEventArgs e)
     {

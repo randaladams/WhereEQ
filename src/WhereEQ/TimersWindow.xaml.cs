@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 using WhereEQ.Models;
 using WhereEQ.Services;
@@ -122,6 +123,9 @@ public partial class TimersWindow : Window
 
         _tick.Tick += (_, _) => Tick();
         _tick.Start();
+        _lockPoll.Tick += (_, _) => UpdateClickThrough();
+        // Own drag instead of DragMove: Windows Snap would maximize/tile the overlay at screen edges.
+        WindowDrag.Attach(TitleBar, this);
         SourceInitialized += (_, _) =>
         {
             _hwnd = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
@@ -132,6 +136,7 @@ public partial class TimersWindow : Window
         Closed += (_, _) =>
         {
             _tick.Stop();
+            _lockPoll.Stop();
             if (_hwnd != null) UnregisterHotKey(_hwnd.Handle, HotkeyId);
             SaveState();
         };
@@ -274,11 +279,6 @@ public partial class TimersWindow : Window
 
     // ------------------------------------------------------------------ UI
 
-    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed) DragMove();
-    }
-
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
     private void Lock_Click(object sender, RoutedEventArgs e) => ApplyLock(true);
@@ -348,6 +348,8 @@ public partial class TimersWindow : Window
 
     private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // Locked: the ✕/🔔 buttons still work, but rows shouldn't light up as selected.
+        if (_settings.Timers.Locked && List.SelectedItem != null) { List.SelectedItem = null; return; }
         if (List.SelectedItem is not TimerRow r) return;
         MobBox.Text = r.Mob;
         TimeBox.Text = r.Respawn is { } t ? Format(t) : "";
@@ -479,6 +481,34 @@ public partial class TimersWindow : Window
         if (_hwnd == null) return;
         var style = GetWindowLong(_hwnd.Handle, GWL_EXSTYLE);
         style = locked ? style | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE : style & ~WS_EX_TRANSPARENT & ~WS_EX_NOACTIVATE;
+        SetWindowLong(_hwnd.Handle, GWL_EXSTYLE, style);
+        _clickThrough = locked;
+        if (locked) _lockPoll.Start(); else _lockPoll.Stop();
+    }
+
+    // While locked the window is click-through, except the little ✕ and 🔔 on each timer: watch the cursor and
+    // let the mouse in only while it's over one of them (the game keeps focus: the window never activates).
+    private readonly DispatcherTimer _lockPoll = new() { Interval = TimeSpan.FromMilliseconds(40) };
+    private bool _clickThrough;
+
+    private void UpdateClickThrough()
+    {
+        if (_hwnd == null || !_settings.Timers.Locked) return;
+        var p = WindowDrag.CursorInDips(this);
+        var local = new Point(p.X - Left, p.Y - Top);
+        var overButton = false;
+        if (local.X >= 0 && local.Y >= 0 && local.X < ActualWidth && local.Y < ActualHeight)
+        {
+            var hit = VisualTreeHelper.HitTest(this, local)?.VisualHit;
+            for (DependencyObject? d = hit; d != null && d != this; d = VisualTreeHelper.GetParent(d))
+                if (d is System.Windows.Controls.Primitives.ButtonBase b && b.Style == Resources["RowButton"]) { overButton = true; break; }
+        }
+        // Keep the mouse while a button is pressed so the click completes.
+        if (!overButton && Mouse.LeftButton == MouseButtonState.Pressed && !_clickThrough) return;
+        if (overButton == !_clickThrough) return;
+        _clickThrough = !overButton;
+        var style = GetWindowLong(_hwnd.Handle, GWL_EXSTYLE);
+        style = _clickThrough ? style | WS_EX_TRANSPARENT : style & ~WS_EX_TRANSPARENT;
         SetWindowLong(_hwnd.Handle, GWL_EXSTYLE, style);
     }
 

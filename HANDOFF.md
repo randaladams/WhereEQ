@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.17** (timer ✕/🔔 per row, side button strip, map trail show/clear) pushed after 0.1.16
+- Status: build **0.1.18** (✕/🔔 work while locked; overlays drag without Windows Snap) after 0.1.17 (timer ✕/🔔
+  per row, side button strip, map trail show/clear), 0.1.16
   (timers as a small transparent overlay; first version 0.1.15) and 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
   button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
 
@@ -79,12 +80,15 @@ Format notes learned from real data:
 - `Data/Maps/*.txt` — 429 P1999 map files bundled from EqTool (MIT, `Data/Maps/NOTICE.md`).
 - `TimersWindow.xaml(.cs)` — spawn timers overlay (transparent like the map; compact = countdown + mob, ☰ =
   details and wider; buttons in a strip on the right; per-row ✕ remove and 🔔 alert (beeps 30 s before, keys in
-  `Settings.Timers.Alerts`); click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
+  `Settings.Timers.Alerts`; while locked a 40 ms cursor poll drops `WS_EX_TRANSPARENT` only over those
+  buttons, so they stay clickable); click-through lock with **Ctrl+Alt+T**; snapshot `|timers|details` / `|timers|options`). Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
   "You have slain X!" / "X has been slain by Y!", skipping chat, player deaths and Eye of Zomm). Kills arrive via
   `PositionChanged` (not in `Signature`), so tabs don't rebuild on every kill. Same mob + zone within 5 s in two
   logs = one kill. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
 - `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
   `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
+- `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile
+  them at screen edges.
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest
@@ -107,7 +111,8 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 
 1. **Confirm the Skyshrine map fix on the test PC** (0.1.11+). Root cause: the P1999 install's Skyshrine map file
    apparently has no wall lines; the bundled EqTool map is now used as a fallback. Not yet seen in-game.
-2. **Spawn timers are new** (0.1.15/0.1.16): not yet tried in-game. Kill-message wording was checked against the sample
+2. **Spawn timers are new** (0.1.15–0.1.18): not yet tried in-game; the beep, the locked ✕/🔔 clicks and the
+   snap-free drag can't be exercised on the dev machine (no mouse automation used). Kill-message wording was checked against the sample
    logs; no variance windows (P1999 rare spawns can vary); no sound/flash when a mob is up yet.
 3. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
    multi-monitor DPI. EverQuest must run **windowed** for any overlay to show (exclusive full screen owns the
