@@ -130,8 +130,10 @@ public partial class TimersWindow : Window
         _tick.Tick += (_, _) => Tick();
         _tick.Start();
         _lockPoll.Tick += (_, _) => UpdateClickThrough();
-        // Own drag instead of DragMove: Windows Snap would maximize/tile the overlay at screen edges.
-        WindowDrag.Attach(TitleBar, this);
+        // Own drag instead of DragMove (Windows Snap would maximize/tile the overlay at screen edges). While
+        // unlocked, drag from anywhere in the window, not just the button strip; it stays on screen.
+        WindowDrag.Attach((UIElement)Content, this, anywhere: true, canDrag: () => !_settings.Timers.Locked);
+        Loaded += (_, _) => WindowDrag.KeepOnScreen(this);
         SourceInitialized += (_, _) =>
         {
             _hwnd = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);

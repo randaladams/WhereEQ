@@ -55,6 +55,7 @@ public partial class MapWindow : Window
         View.Follow = m.Follow;
         // Own drag instead of DragMove: Windows Snap would maximize/tile the overlay at screen edges.
         WindowDrag.Attach(TitleBar, this);
+        Loaded += (_, _) => WindowDrag.KeepOnScreen(this);
         View.UserPanned += () => { FollowButton.IsChecked = false; _settings.Map.Follow = false; };
 
         SourceInitialized += (_, _) =>

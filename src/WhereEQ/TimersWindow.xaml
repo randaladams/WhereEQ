@@ -183,7 +183,7 @@
         <DockPanel>
             <!-- Buttons run down the right side; drag the strip to move the window. Hidden while locked. -->
             <Border x:Name="TitleBar" DockPanel.Dock="Right" Background="#CC1E1E1E" CornerRadius="0,6,6,0"
-                    Cursor="SizeAll" ToolTip="Drag to move">
+                    Cursor="SizeAll" ToolTip="Drag here or anywhere on the list to move">
                 <StackPanel Margin="2,4,2,16">
                     <TextBlock Text="⠿" Foreground="#AAFFFFFF" HorizontalAlignment="Center" FontSize="12" Margin="0,0,0,2"/>
                     <ToggleButton x:Name="DetailsButton" Content="☰" ToolTip="Show zone, kill time, killer and timer (wider)"

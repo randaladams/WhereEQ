@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.19** (faction/xp deaths as count-up timers) after 0.1.18 (✕/🔔 work while locked; overlays
+- Status: build **0.1.20** (timers drag from anywhere, overlays kept on screen) after 0.1.19 (faction/xp deaths
+  as count-up timers), 0.1.18 (✕/🔔 work while locked; overlays
   drag without Windows Snap), 0.1.17 (timer ✕/🔔
   per row, side button strip, map trail show/clear), 0.1.16
   (timers as a small transparent overlay; first version 0.1.15) and 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
@@ -91,7 +92,8 @@ Format notes learned from real data:
 - `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
   `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
 - `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile
-  them at screen edges.
+  them at screen edges, and clamps them to the screen (also on open). Timers: drag from anywhere while
+  unlocked (`anywhere: true`, 4 px threshold so clicks still select rows; buttons/text boxes/sliders excluded).
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest

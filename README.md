@@ -41,7 +41,8 @@ EverQuest client writes and keeps them up to date while you play.
   **Keep up timers** time.
 - In front of each timer: **✕** removes it, **🔔** beeps when the mob is 30 seconds from respawning. Both
   still work while the window is locked (click-through). Right-click a timer to restart it.
-- The buttons run down the right edge; drag that strip to move the window, the corner to resize. ☰ adds zone,
+- The buttons run down the right edge. While unlocked, drag anywhere on the window to move it (it stays on
+  screen, so the buttons can't end up out of reach); drag the corner to resize. ☰ adds zone,
   kill time, killer and timer length (and widens the window). 🔒 or **Ctrl+Alt+T** makes it click-through;
   Ctrl+Alt+T again unlocks it.
 - ⚙ has the options (kills by others, how long "up" timers stay, backdrop darkness) and a box to type a mob
