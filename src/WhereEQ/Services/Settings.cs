@@ -30,6 +30,37 @@ public sealed class MapOverlaySettings
     public string? Character { get; set; }
 }
 
+/// <summary>A timer started by hand in the Timers window (or "restart now" on a kill).</summary>
+public sealed class ManualTimer
+{
+    public string Name { get; set; } = "";
+    /// <summary>Map short name of the zone, if known.</summary>
+    public string? Zone { get; set; }
+    public DateTime Start { get; set; }
+    public int Seconds { get; set; }
+}
+
+public sealed class TimersSettings
+{
+    public bool Open { get; set; }
+    public double? Left { get; set; }
+    public double? Top { get; set; }
+    public double Width { get; set; } = 640;
+    public double Height { get; set; } = 420;
+    public bool Topmost { get; set; } = true;
+    /// <summary>Also time mobs killed by other players and pets ("X has been slain by Y!").</summary>
+    public bool IncludeOthers { get; set; }
+    /// <summary>How long a timer stays in the list after the mob is up again.</summary>
+    public int KeepUpMinutes { get; set; } = 5;
+    /// <summary>"Clear": kills before this time are not shown.</summary>
+    public DateTime? ClearedBefore { get; set; }
+    /// <summary>Kills removed one by one (TimersWindow row keys).</summary>
+    public List<string> Dismissed { get; set; } = new();
+    public List<ManualTimer> Manual { get; set; } = new();
+    /// <summary>Your own respawn times in seconds, keyed by SpawnTimes.OverrideKey ("zone|mob", lower case).</summary>
+    public Dictionary<string, int> Overrides { get; set; } = new();
+}
+
 /// <summary>User settings, stored in %LocalAppData%\WhereEQ\settings.json.</summary>
 public sealed class Settings
 {
@@ -57,6 +88,9 @@ public sealed class Settings
 
     /// <summary>Map overlay window state.</summary>
     public MapOverlaySettings Map { get; set; } = new();
+
+    /// <summary>Spawn timers window state and options.</summary>
+    public TimersSettings Timers { get; set; } = new();
 
     /// <summary>Usable bank slots (P1999: 8). Higher-numbered slots in the inventory file are ignored.</summary>
     public int BankSlots { get; set; } = InventoryParser.DefaultBankSlots;
@@ -113,6 +147,10 @@ public sealed class Settings
                     s.Overrides = new(s.Overrides ?? new(), StringComparer.OrdinalIgnoreCase);
                     s.HiddenCharacters ??= new();
                     s.Map ??= new();
+                    s.Timers ??= new();
+                    s.Timers.Dismissed ??= new();
+                    s.Timers.Manual ??= new();
+                    s.Timers.Overrides = new(s.Timers.Overrides ?? new(), StringComparer.OrdinalIgnoreCase);
                     if (!string.IsNullOrWhiteSpace(s.DataFolder) && !s.HasAnyFolder)
                     {
                         s.InventoryFolder = s.SpellbookFolder = s.LogFolder = s.DataFolder;

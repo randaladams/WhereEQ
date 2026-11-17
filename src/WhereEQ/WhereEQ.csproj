@@ -17,6 +17,8 @@
     <None Include="Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- Built-in map files (from EqTool, MIT) and their license notice -->
     <None Include="Data\Maps\NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
+    <!-- P1999 respawn times (generated from EqTool, MIT, by tools/make_spawn_times.py) and their notice -->
+    <None Include="Data\SpawnTimes\NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -15,6 +15,7 @@ public partial class MainWindow : Window
 
     private readonly Settings _settings = Settings.Load();
     private readonly SpellDatabase _spellDb = new(Path.Combine(AppContext.BaseDirectory, "Data", "Spells"));
+    private readonly SpawnTimes _spawnTimes = SpawnTimes.LoadBundled();
     private DataStore? _store;
     /// <summary>Visible characters (everything except hidden ones); what every tab works from.</summary>
     private List<Character> _characters = new();
@@ -45,12 +46,14 @@ public partial class MainWindow : Window
                 ShowSettings(); // first run: ask where the files are
             await LoadDataAsync();
             if (_settings.Map.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenMap();
+            if (_settings.Timers.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenTimers();
         };
         Closing += (_, _) =>
         {
             SaveWindow();
             // Remember the map was open so it comes back next time, then close it with us.
             if (_mapWindow != null) { var open = true; _mapWindow.Close(); _settings.Map.Open = open; _settings.Save(); }
+            if (_timersWindow != null) { _timersWindow.Close(); _settings.Timers.Open = true; _settings.Save(); }
             _store?.Dispose();
         };
         // Keep "5m ago" style text fresh.
@@ -144,6 +147,15 @@ public partial class MainWindow : Window
             Application.Current.Shutdown();
             return;
         }
+        if (parts.Length > 1 && parts[1] == "timers")
+        {
+            OpenTimers();
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            await Task.Delay(800);
+            RenderToPng(_timersWindow!, parts[0]);
+            Application.Current.Shutdown();
+            return;
+        }
         if (parts.Length > 1 && parts[1] is "settings" or "sync")
         {
             Window dlg = parts[1] == "sync" ? new SyncFriendsWindow(_characters) { Owner = this }
@@ -206,17 +218,45 @@ public partial class MainWindow : Window
         UpdateMap();
     }
 
-    /// <summary>Position-only update: refresh the map without rebuilding the grids.</summary>
+    /// <summary>Position-only update (/loc, kills, chatter): refresh the map and timers without rebuilding the grids.</summary>
     private void UpdateMap()
     {
-        if (_mapWindow == null || _store == null) return;
-        _mapWindow.Update(_store.GetCharacters().Where(c => !c.Hidden).ToList());
+        if ((_mapWindow == null && _timersWindow == null) || _store == null) return;
+        var chars = _store.GetCharacters().Where(c => !c.Hidden).ToList();
+        _mapWindow?.Update(chars);
+        _timersWindow?.Update(chars);
+    }
+
+    // ---------------------------------------------------------------- spawn timers
+
+    private TimersWindow? _timersWindow;
+
+    private void Timers_Click(object sender, RoutedEventArgs e)
+    {
+        if (_timersWindow != null)
+        {
+            if (_timersWindow.WindowState == WindowState.Minimized) _timersWindow.WindowState = WindowState.Normal;
+            _timersWindow.Activate();
+            return;
+        }
+        OpenTimers();
+    }
+
+    private void OpenTimers()
+    {
+        _timersWindow = new TimersWindow(_settings, _spawnTimes);
+        _timersWindow.Closed += (_, _) => { _timersWindow = null; _settings.Timers.Open = false; _settings.Save(); };
+        _settings.Timers.Open = true;
+        _settings.Save();
+        _timersWindow.Show();
+        UpdateMap();
     }
 
     private void RefreshAll()
     {
         _allCharacters = _store?.GetCharacters() ?? new();
         _mapWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
+        _timersWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
         _characters = _allCharacters.Where(c => !c.Hidden).ToList();
         RefreshCharacterFilter();
         RunSearch();

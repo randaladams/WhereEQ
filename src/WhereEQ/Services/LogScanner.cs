@@ -21,6 +21,10 @@ public sealed class FriendInfo
 
 public sealed record TrailPoint(double X, double Y, DateTime T);
 
+/// <summary>A mob death seen in the log. <see cref="By"/> is null for "You have slain X!", else the killer
+/// from "X has been slain by Killer!" (another player, a pet, ...). <see cref="Zone"/> is the log's zone name.</summary>
+public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By);
+
 public sealed class LogState
 {
     /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
@@ -51,6 +55,10 @@ public sealed class LogState
     /// so the trail survives a restart.</summary>
     public List<TrailPoint> Trail { get; set; } = new();
     public const int TrailMax = 300;
+
+    /// <summary>Recent mob deaths (newest last), for spawn timers.</summary>
+    public List<KillRecord> Kills { get; set; } = new();
+    public const int KillsMax = 300;
 
     /// <summary>Current guild (null = not in a guild, when <see cref="GuildSeen"/> is set).</summary>
     public string? Guild { get; set; }
@@ -141,7 +149,7 @@ public static partial class LogScanner
             state.BindZone = null; state.BindSeen = null; state.BindHow = null;
             state.Guild = null; state.GuildSeen = null;
             state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
-            state.Heading = null; state.HeadingSeen = null; state.Trail.Clear();
+            state.Heading = null; state.HeadingSeen = null; state.Trail.Clear(); state.Kills.Clear();
             state.InFriendsList = false;
         }
         if (info.Length < state.Offset) state.Offset = 0; // log was rotated or truncated
@@ -181,6 +189,14 @@ public static partial class LogScanner
                     state.Trail.Add(new TrailPoint(p.X, p.Y, ts ?? DateTime.Now));
                     if (state.Trail.Count > LogState.TrailMax) state.Trail.RemoveRange(0, state.Trail.Count - LogState.TrailMax);
                 }
+                continue;
+            }
+
+            // Mob deaths (spawn timers). Before the other checks: a mob's name can contain words like "guild".
+            if (msg.EndsWith('!') && TryParseKill(msg, name, out var victim, out var killer))
+            {
+                state.Kills.Add(new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer));
+                if (state.Kills.Count > LogState.KillsMax) state.Kills.RemoveRange(0, state.Kills.Count - LogState.KillsMax);
                 continue;
             }
 
@@ -288,6 +304,33 @@ public static partial class LogScanner
         var changed = consumed != state.Offset;
         state.Offset = consumed;
         return changed;
+    }
+
+    /// <summary>
+    /// "You have slain a fire beetle!" (killer = null) or "a plague rat has been slain by Somebody!".
+    /// Skips chat, your own death, Eye of Zomm, and players killed by mobs ("Somefriend has been slain by a gnoll!").
+    /// </summary>
+    internal static bool TryParseKill(string msg, string self, out string victim, out string? killer)
+    {
+        victim = ""; killer = null;
+        if (msg.Contains(", '")) return false; // chat line that happens to end in "!"
+        if (msg.StartsWith("You have slain "))
+        {
+            victim = msg["You have slain ".Length..^1].Trim();
+            return victim.Length > 0;
+        }
+        var at = msg.IndexOf(" has been slain by ", StringComparison.Ordinal);
+        if (at <= 0) return false;
+        victim = msg[..at].Trim();
+        killer = msg[(at + " has been slain by ".Length)..^1].Trim();
+        if (victim.Length == 0 || killer.Length == 0) return false;
+        if (victim.Equals(self, StringComparison.OrdinalIgnoreCase)) return false;
+        if (victim.StartsWith("Eye of ", StringComparison.Ordinal)) return false;
+        // One capitalized word killed by something with a space or in lower case ("a gnoll") is a player death.
+        var victimIsPlayerLike = !victim.Contains(' ') && char.IsUpper(victim[0]);
+        var killerIsMobLike = killer.Contains(' ') || char.IsLower(killer[0]);
+        if (victimIsPlayerLike && killerIsMobLike) return false;
+        return true;
     }
 
     /// <summary>Parses "2670.49, 879.69, -32.22" (Y, X, Z).</summary>

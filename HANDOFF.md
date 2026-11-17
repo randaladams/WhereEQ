@@ -7,7 +7,7 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.13** released (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
+- Status: build **0.1.15** (spawn timers window) pushed after 0.1.13 (bundled maps fallback; loc/heading on the map's zone line; Find item Reset
   button; full-screen hint in map options). Check https://github.com/randaladams/WhereEQ/actions after each push.
 
 ## Hard rules (privacy)
@@ -76,6 +76,12 @@ Format notes learned from real data:
 - `Services/SpellDatabase.cs` + `Data/Spells/<Class>.txt` — class spell lists scraped from the P1999 wiki
   (`level<TAB>name<TAB>era`).
 - `Data/Maps/*.txt` — 429 P1999 map files bundled from EqTool (MIT, `Data/Maps/NOTICE.md`).
+- `TimersWindow.xaml(.cs)` — spawn timers. Kills come from `LogState.Kills` (`LogScanner.TryParseKill`:
+  "You have slain X!" / "X has been slain by Y!", skipping chat, player deaths and Eye of Zomm). Kills arrive via
+  `PositionChanged` (not in `Signature`), so tabs don't rebuild on every kill. Same mob + zone within 5 s in two
+  logs = one kill. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
+- `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
+  `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest
@@ -83,7 +89,7 @@ Format notes learned from real data:
 `WHEREEQ_SNAPSHOT="<png>|<what>|<arg>|<arg>"` makes the app render a window to PNG and exit
 (`MainWindow.DevSnapshotAsync`). Examples: `out.png|2` (tab index; tabs are 0 Find, 1 Bags, 2 Characters,
 3 Friends, 4 Spells), `out.png|4|Charname|missing`, `out.png|1|Charname|bank`, `out.png|settings`,
-`out.png|sync`, `out.png|map`.
+`out.png|sync`, `out.png|map`, `out.png|timers`.
 
 Map tests used a fake character: write a slice of a real log (zone entry + `/loc` lines) to
 `Logs\eqlog_Testmap_P1999Green.txt`, temporarily set `MapsFolder` and `Map.Character` in `settings.json`
@@ -98,15 +104,17 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 
 1. **Confirm the Skyshrine map fix on the test PC** (0.1.11+). Root cause: the P1999 install's Skyshrine map file
    apparently has no wall lines; the bundled EqTool map is now used as a fallback. Not yet seen in-game.
-2. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
+2. **Spawn timers are new** (0.1.15): not yet tried in-game. Kill-message wording was checked against the sample
+   logs; no variance windows (P1999 rare spawns can vary); no sound/flash when a mob is up yet.
+3. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
    multi-monitor DPI. EverQuest must run **windowed** for any overlay to show (exclusive full screen owns the
    display; the owner's test PC has one monitor; `WindowedMode=TRUE` in `eqclient.ini`).
-3. Friends `.ini` format and the 100-friend cap are assumptions (no real `.ini` seen yet); sync hasn't been run
+4. Friends `.ini` format and the 100-friend cap are assumptions (no real `.ini` seen yet); sync hasn't been run
    against real files.
-4. Guild join/leave message wording is a guess (none in the sample logs); `/who` of self is the reliable source.
-5. Friends tab "Where" shows `/friends` short zone names (e.g. `ecommons`); could map via `ZoneNames.ToLong`.
-6. Map ideas not built: show other characters' last known positions, z-level filtering for multi-level zones,
+5. Guild join/leave message wording is a guess (none in the sample logs); `/who` of self is the reliable source.
+6. Friends tab "Where" shows `/friends` short zone names (e.g. `ecommons`); could map via `ZoneNames.ToLong`.
+7. Map ideas not built: show other characters' last known positions, z-level filtering for multi-level zones,
    per-zone remembered zoom.
    - **Wanted by the owner (not built yet):** map ⚙ options get a "Trail" on/off checkbox and a "Clear trail"
      button. Trail = blue line of the last 300 `/loc` points (`LogState.Trail`, drawn in `MapView`).
-7. `HANDOFF.md`/README should be updated when features change.
+8. `HANDOFF.md`/README should be updated when features change.

@@ -17,10 +17,26 @@ EverQuest client writes and keeps them up to date while you play.
 - Mouse wheel zooms, drag pans, double-click fits the zone. ⚙ sets the backdrop darkness, map opacity, line
   colors, labels, which character to track, and a manual map pick.
 - 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
-- EverQuest has to run in windowed mode for any overlay to show on top of it.
+- EverQuest has to run in windowed mode for any overlay to show on top of it (full screen hides every other
+  window). Set `WindowedMode=TRUE` in `eqclient.ini` and size the game window to fill the screen.
 - Map files are read from the `maps` folder of your P1999 install (set in Settings). WhereEQ also ships a
   built-in set of P1999 maps, from [EqTool](https://github.com/smasherprog/EqTool) (MIT, see
   `src/WhereEQ/Data/Maps/NOTICE.md`), which is used when your folder lacks a zone or only has its label layers.
+
+## Spawn timers
+
+**⏱ Timers** opens a window that counts down to each mob's respawn:
+
+- A timer starts whenever your log says `You have slain a fire beetle!`. Tick **Kills by others** to also time
+  mobs that others or pets kill (`... has been slain by Somebody!`). A death you're too far away to see isn't
+  in your log, so it can't be timed.
+- Respawn times are P1999's (from the P1999 wiki, via [EqTool](https://github.com/smasherprog/EqTool), MIT,
+  `src/WhereEQ/Data/SpawnTimes/NOTICE.md`): the zone's usual timer, or a mob's own timer where one is known.
+  Zones without data use 6:40, shown as `6:40?`. Timers on P1999 can vary, especially for rare spawns.
+- Countdowns turn yellow in the last minute and green ("up") when the mob is due, then drop off after the
+  **Keep for** time. Right-click a timer to restart it or remove it (Del).
+- Type a mob name and a time (`22`, `6:40` or `8:00:00`) at the bottom: **Start timer** starts one by hand,
+  **Save time** always uses that time for that mob in that zone.
 
 ## Download
 
