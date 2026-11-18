@@ -2,7 +2,7 @@ namespace WhereEQ.Services;
 
 /// <summary>Things WhereEQ can beep for. Each has its own short tone pattern so you can tell them apart.
 /// Log-driven ones share their names with <see cref="LogNotice"/>.</summary>
-public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, CharmEnd }
+public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, CharmEnd, Gem }
 
 /// <summary>One log alert: what it's called in Settings, which lines trigger it, and whether it's on by default.</summary>
 public sealed record AlertInfo(LogNotice Notice, string Label, string Description, bool DefaultOn = true);
@@ -13,6 +13,30 @@ public sealed record AlertInfo(LogNotice Notice, string Label, string Descriptio
 /// </summary>
 public static class Sounds
 {
+    /// <summary>Gems used for Velious armor quests: looting one plays a note ("Velious Armor Gems" alert).
+    /// Matched on the whole item name.</summary>
+    public static readonly HashSet<string> VeliousGems = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Flawless Diamond",
+        "Flawed Sea Sapphire",
+        "Flawed Emerald",
+        "Crushed Coral",
+        "Crushed Topaz",
+        "Crushed Black Marble",
+        "Crushed Flame Emerald",
+        "Black Marble",
+        "Chipped Onyx Sapphire",
+        "Jaundice Gem",
+        "Crushed Lava Ruby",
+        "Crushed Opal",
+        "Crushed Onyx Sapphire",
+        "Pristine Emerald",
+        "Nephrite",
+        "Flawed Topaz",
+        "Crushed Flame Opal",
+        "Crushed Jaundice Gem",
+    };
+
     /// <summary>The log alerts, in the order Settings lists them.</summary>
     public static readonly AlertInfo[] Alerts =
     {
@@ -27,6 +51,7 @@ public static class Sounds
         new(LogNotice.Mana, "Out of mana", "\"Insufficient Mana to cast this spell!\""),
         new(LogNotice.Forage, "Foraged", "\"You have scrounged up some food / water / ...\""),
         new(LogNotice.Charm, "Charm landed", "\"... 's eyes glaze over.\" On a Bard this starts an 18-second charm timer instead"),
+        new(LogNotice.Gem, "Velious Armor Gems", "Looting Flawless Diamond, Nephrite, Crushed Coral, Jaundice Gem, ... (the Velious armor quest gems)"),
         new(LogNotice.Food, "Food / drink low", "\"You are low on food / out of drink ...\" (at most once a minute)"),
     };
 
@@ -45,7 +70,8 @@ public static class Sounds
         [Sound.Mana] = new[] { (350, 250) },                                         // one low tone
         [Sound.Forage] = new[] { (1300, 50), (1700, 50) },                           // tiny up blip
         [Sound.Charm] = new[] { (900, 70), (1300, 70), (900, 70) },                  // up-down
-        [Sound.CharmEnd] = new[] { (2000, 60) },                                     // one short high blip                             // slow pair
+        [Sound.CharmEnd] = new[] { (2000, 60) },
+        [Sound.Gem] = new[] { (1568, 110), (2093, 260) },                            // a bright two-note chime (G, high C)                                     // one short high blip                             // slow pair
     };
 
     private static readonly Dictionary<Sound, DateTime> LastPlayed = new();
@@ -111,6 +137,10 @@ public static class Sounds
                 var got = line.StartsWith("You have scrounged up ") ? line["You have scrounged up ".Length..].TrimEnd('.') : "";
                 return got.Length > 0 ? $"Foraged {got}" : "Foraged";
             case LogNotice.Charm: return LogScanner.GlazedMob(line) is { } mob ? $"Charmed {mob}" : "Charm landed";
+            case LogNotice.Gem:
+                var gem = LogScanner.LootedItem(line) ?? "gem";
+                var looter = LogScanner.Looter(line);
+                return looter is "You" or "" ? $"Looted {gem}" : $"{looter} looted {gem}";
             default: return n.ToString();
         }
     }
@@ -130,6 +160,7 @@ public static class Sounds
         LogNotice.Mana => "Insufficient Mana to cast this spell!",
         LogNotice.Forage => "You have scrounged up some food.",
         LogNotice.Charm => "A bulthar's eyes glaze over.",
+        LogNotice.Gem => "--You have looted a Flawless Diamond.--",
         _ => "",
     };
 

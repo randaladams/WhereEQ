@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.26** (fizzle/mana/forage/charm alerts; Bard 18 s charm timer) after 0.1.25 (voice alerts:
+- Status: build **0.1.27** ("Velious Armor Gems" loot alert) after 0.1.26 (fizzle/mana/forage/charm alerts; Bard
+  18 s charm timer), 0.1.25 (voice alerts:
   Off/Beep/Voice per alert), 0.1.24 (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
   the owner's request, 8 alerts left) after 0.1.23 (log alerts with their own tones), 0.1.22 (arena line isn't a zone),
   0.1.21 (kill dots on the map; sounds for falling, stand up, tells), 0.1.20 (timers drag
@@ -103,6 +104,8 @@ Format notes learned from real data:
   the single-file publish). Runs on the UI thread, async queue, 3 s duplicate drop. `Sounds.Alert` /
   `Sounds.TimerAlert` route each alert by `SoundSettings.Modes` (Off/Beep/Voice); `Sounds.Phrase` builds the
   spoken text. Dev hook `out.txt|voices` lists voices and speaks silently (volume 0), writing "speak: ok".
+- Gem alert: `Sounds.VeliousGems` (owner's list) matched on the whole looted item name (`LogScanner.LootedItem`),
+  so "Crushed Nephrite" ≠ "Nephrite"; fires for your loot and groupmates' ("--Somebody has looted a …--").
 - Bard charm: `LogScanner.Notice` passes the log's class; `MainWindow.StartBardCharm` adds a `ManualTimer`
   (Kind "charm", 18 s, `AlertSeconds` 4, `KeepSeconds` 10) and opens Timers, which owns the alert tick. The log
   doesn't say who cast a charm (other players' charms show the same line), so non-Bards just get the alert.

@@ -72,6 +72,7 @@ anyone in the room hears it). The voice works offline and needs nothing installe
 | Out of mana | "Insufficient Mana to cast this spell!" |
 | Foraged | "You have scrounged up some food / water / …" |
 | Charm landed | "… 's eyes glaze over." (see below for Bards) |
+| Velious Armor Gems | you or a groupmate loots one of the Velious armor quest gems (Flawless Diamond, Flawed Sea Sapphire, Flawed Emerald, Pristine Emerald, Nephrite, Jaundice Gem, Black Marble, Chipped Onyx Sapphire, Flawed Topaz, and the Crushed Coral / Topaz / Black Marble / Flame Emerald / Lava Ruby / Opal / Onyx Sapphire / Flame Opal / Jaundice Gem); plays a two-note chime |
 | Food / drink low | "You are low on food / out of drink …" (at most once a minute) |
 
 The 🔔 on a spawn timer has its own Off / Beep / Voice setting too.

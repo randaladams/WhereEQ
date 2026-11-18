@@ -30,7 +30,7 @@ public sealed record KillRecord(string Name, string? Zone, DateTime Time, string
                                 double? X = null, double? Y = null);
 
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
-public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm }
+public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, Gem }
 
 public sealed class LogState
 {
@@ -390,6 +390,22 @@ public static partial class LogScanner
         try { Notice?.Invoke(notice, character, cls, msg); } catch { /* a sound must never break log reading */ }
     }
 
+    /// <summary>The item in "--You have looted a Flawless Diamond.--" (also "an", "some", or "Somebody has looted").
+    /// Whole name only, so "Crushed Nephrite" isn't "Nephrite".</summary>
+    public static string? LootedItem(string msg)
+    {
+        if (!msg.StartsWith("--") || !msg.EndsWith(".--")) return null;
+        var at = msg.IndexOf(" looted ", StringComparison.Ordinal);
+        if (at < 0) return null;
+        var item = msg[(at + " looted ".Length)..^3];
+        foreach (var article in new[] { "a ", "an ", "some ", "the " })
+            if (item.StartsWith(article)) { item = item[article.Length..]; break; }
+        return item.Length > 0 ? item : null;
+    }
+
+    /// <summary>Who looted, from "--You have looted ...--" ("You") or "--Somebody has looted ...--".</summary>
+    public static string Looter(string msg) => msg.Length > 2 ? msg[2..].Split(' ', 2)[0] : "";
+
     /// <summary>The mob in "A bulthar's eyes glaze over." ("a bulthar"), or null.</summary>
     public static string? GlazedMob(string msg)
     {
@@ -407,6 +423,10 @@ public static partial class LogScanner
         if (msg.Contains(" tells you, '"))
             return TellLine().Match(msg) is { Success: true } t && !NpcTell().IsMatch(t.Groups["text"].Value) ? LogNotice.Tell : null;
         if (msg.Contains(", '") || msg.Contains(" says '")) return null; // chat / NPC speech
+
+        // "--You have looted a Flawless Diamond.--" / "--Somebody has looted a Nephrite.--"
+        if (msg.StartsWith("--") && LootedItem(msg) is { } item)
+            return Sounds.VeliousGems.Contains(item) ? LogNotice.Gem : null;
 
         if (msg.StartsWith("You "))
         {
