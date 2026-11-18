@@ -30,7 +30,7 @@ public sealed record KillRecord(string Name, string? Zone, DateTime Time, string
                                 double? X = null, double? Y = null);
 
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
-public enum LogNotice { Fall, Stand, Tell }
+public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, SpellOff, Charmed, Invite, Trade, Rampage, Gate, Food, Died }
 
 public sealed class LogState
 {
@@ -385,15 +385,41 @@ public static partial class LogScanner
 
     private static void CheckNotice(string character, string msg)
     {
-        LogNotice? n = null;
-        if (msg == "You feel as if you are about to fall.") n = LogNotice.Fall;
-        else if (msg.StartsWith("You must be standing to ")) n = LogNotice.Stand;
-        else if (msg.Contains(" tells you, '") && TellLine().Match(msg) is { Success: true } t && !NpcTell().IsMatch(t.Groups["text"].Value))
-            n = LogNotice.Tell;
-        if (n is { } notice)
+        if (Classify(msg) is not { } notice) return;
+        try { Notice?.Invoke(notice, character, msg); } catch { /* a sound must never break log reading */ }
+    }
+
+    /// <summary>Which alert (if any) a log message is. Chat lines never are, except tells to you.</summary>
+    public static LogNotice? Classify(string msg)
+    {
+        if (msg.Contains(" tells you, '"))
+            return TellLine().Match(msg) is { Success: true } t && !NpcTell().IsMatch(t.Groups["text"].Value) ? LogNotice.Tell : null;
+        if (msg.Contains(", '") || msg.Contains(" says '")) return null; // chat / NPC speech
+
+        if (msg.StartsWith("You "))
         {
-            try { Notice?.Invoke(notice, character, msg); } catch { /* a sound must never break log reading */ }
+            if (msg == "You feel as if you are about to fall.") return LogNotice.Fall;
+            if (msg.StartsWith("You must be standing to ")) return LogNotice.Stand;
+            if (msg == "You feel yourself starting to appear.") return LogNotice.Fade;
+            if (msg == "You feel as if you are about to look like yourself again.") return LogNotice.Illusion;
+            if (msg == "You have been charmed.") return LogNotice.Charmed;
+            if (msg.StartsWith("You have been slain by ") || msg == "You died.") return LogNotice.Died;
+            if ((msg.StartsWith("You are low on ") || msg.StartsWith("You are out of ")) &&
+                (msg.Contains("food") || msg.Contains("drink"))) return LogNotice.Food;
+            if (msg is "You are hungry." or "You are thirsty.") return LogNotice.Food;
+            return null;
         }
+        if (msg.StartsWith("Your "))
+        {
+            if (msg == "Your shadows fade.") return LogNotice.Fade;
+            if (msg.EndsWith(" spell has worn off.")) return LogNotice.SpellOff;
+            return null;
+        }
+        if (msg.EndsWith(" goes on a RAMPAGE!") || msg.EndsWith(" begins to rampage.")) return LogNotice.Rampage;
+        if (msg.EndsWith(" Gates.") || msg.EndsWith(" begins to cast the gate spell.")) return LogNotice.Gate;
+        if (msg.EndsWith(" invites you to join a group.")) return LogNotice.Invite;
+        if (msg.Contains(" has offered you ")) return LogNotice.Trade;
+        return null;
     }
 
     private static void AddKill(LogState state, KillRecord k)

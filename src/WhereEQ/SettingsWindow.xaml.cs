@@ -26,9 +26,20 @@ public partial class SettingsWindow : Window
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
-        SoundFallCheck.IsChecked = settings.Sounds.Fall;
-        SoundStandCheck.IsChecked = settings.Sounds.Stand;
-        SoundTellCheck.IsChecked = settings.Sounds.Tell;
+        foreach (var a in Sounds.Alerts)
+        {
+            var check = new CheckBox { Content = a.Label, IsChecked = settings.Sounds.IsOn(a.Notice), ToolTip = a.Description,
+                                       VerticalAlignment = VerticalAlignment.Center, Tag = a.Notice };
+            var test = new Button { Content = "▶", Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 0),
+                                    ToolTip = "Play this sound", Tag = a.Notice.ToString() };
+            test.Click += TestSound_Click;
+            var row = new DockPanel { Margin = new Thickness(0, 0, 12, 4) };
+            DockPanel.SetDock(test, Dock.Left);
+            row.Children.Add(test);
+            row.Children.Add(check);
+            SoundRows.Children.Add(row);
+            _soundChecks.Add(check);
+        }
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
         BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
         _ready = true;
@@ -129,15 +140,13 @@ public partial class SettingsWindow : Window
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;
         s.BankSlots = BankSlotsBox.SelectedItem is int b ? b : InventoryParser.DefaultBankSlots;
-        s.Sounds = new SoundSettings
-        {
-            Fall = SoundFallCheck.IsChecked == true,
-            Stand = SoundStandCheck.IsChecked == true,
-            Tell = SoundTellCheck.IsChecked == true,
-        };
+        s.Sounds = new SoundSettings();
+        foreach (var c in _soundChecks) s.Sounds.Set((LogNotice)c.Tag, c.IsChecked == true);
         Result = s;
         DialogResult = true;
     }
+
+    private readonly List<CheckBox> _soundChecks = new();
 
     private void TestSound_Click(object sender, RoutedEventArgs e)
     {

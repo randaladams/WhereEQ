@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.21** (kill dots on the map; sounds for falling, stand up, tells) after 0.1.20 (timers drag
+- Status: build **0.1.23** (13 log alerts with their own tones) after 0.1.22 (arena line isn't a zone),
+  0.1.21 (kill dots on the map; sounds for falling, stand up, tells), 0.1.20 (timers drag
   from anywhere, overlays kept on screen), 0.1.19 (faction/xp deaths
   as count-up timers), 0.1.18 (✕/🔔 work while locked; overlays
   drag without Windows Snap), 0.1.17 (timer ✕/🔔
@@ -96,9 +97,12 @@ Format notes learned from real data:
   <NPC>" or a multi-word speaker "says" is a quest turn-in and is skipped. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
 - `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
   `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
-- `Services/Sounds.cs` — beep patterns per event (Timer, Fall, Stand, Tell), off the UI thread, 2 s throttle.
-  `LogScanner.Notice` fires for fresh lines (stamped < 20 s ago) only; `MainWindow` maps it to sounds per
-  `Settings.Sounds`. Tell filter drops multi-word speakers and merchant/banker/pet phrases (`NpcTell`).
+- `Services/Sounds.cs` — `Sounds.Alerts` is the one table of log alerts (label, description, default); Settings
+  builds its rows from it. Beep patterns per `Sound` (same names as `LogNotice`), off the UI thread, 2 s throttle
+  (food 60 s). `LogScanner.Classify(msg)` decides the alert; `LogScanner.Notice` fires for fresh lines (stamped
+  < 20 s ago) only. Tell filter drops multi-word speakers and merchant/banker/pet phrases (`NpcTell`).
+  `Settings.Sounds`: Fall/Stand/Tell bools (0.1.21) + `On` dictionary for the rest. Dev hook
+  `WHEREEQ_SNAPSHOT="out.txt|classify|<log>"` writes alert counts for a log.
 - Kill markers: `KillRecord.X/Y` = last `/loc` in the same zone ≤ 10 min before the kill; `MapWindow.RecentKills`
   draws kills from all logs in the map's zone for 10 minutes (15 s refresh timer so they fade).
 - `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile

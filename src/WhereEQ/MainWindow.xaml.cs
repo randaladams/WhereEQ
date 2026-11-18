@@ -43,8 +43,7 @@ public partial class MainWindow : Window
         // Sounds for fresh log lines (falling, stand up, tells). Raised on the log reader's thread.
         LogScanner.Notice += (notice, _, _) =>
         {
-            if (_settings.Sounds.IsOn(notice))
-                Sounds.Play(notice switch { LogNotice.Fall => Sound.Fall, LogNotice.Stand => Sound.Stand, _ => Sound.Tell });
+            if (_settings.Sounds.IsOn(notice)) Sounds.Play(Sounds.For(notice));
         };
         Loaded += async (_, _) =>
         {
@@ -152,6 +151,20 @@ public partial class MainWindow : Window
             if (parts.Length > 2 && parts[2] == "fit") _mapWindow!.View.Follow = false;
             if (parts.Length > 2 && parts[2] == "options") { _mapWindow!.OptionsButton.IsChecked = true; _mapWindow.OptionsPanel.Visibility = Visibility.Visible; _mapWindow.UpdateLayout(); }
             RenderToPng(_mapWindow!, parts[0]);
+            Application.Current.Shutdown();
+            return;
+        }
+        if (parts.Length > 2 && parts[1] == "classify")
+        {
+            // Dev: count which alerts each line of a log would trigger -> parts[0] (text file).
+            var counts = new Dictionary<string, int>();
+            foreach (var line in File.ReadLines(parts[2], System.Text.Encoding.Latin1))
+            {
+                var close = line.IndexOf("] ", StringComparison.Ordinal);
+                if (!line.StartsWith('[') || close < 0) continue;
+                if (LogScanner.Classify(line[(close + 2)..]) is { } n) counts[n.ToString()] = counts.GetValueOrDefault(n.ToString()) + 1;
+            }
+            File.WriteAllLines(parts[0], counts.OrderBy(k => k.Key).Select(k => $"{k.Key}\t{k.Value}"));
             Application.Current.Shutdown();
             return;
         }

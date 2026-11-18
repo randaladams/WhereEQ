@@ -53,13 +53,26 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Sounds
 
-Settings → **Sounds** beeps (each with its own tone; **▶ Test** plays it) when the log says:
+Settings → **Sounds** beeps when a new line shows up in your log; each alert has its own tone and a **▶** button
+to hear it. Turn any of them off there.
 
-- **About to fall**: "You feel as if you are about to fall." (levitate wearing off).
-- **Stand up**: "You must be standing to attack / cast a spell / forage / bind wounds."
-- **Tell**: a player sends you a tell (merchants, bankers and pets are ignored).
+| Alert | Log line |
+|---|---|
+| Tell | a player sends you a tell (merchants, bankers and pets are ignored) |
+| About to fall | "You feel as if you are about to fall." (levitate wearing off) |
+| Invisibility fading | "You feel yourself starting to appear." / "Your shadows fade." |
+| Illusion ending (off by default) | "You feel as if you are about to look like yourself again." |
+| Your spell wore off | "Your Fear / Root / Dooming Darkness … spell has worn off." |
+| Stand up | "You must be standing to attack / cast a spell / …" |
+| You're charmed | "You have been charmed." |
+| You died | "You have been slain by …" |
+| Rampage | "… goes on a RAMPAGE!" / "… begins to rampage." |
+| Mob gating | "a wurm Gates." / "… begins to cast the gate spell." |
+| Group invite | "Somebody invites you to join a group." |
+| Trade offered | "Somebody has offered you …" |
+| Food / drink low | "You are low on food / out of drink …" (at most once a minute) |
 
-The 🔔 on a spawn timer uses a fourth tone.
+The 🔔 on a spawn timer has its own tone too.
 
 ## Download
 

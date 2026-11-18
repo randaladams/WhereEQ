@@ -37,17 +37,31 @@ public sealed class MapOverlaySettings
 /// <summary>Which log events beep (Settings → Sounds).</summary>
 public sealed class SoundSettings
 {
-    /// <summary>"You feel as if you are about to fall." (levitate ending).</summary>
+    // The first three (0.1.21) were plain flags; kept so older settings files keep their choice.
     public bool Fall { get; set; } = true;
-    /// <summary>"You must be standing to attack/cast/...".</summary>
     public bool Stand { get; set; } = true;
-    /// <summary>A player sends you a tell.</summary>
     public bool Tell { get; set; } = true;
+    /// <summary>The other alerts, by <see cref="LogNotice"/> name. Missing = the alert's default.</summary>
+    public Dictionary<string, bool> On { get; set; } = new();
 
     public bool IsOn(LogNotice n) => n switch
     {
-        LogNotice.Fall => Fall, LogNotice.Stand => Stand, LogNotice.Tell => Tell, _ => false,
+        LogNotice.Fall => Fall,
+        LogNotice.Stand => Stand,
+        LogNotice.Tell => Tell,
+        _ => On.TryGetValue(n.ToString(), out var v) ? v : Sounds.Alerts.FirstOrDefault(a => a.Notice == n)?.DefaultOn ?? false,
     };
+
+    public void Set(LogNotice n, bool on)
+    {
+        switch (n)
+        {
+            case LogNotice.Fall: Fall = on; break;
+            case LogNotice.Stand: Stand = on; break;
+            case LogNotice.Tell: Tell = on; break;
+            default: On[n.ToString()] = on; break;
+        }
+    }
 }
 
 /// <summary>A timer started by hand in the Timers window (or "restart now" on a kill).</summary>
@@ -179,6 +193,7 @@ public sealed class Settings
                     s.Map ??= new();
                     s.Timers ??= new();
                     s.Sounds ??= new();
+                    s.Sounds.On ??= new();
                     s.Timers.Dismissed ??= new();
                     s.Timers.Manual ??= new();
                     s.Timers.Alerts ??= new();
