@@ -2,7 +2,7 @@ namespace WhereEQ.Services;
 
 /// <summary>Things WhereEQ can beep for. Each has its own short tone pattern so you can tell them apart.
 /// Log-driven ones share their names with <see cref="LogNotice"/>.</summary>
-public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food }
+public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, CharmEnd }
 
 /// <summary>One log alert: what it's called in Settings, which lines trigger it, and whether it's on by default.</summary>
 public sealed record AlertInfo(LogNotice Notice, string Label, string Description, bool DefaultOn = true);
@@ -23,6 +23,10 @@ public static class Sounds
         new(LogNotice.Stand, "Stand up", "\"You must be standing to attack / cast a spell / ...\""),
         new(LogNotice.Invite, "Group invite", "\"Somebody invites you to join a group.\""),
         new(LogNotice.Trade, "Trade offered", "\"Somebody has offered you ...\""),
+        new(LogNotice.Fizzle, "Fizzle / missed note", "\"Your spell fizzles!\" / \"You miss a note, bringing your song to a close!\""),
+        new(LogNotice.Mana, "Out of mana", "\"Insufficient Mana to cast this spell!\""),
+        new(LogNotice.Forage, "Foraged", "\"You have scrounged up some food / water / ...\""),
+        new(LogNotice.Charm, "Charm landed", "\"... 's eyes glaze over.\" On a Bard this starts an 18-second charm timer instead"),
         new(LogNotice.Food, "Food / drink low", "\"You are low on food / out of drink ...\" (at most once a minute)"),
     };
 
@@ -36,7 +40,12 @@ public static class Sounds
         [Sound.Illusion] = new[] { (1100, 120), (900, 120) },                        // soft down pair
         [Sound.Invite] = new[] { (1000, 90), (1500, 90) },                           // up pair, short
         [Sound.Trade] = new[] { (1500, 60), (1500, 60), (1500, 60) },                // three ticks
-        [Sound.Food] = new[] { (800, 200), (800, 200) },                             // slow pair
+        [Sound.Food] = new[] { (800, 200), (800, 200) },
+        [Sound.Fizzle] = new[] { (600, 60), (450, 90) },                             // short drop
+        [Sound.Mana] = new[] { (350, 250) },                                         // one low tone
+        [Sound.Forage] = new[] { (1300, 50), (1700, 50) },                           // tiny up blip
+        [Sound.Charm] = new[] { (900, 70), (1300, 70), (900, 70) },                  // up-down
+        [Sound.CharmEnd] = new[] { (2000, 60) },                                     // one short high blip                             // slow pair
     };
 
     private static readonly Dictionary<Sound, DateTime> LastPlayed = new();
@@ -64,6 +73,16 @@ public static class Sounds
         }
     }
 
+    /// <summary>A Bard's charm timer is about to run out (4 seconds left).</summary>
+    public static void CharmEndingAlert(SoundSettings s)
+    {
+        switch (s.TimerMode)
+        {
+            case AlertMode.Beep: Play(Sound.CharmEnd, force: true); break;
+            case AlertMode.Voice: Speech.Say("Charm ending", s, force: true); break;
+        }
+    }
+
     /// <summary>What the voice says for a log line.</summary>
     public static string Phrase(LogNotice n, string line, bool readTells)
     {
@@ -86,6 +105,12 @@ public static class Sounds
                 var t = line.StartsWith("You are ") ? line["You are ".Length..] : line;
                 t = t.TrimEnd('.');
                 return t.Length > 0 ? char.ToUpper(t[0]) + t[1..] : "Food and drink";
+            case LogNotice.Fizzle: return line.StartsWith("You miss a note") ? "Missed note" : "Fizzle";
+            case LogNotice.Mana: return "Out of mana";
+            case LogNotice.Forage:
+                var got = line.StartsWith("You have scrounged up ") ? line["You have scrounged up ".Length..].TrimEnd('.') : "";
+                return got.Length > 0 ? $"Foraged {got}" : "Foraged";
+            case LogNotice.Charm: return LogScanner.GlazedMob(line) is { } mob ? $"Charmed {mob}" : "Charm landed";
             default: return n.ToString();
         }
     }
@@ -101,6 +126,10 @@ public static class Sounds
         LogNotice.Invite => "Somebody invites you to join a group.",
         LogNotice.Trade => "Somebody has offered you a Bone Chips.",
         LogNotice.Food => "You are low on food.",
+        LogNotice.Fizzle => "Your spell fizzles!",
+        LogNotice.Mana => "Insufficient Mana to cast this spell!",
+        LogNotice.Forage => "You have scrounged up some food.",
+        LogNotice.Charm => "A bulthar's eyes glaze over.",
         _ => "",
     };
 

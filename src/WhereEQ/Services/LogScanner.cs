@@ -30,7 +30,7 @@ public sealed record KillRecord(string Name, string? Zone, DateTime Time, string
                                 double? X = null, double? Y = null);
 
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
-public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food }
+public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm }
 
 public sealed class LogState
 {
@@ -153,9 +153,10 @@ public static partial class LogScanner
     /// Raised (on the log reader's thread) for fresh lines that deserve a sound: falling ("You feel as if you are
     /// about to fall."), needing to stand ("You must be standing to ..."), and tells from players. Only lines
     /// stamped within the last 20 seconds count, so reading an old log doesn't replay them.
-    /// Arguments: what happened, the character whose log it is, the line.
+    /// Arguments: what happened, the character whose log it is, that character's class from the log (or null),
+    /// the line.
     /// </summary>
-    public static event Action<LogNotice, string, string>? Notice;
+    public static event Action<LogNotice, string, string?, string>? Notice;
 
     public static bool TryParseFileName(string path, out string character, out string server)
     {
@@ -205,7 +206,7 @@ public static partial class LogScanner
             var ts = ParseTimestamp(m.Groups["ts"].Value);
             if (ts != null) state.LastLine = ts;
 
-            if (Notice != null && ts is { } lt && (DateTime.Now - lt).TotalSeconds < 20) CheckNotice(name, msg);
+            if (Notice != null && ts is { } lt && (DateTime.Now - lt).TotalSeconds < 20) CheckNotice(name, state.Class, msg);
 
             // /friends output: header, dashes, who-style lines, then "There is/are ..." ends it.
             if (state.InFriendsList && (msg.StartsWith("There ") || msg.StartsWith("Your Location") || msg.StartsWith("You ")))
@@ -383,10 +384,21 @@ public static partial class LogScanner
         return (t - seen).TotalMinutes is >= 0 and <= 10 ? (x, y) : (null, null);
     }
 
-    private static void CheckNotice(string character, string msg)
+    private static void CheckNotice(string character, string? cls, string msg)
     {
         if (Classify(msg) is not { } notice) return;
-        try { Notice?.Invoke(notice, character, msg); } catch { /* a sound must never break log reading */ }
+        try { Notice?.Invoke(notice, character, cls, msg); } catch { /* a sound must never break log reading */ }
+    }
+
+    /// <summary>The mob in "A bulthar's eyes glaze over." ("a bulthar"), or null.</summary>
+    public static string? GlazedMob(string msg)
+    {
+        const string tail = "'s eyes glaze over.";
+        if (!msg.EndsWith(tail)) return null;
+        var mob = msg[..^tail.Length];
+        // The game capitalizes the first letter at the start of a sentence; mob names are "a bulthar".
+        if (mob.StartsWith("A ") || mob.StartsWith("An ")) mob = char.ToLower(mob[0]) + mob[1..];
+        return mob.Length > 0 ? mob : null;
     }
 
     /// <summary>Which alert (if any) a log message is. Chat lines never are, except tells to you.</summary>
@@ -405,14 +417,19 @@ public static partial class LogScanner
             if ((msg.StartsWith("You are low on ") || msg.StartsWith("You are out of ")) &&
                 (msg.Contains("food") || msg.Contains("drink"))) return LogNotice.Food;
             if (msg is "You are hungry." or "You are thirsty.") return LogNotice.Food;
+            if (msg == "You miss a note, bringing your song to a close!") return LogNotice.Fizzle;
+            if (msg.StartsWith("You have scrounged up ")) return LogNotice.Forage;
             return null;
         }
         if (msg.StartsWith("Your "))
         {
             if (msg == "Your shadows fade.") return LogNotice.Fade;
+            if (msg == "Your spell fizzles!") return LogNotice.Fizzle;
             return null;
         }
         if (msg.EndsWith(" invites you to join a group.")) return LogNotice.Invite;
+        if (msg == "Insufficient Mana to cast this spell!") return LogNotice.Mana;
+        if (msg.EndsWith("'s eyes glaze over.")) return LogNotice.Charm;
         if (msg.Contains(" has offered you ")) return LogNotice.Trade;
         return null;
     }

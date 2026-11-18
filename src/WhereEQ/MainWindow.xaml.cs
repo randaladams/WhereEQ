@@ -41,7 +41,14 @@ public partial class MainWindow : Window
         OverrideLevel.ItemsSource = new[] { "" }.Concat(Enumerable.Range(1, 60).Select(i => i.ToString())).ToList();
         TopmostCheck.IsChecked = _settings.AlwaysOnTop;
         // Sounds for fresh log lines (falling, stand up, tells). Raised on the log reader's thread.
-        LogScanner.Notice += (notice, _, line) => Sounds.Alert(_settings.Sounds, notice, line);
+        LogScanner.Notice += (notice, character, cls, line) =>
+        {
+            // A Bard's charm song lasts 18 seconds: count it down instead of the plain "charm landed" alert.
+            if (notice == LogNotice.Charm && IsBard(character, cls) && LogScanner.GlazedMob(line) is { } mob)
+                Dispatcher.BeginInvoke(() => StartBardCharm(mob));
+            else
+                Sounds.Alert(_settings.Sounds, notice, line);
+        };
         Loaded += async (_, _) =>
         {
             if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
@@ -178,7 +185,7 @@ public partial class MainWindow : Window
         }
         if (parts.Length > 1 && parts[1] == "timers")
         {
-            OpenTimers();
+            if (_timersWindow == null) OpenTimers();
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             if (parts.Length > 2) _timersWindow!.DevShow(parts[2]);
             await Task.Delay(800);
@@ -270,6 +277,30 @@ public partial class MainWindow : Window
             return;
         }
         OpenTimers();
+    }
+
+    private bool IsBard(string character, string? cls)
+    {
+        var c = cls ?? (_settings.Overrides.TryGetValue(character, out var o) ? o.Class : null);
+        return string.Equals(c, "Bard", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Bard charm: an 18-second timer for the mob with a short alert 4 seconds before it ends. A new
+    /// "eyes glaze over" on the same mob restarts it. Opens the timers window if it's closed (it does the alert).</summary>
+    private void StartBardCharm(string mob)
+    {
+        var t = _settings.Timers;
+        var name = $"charm: {mob}";
+        t.Manual.RemoveAll(m => m.Kind == "charm" && m.Name == name);
+        var timer = new ManualTimer
+        {
+            Name = name, Start = DateTime.Now, Seconds = 18, AlertSeconds = 4, KeepSeconds = 10, Kind = "charm",
+        };
+        t.Manual.Add(timer);
+        t.Alerts.Add($"manual|{timer.Start.Ticks}|{timer.Name}");
+        _settings.Save();
+        if (_timersWindow == null) OpenTimers();
+        else _timersWindow.RefreshTimers();
     }
 
     private void OpenTimers()

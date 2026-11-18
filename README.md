@@ -68,9 +68,18 @@ anyone in the room hears it). The voice works offline and needs nothing installe
 | Stand up | "You must be standing to attack / cast a spell / …" |
 | Group invite | "Somebody invites you to join a group." |
 | Trade offered | "Somebody has offered you …" |
+| Fizzle / missed note | "Your spell fizzles!" / "You miss a note, bringing your song to a close!" |
+| Out of mana | "Insufficient Mana to cast this spell!" |
+| Foraged | "You have scrounged up some food / water / …" |
+| Charm landed | "… 's eyes glaze over." (see below for Bards) |
 | Food / drink low | "You are low on food / out of drink …" (at most once a minute) |
 
 The 🔔 on a spawn timer has its own Off / Beep / Voice setting too.
+
+**Bards:** a charm song lasts 18 seconds, so on a Bard "… 's eyes glaze over." starts an 18-second **charm: mob**
+timer in the Timers window (opening it if needed) instead of the plain alert, with a short blip (or "Charm
+ending") 4 seconds before it ends. Charming the same mob again restarts it. The class comes from the log
+(`/who` yourself) or the class you set on the Characters tab.
 
 ## Download
 

@@ -39,6 +39,11 @@ public partial class TimersWindow : Window
         public TimeSpan? Respawn { get; init; }
         public SpawnSource Source { get; init; }
         public bool IsManual { get; init; }
+        /// <summary>🔔 fires this long before the end (30 s, or 4 s for a Bard charm).</summary>
+        public TimeSpan AlertLead { get; init; } = TimeSpan.FromSeconds(30);
+        /// <summary>Overrides "keep up timers" (charm timers vanish soon after they end).</summary>
+        public TimeSpan? KeepUp { get; init; }
+        public bool IsCharm { get; init; }
         /// <summary>Death of an unknown mob (from faction/experience): counts up from the kill.</summary>
         public bool CountUp { get; init; }
         public bool HasDue => Respawn != null;
@@ -220,10 +225,13 @@ public partial class TimersWindow : Window
                 Key = ManualKey(m), Mob = m.Name, ZoneShort = m.Zone,
                 ZoneText = m.Zone != null ? ZoneNames.ToLong(m.Zone) : "", Killed = m.Start, By = "(by hand)", Mine = true,
                 Respawn = TimeSpan.FromSeconds(m.Seconds), Source = SpawnSource.None, IsManual = true,
+                AlertLead = TimeSpan.FromSeconds(m.AlertSeconds ?? 30),
+                KeepUp = m.KeepSeconds is { } ks ? TimeSpan.FromSeconds(ks) : null,
+                IsCharm = m.Kind == "charm",
             });
         }
 
-        rows = rows.Where(r => r.Due is { } due ? due + keepUp > now : now - r.Killed < UnknownKeep)
+        rows = rows.Where(r => r.Due is { } due ? due + (r.KeepUp ?? keepUp) > now : now - r.Killed < UnknownKeep)
                    .OrderBy(r => r.Due ?? DateTime.MaxValue).ThenBy(r => r.Killed).ToList();
 
         // Forget timers that are long gone so settings don't grow forever.
@@ -234,7 +242,7 @@ public partial class TimersWindow : Window
         {
             r.Alert = alerts.Contains(r.Key);
             // Already inside the alert window when the list was built (e.g. at startup): don't beep late.
-            r.Beeped = r.Due is { } d && d - now <= AlertBefore;
+            r.Beeped = r.Due is { } d && d - now <= r.AlertLead;
             if (_rows.FirstOrDefault(o => o.Key == r.Key) is { } old) r.Beeped = old.Beeped;
             r.Tick(now);
         }
@@ -267,8 +275,8 @@ public partial class TimersWindow : Window
 
     private static string ManualKey(ManualTimer m) => $"manual|{m.Start.Ticks}|{m.Name}";
 
-    /// <summary>🔔 timers beep this long before the respawn.</summary>
-    private static readonly TimeSpan AlertBefore = TimeSpan.FromSeconds(30);
+    /// <summary>Called by the main window after it adds a timer (e.g. a Bard charm).</summary>
+    public void RefreshTimers() => Rebuild();
 
     private void Tick()
     {
@@ -277,14 +285,15 @@ public partial class TimersWindow : Window
         foreach (var r in _rows)
         {
             r.Tick(now);
-            if (r.Alert && !r.Beeped && r.Due is { } due && due - now <= AlertBefore && due > now)
+            if (r.Alert && !r.Beeped && r.Due is { } due && due - now <= r.AlertLead && due > now)
             {
                 r.Beeped = true;
-                Sounds.TimerAlert(_settings.Sounds, r.Mob);
+                if (r.IsCharm) Sounds.CharmEndingAlert(_settings.Sounds);
+                else Sounds.TimerAlert(_settings.Sounds, r.Mob);
             }
         }
         // Drop timers whose "keep for" time ran out.
-        if (_rows.Any(r => r.Due is { } due ? due + keepUp <= now : now - r.Killed >= UnknownKeep)) Rebuild();
+        if (_rows.Any(r => r.Due is { } due ? due + (r.KeepUp ?? keepUp) <= now : now - r.Killed >= UnknownKeep)) Rebuild();
     }
 
     // ------------------------------------------------------------------ UI

@@ -84,6 +84,12 @@ public sealed class ManualTimer
     public string? Zone { get; set; }
     public DateTime Start { get; set; }
     public int Seconds { get; set; }
+    /// <summary>Alert this many seconds before the end instead of 30 (Bard charm: 4).</summary>
+    public int? AlertSeconds { get; set; }
+    /// <summary>Drop the timer this many seconds after it ends instead of the "keep up timers" time.</summary>
+    public int? KeepSeconds { get; set; }
+    /// <summary>"charm" for a Bard charm timer (short alert sound, "Charm ending").</summary>
+    public string? Kind { get; set; }
 }
 
 public sealed class TimersSettings
