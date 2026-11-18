@@ -59,6 +59,10 @@ Format notes learned from real data:
   `/friends` blocks), `/loc` + trail + sense-heading.
 - `/loc` prints **Y, X, Z**; map files use **(-X, -Y)** (`MapData.FromLoc`). Verified: 10,645 of 10,647 logged
   East Commonlands locs fall inside the ecommons map with this transform.
+- Seen in bigger logs (Shadow Knight 2.4M lines, Bard 1.7M): stray NUL bytes (harmless: such lines don't match
+  the timestamp regex); until mid-2026 tells could also appear as `Somebody -> Yourname: text` (not used now);
+  "You have entered an Arena (PvP) area." is not a zone change; bard song/DoT kills often have no "slain" line
+  (corpse shows as `...'scorpse`), which the faction/xp deaths cover.
 - `.ini` friends: `[Friends]` section, `FriendN=Name`; `UI_Name_server.ini` is ignored. Writing keeps other
   sections and makes `.whereeq.bak`.
 

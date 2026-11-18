@@ -349,8 +349,9 @@ public static partial class LogScanner
             else if (msg.StartsWith("You have entered "))
             {
                 var z = ZoneLine().Match(msg);
-                // Skip "You have entered an area where levitation effects do not function." etc.
-                if (z.Success && !msg.StartsWith("You have entered an area"))
+                // Skip "You have entered an area where levitation effects do not function.", "You have entered an
+                // Arena (PvP) area." etc.: no zone name starts with "an ".
+                if (z.Success && !msg.StartsWith("You have entered an ", StringComparison.OrdinalIgnoreCase))
                 {
                     state.Zone = z.Groups["zone"].Value;
                     state.Trail.Clear(); // locs from the previous zone don't belong on this map
