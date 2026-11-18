@@ -401,12 +401,7 @@ public partial class TimersWindow : Window
         Tick();
     }
 
-    /// <summary>Short beep, off the UI thread (Console.Beep blocks for its duration).</summary>
-    private static void Beep() => Task.Run(() =>
-    {
-        try { Console.Beep(1200, 120); Console.Beep(1600, 120); }
-        catch { System.Media.SystemSounds.Beep.Play(); }
-    });
+    private static void Beep() => Sounds.Play(Sound.Timer, force: true);
 
     private void Remove(TimerRow r)
     {

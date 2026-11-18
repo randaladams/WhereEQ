@@ -40,6 +40,12 @@ public partial class MainWindow : Window
         OverrideClass.ItemsSource = new[] { "" }.Concat(EqClass.All).ToList();
         OverrideLevel.ItemsSource = new[] { "" }.Concat(Enumerable.Range(1, 60).Select(i => i.ToString())).ToList();
         TopmostCheck.IsChecked = _settings.AlwaysOnTop;
+        // Sounds for fresh log lines (falling, stand up, tells). Raised on the log reader's thread.
+        LogScanner.Notice += (notice, _, _) =>
+        {
+            if (_settings.Sounds.IsOn(notice))
+                Sounds.Play(notice switch { LogNotice.Fall => Sound.Fall, LogNotice.Stand => Sound.Stand, _ => Sound.Tell });
+        };
         Loaded += async (_, _) =>
         {
             if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
@@ -78,6 +84,7 @@ public partial class MainWindow : Window
         _settings.AlwaysOnTop = r.AlwaysOnTop;
         _settings.BankSlots = r.BankSlots;
         _settings.MapsFolder = r.MapsFolder;
+        _settings.Sounds = r.Sounds;
         _settings.Save();
         _mapWindow?.ReloadMaps();
         TopmostCheck.IsChecked = r.AlwaysOnTop;

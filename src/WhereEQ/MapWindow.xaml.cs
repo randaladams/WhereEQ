@@ -71,6 +71,11 @@ public partial class MapWindow : Window
             SaveState();
         };
         LocationChanged += (_, _) => SaveState();
+        // Kill markers fade and expire even when nothing new is logged.
+        var fade = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+        fade.Tick += (_, _) => { if (IsVisible) Refresh(); };
+        fade.Start();
+        Closed += (_, _) => fade.Stop();
         SizeChanged += (_, _) => SaveState();
     }
 
@@ -146,6 +151,7 @@ public partial class MapWindow : Window
         Point? player = locHere ? new Point(log!.MapX!.Value, log.MapY!.Value) : null;
         var trail = locHere ? SafeTrail(log!, _settings.Map.TrailClearedAt) : new List<Point>();
         View.SetPlayer(player, locHere ? HeadingOf(log!, trail) : null, _settings.Map.ShowTrail ? trail : new List<Point>());
+        View.SetKills(RecentKills(shortName));
 
         // Time · loc · heading go on the same line as the zone name (title bar when unlocked, caption when locked).
         var locInfo = map != null && locHere
@@ -186,6 +192,33 @@ public partial class MapWindow : Window
     private static readonly Brush LocBrush = Frozen(Color.FromRgb(0xE8, 0xE8, 0xE8));
     private static readonly Brush DimBrush = Frozen(Color.FromRgb(0xA0, 0xA0, 0xA0));
     private static Brush Frozen(Color c) { var b = new SolidColorBrush(c); b.Freeze(); return b; }
+
+    /// <summary>Kill markers stay on the map this long.</summary>
+    private static readonly TimeSpan KillMarkerTime = TimeSpan.FromMinutes(10);
+
+    /// <summary>Kills in this map's zone in the last 10 minutes, from every character's log (map coordinates are
+    /// the same for everyone), placed at the killer's last /loc.</summary>
+    private List<(Point P, double Age)> RecentKills(string? shortName)
+    {
+        var list = new List<(Point, double)>();
+        if (shortName == null) return list;
+        var now = DateTime.Now;
+        foreach (var c in _characters)
+        {
+            if (c.Log == null) continue;
+            KillRecord[] kills;
+            try { kills = c.Log.Kills.ToArray(); } catch (ArgumentException) { continue; } catch (InvalidOperationException) { continue; }
+            foreach (var k in kills)
+            {
+                if (k.X is not { } x || k.Y is not { } y) continue;
+                var age = now - k.Time;
+                if (age < TimeSpan.Zero || age > KillMarkerTime) continue;
+                if (!string.Equals(ZoneNames.ToShort(k.Zone), shortName, StringComparison.OrdinalIgnoreCase)) continue;
+                list.Add((new Point(x, y), age / KillMarkerTime));
+            }
+        }
+        return list;
+    }
 
     /// <summary>Warn when the player is nowhere near the map: wrong map, or a map pack with different coordinates.</summary>
     private static string OutsideNote(MapData map, Point? player)

@@ -16,6 +16,8 @@ EverQuest client writes and keeps them up to date while you play.
   `/loc` macro. The map switches automatically when you zone.
 - Mouse wheel zooms, drag pans, double-click fits the zone. ⚙ sets the backdrop darkness, map opacity, line
   colors, labels, the trail (show it, or clear it to start over), which character to track, and a manual map pick.
+- Kills (yours and the ones on your Timers list) leave a small orange dot at your last `/loc` before the kill;
+  it fades out over 10 minutes.
 - Drag the title bar to move it; it can go right up to a screen edge (Windows Snap doesn't grab it).
 - 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
 - EverQuest has to run in windowed mode for any overlay to show on top of it (full screen hides every other
@@ -48,6 +50,16 @@ EverQuest client writes and keeps them up to date while you play.
 - ⚙ has the options (kills by others, how long "up" timers stay, backdrop darkness) and a box to type a mob
   name and a time (`22`, `6:40` or `8:00:00`): **Start timer** starts one by hand, **Save time** always uses
   that time for that mob in that zone.
+
+## Sounds
+
+Settings → **Sounds** beeps (each with its own tone; **▶ Test** plays it) when the log says:
+
+- **About to fall**: "You feel as if you are about to fall." (levitate wearing off).
+- **Stand up**: "You must be standing to attack / cast a spell / forage / bind wounds."
+- **Tell**: a player sends you a tell (merchants, bankers and pets are ignored).
+
+The 🔔 on a spawn timer uses a fourth tone.
 
 ## Download
 

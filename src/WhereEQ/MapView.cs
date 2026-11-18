@@ -24,6 +24,14 @@ public sealed class MapView : FrameworkElement
     /// <summary>Heading as a unit vector in map space, if known.</summary>
     public Vector? Heading { get; private set; }
     public IReadOnlyList<Point> Trail { get; private set; } = Array.Empty<Point>();
+    /// <summary>Recent kills: map position and age 0 (just now) .. 1 (about to disappear).</summary>
+    public IReadOnlyList<(Point P, double Age)> Kills { get; private set; } = Array.Empty<(Point, double)>();
+
+    public void SetKills(IReadOnlyList<(Point P, double Age)> kills)
+    {
+        Kills = kills;
+        InvalidateVisual();
+    }
     public string LineStyle { get; set; } = "Bright";
     public bool ShowLabels { get; set; } = true;
     public bool Follow { get; set; } = true;
@@ -162,6 +170,15 @@ public sealed class MapView : FrameworkElement
                 var pen = new Pen(new SolidColorBrush(Color.FromArgb(a, 80, 200, 255)), 2);
                 dc.DrawLine(pen, ToScreen(Trail[i - 1]), ToScreen(Trail[i]));
             }
+        }
+
+        // Kill markers: small dots that fade out over their 10 minutes.
+        foreach (var (kp, age) in Kills)
+        {
+            var alpha = (byte)(230 - 150 * Math.Clamp(age, 0, 1));
+            var fill = new SolidColorBrush(Color.FromArgb(alpha, 255, 152, 0));
+            var ring = new Pen(new SolidColorBrush(Color.FromArgb(alpha, 0, 0, 0)), 1);
+            dc.DrawEllipse(fill, ring, ToScreen(kp), 3.5, 3.5);
         }
 
         if (Player is { } pl)

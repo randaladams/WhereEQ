@@ -24,8 +24,13 @@ public sealed record TrailPoint(double X, double Y, DateTime T);
 /// <summary>A mob death seen in the log. <see cref="By"/> is null for "You have slain X!", else the killer
 /// from "X has been slain by Killer!" (another player, a pet, ...). <see cref="Zone"/> is the log's zone name.
 /// <see cref="Kind"/> is "faction" or "xp" for a death with no "slain" line, noticed only from a faction change or
-/// experience (the mob's name isn't known, so there's no respawn time).</summary>
-public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By, string? Kind = null);
+/// experience (the mob's name isn't known, so there's no respawn time). <see cref="X"/>/<see cref="Y"/> is the
+/// last /loc before the kill (map coordinates), when it was taken in the same zone shortly before.</summary>
+public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By, string? Kind = null,
+                                double? X = null, double? Y = null);
+
+/// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
+public enum LogNotice { Fall, Stand, Tell }
 
 public sealed class LogState
 {
@@ -136,6 +141,22 @@ public static partial class LogScanner
     [GeneratedRegex(@"^You have entered (?<zone>.+)\.$")]
     private static partial Regex ZoneLine();
 
+    // "Somefriend tells you, 'hi'" (players have one-word names; NPC merchants/bankers have more).
+    [GeneratedRegex(@"^(?<who>[A-Za-z]+) tells you, '(?<text>.*)'$")]
+    private static partial Regex TellLine();
+
+    // Pets and one-word-name NPCs also "tell" you things.
+    [GeneratedRegex(@"^(Attacking |Following you|Guarding |Sorry, Master|I'll give you |That'll be |Welcome to my bank|Come back soon)|Master\.?$")]
+    private static partial Regex NpcTell();
+
+    /// <summary>
+    /// Raised (on the log reader's thread) for fresh lines that deserve a sound: falling ("You feel as if you are
+    /// about to fall."), needing to stand ("You must be standing to ..."), and tells from players. Only lines
+    /// stamped within the last 20 seconds count, so reading an old log doesn't replay them.
+    /// Arguments: what happened, the character whose log it is, the line.
+    /// </summary>
+    public static event Action<LogNotice, string, string>? Notice;
+
     public static bool TryParseFileName(string path, out string character, out string server)
     {
         var m = LogFileName().Match(System.IO.Path.GetFileNameWithoutExtension(path));
@@ -184,6 +205,8 @@ public static partial class LogScanner
             var ts = ParseTimestamp(m.Groups["ts"].Value);
             if (ts != null) state.LastLine = ts;
 
+            if (Notice != null && ts is { } lt && (DateTime.Now - lt).TotalSeconds < 20) CheckNotice(name, msg);
+
             // /friends output: header, dashes, who-style lines, then "There is/are ..." ends it.
             if (state.InFriendsList && (msg.StartsWith("There ") || msg.StartsWith("Your Location") || msg.StartsWith("You ")))
                 state.InFriendsList = false;
@@ -208,7 +231,8 @@ public static partial class LogScanner
             // Mob deaths (spawn timers). Before the other checks: a mob's name can contain words like "guild".
             if (msg.EndsWith('!') && TryParseKill(msg, name, out var victim, out var killer))
             {
-                AddKill(state, new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer));
+                var (kx, ky) = KillPosition(state, ts);
+                AddKill(state, new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer, X: kx, Y: ky));
                 Pending(state, ts).PendingSlain++;
                 continue;
             }
@@ -349,6 +373,28 @@ public static partial class LogScanner
 
     private const double PendingSeconds = 2;
 
+    /// <summary>Where a kill happened, roughly: the last /loc, if it's in this zone and under 10 minutes old.</summary>
+    private static (double? X, double? Y) KillPosition(LogState state, DateTime? when)
+    {
+        if (state.MapX is not { } x || state.MapY is not { } y || state.LocZone != state.Zone || state.LocSeen is not { } seen)
+            return (null, null);
+        var t = when ?? DateTime.Now;
+        return (t - seen).TotalMinutes is >= 0 and <= 10 ? (x, y) : (null, null);
+    }
+
+    private static void CheckNotice(string character, string msg)
+    {
+        LogNotice? n = null;
+        if (msg == "You feel as if you are about to fall.") n = LogNotice.Fall;
+        else if (msg.StartsWith("You must be standing to ")) n = LogNotice.Stand;
+        else if (msg.Contains(" tells you, '") && TellLine().Match(msg) is { Success: true } t && !NpcTell().IsMatch(t.Groups["text"].Value))
+            n = LogNotice.Tell;
+        if (n is { } notice)
+        {
+            try { Notice?.Invoke(notice, character, msg); } catch { /* a sound must never break log reading */ }
+        }
+    }
+
     private static void AddKill(LogState state, KillRecord k)
     {
         state.Kills.Add(k);
@@ -379,11 +425,12 @@ public static partial class LogScanner
             var faction = state.PendingFaction?.TrimEnd('+');
             var deaths = state.PendingXp > 0 ? state.PendingXp - state.PendingSlain
                        : state.PendingSlain == 0 && faction != null ? 1 : 0;
+            var (kx, ky) = KillPosition(state, t);
             for (var i = 0; i < deaths; i++)
             {
                 AddKill(state, faction != null
-                    ? new KillRecord($"faction death ({faction})", state.Zone, t, null, "faction")
-                    : new KillRecord("xp death", state.Zone, t, null, "xp"));
+                    ? new KillRecord($"faction death ({faction})", state.Zone, t, null, "faction", kx, ky)
+                    : new KillRecord("xp death", state.Zone, t, null, "xp", kx, ky));
             }
         }
         state.PendingTime = null;

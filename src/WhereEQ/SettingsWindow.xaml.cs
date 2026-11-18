@@ -26,6 +26,9 @@ public partial class SettingsWindow : Window
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
+        SoundFallCheck.IsChecked = settings.Sounds.Fall;
+        SoundStandCheck.IsChecked = settings.Sounds.Stand;
+        SoundTellCheck.IsChecked = settings.Sounds.Tell;
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
         BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
         _ready = true;
@@ -126,8 +129,20 @@ public partial class SettingsWindow : Window
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;
         s.BankSlots = BankSlotsBox.SelectedItem is int b ? b : InventoryParser.DefaultBankSlots;
+        s.Sounds = new SoundSettings
+        {
+            Fall = SoundFallCheck.IsChecked == true,
+            Stand = SoundStandCheck.IsChecked == true,
+            Tell = SoundTellCheck.IsChecked == true,
+        };
         Result = s;
         DialogResult = true;
+    }
+
+    private void TestSound_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is string name && Enum.TryParse<Sound>(name, out var sound))
+            Sounds.Play(sound, force: true);
     }
 
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim().Trim('"');

@@ -34,6 +34,22 @@ public sealed class MapOverlaySettings
     public string? Character { get; set; }
 }
 
+/// <summary>Which log events beep (Settings → Sounds).</summary>
+public sealed class SoundSettings
+{
+    /// <summary>"You feel as if you are about to fall." (levitate ending).</summary>
+    public bool Fall { get; set; } = true;
+    /// <summary>"You must be standing to attack/cast/...".</summary>
+    public bool Stand { get; set; } = true;
+    /// <summary>A player sends you a tell.</summary>
+    public bool Tell { get; set; } = true;
+
+    public bool IsOn(LogNotice n) => n switch
+    {
+        LogNotice.Fall => Fall, LogNotice.Stand => Stand, LogNotice.Tell => Tell, _ => false,
+    };
+}
+
 /// <summary>A timer started by hand in the Timers window (or "restart now" on a kill).</summary>
 public sealed class ManualTimer
 {
@@ -103,6 +119,9 @@ public sealed class Settings
     /// <summary>Spawn timers window state and options.</summary>
     public TimersSettings Timers { get; set; } = new();
 
+    /// <summary>Sounds for log events.</summary>
+    public SoundSettings Sounds { get; set; } = new();
+
     /// <summary>Usable bank slots (P1999: 8). Higher-numbered slots in the inventory file are ignored.</summary>
     public int BankSlots { get; set; } = InventoryParser.DefaultBankSlots;
 
@@ -159,6 +178,7 @@ public sealed class Settings
                     s.HiddenCharacters ??= new();
                     s.Map ??= new();
                     s.Timers ??= new();
+                    s.Sounds ??= new();
                     s.Timers.Dismissed ??= new();
                     s.Timers.Manual ??= new();
                     s.Timers.Alerts ??= new();
