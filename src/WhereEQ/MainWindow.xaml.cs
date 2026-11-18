@@ -41,10 +41,7 @@ public partial class MainWindow : Window
         OverrideLevel.ItemsSource = new[] { "" }.Concat(Enumerable.Range(1, 60).Select(i => i.ToString())).ToList();
         TopmostCheck.IsChecked = _settings.AlwaysOnTop;
         // Sounds for fresh log lines (falling, stand up, tells). Raised on the log reader's thread.
-        LogScanner.Notice += (notice, _, _) =>
-        {
-            if (_settings.Sounds.IsOn(notice)) Sounds.Play(Sounds.For(notice));
-        };
+        LogScanner.Notice += (notice, _, line) => Sounds.Alert(_settings.Sounds, notice, line);
         Loaded += async (_, _) =>
         {
             if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
@@ -165,6 +162,17 @@ public partial class MainWindow : Window
                 if (LogScanner.Classify(line[(close + 2)..]) is { } n) counts[n.ToString()] = counts.GetValueOrDefault(n.ToString()) + 1;
             }
             File.WriteAllLines(parts[0], counts.OrderBy(k => k.Key).Select(k => $"{k.Key}\t{k.Value}"));
+            Application.Current.Shutdown();
+            return;
+        }
+        if (parts.Length > 1 && parts[1] == "voices")
+        {
+            // Dev: list Windows voices and try one silent phrase -> parts[0].
+            var names = Speech.VoiceNames();
+            var probe = new SoundSettings { VoiceVolume = 0 };
+            Speech.Say("test", probe, force: true);
+            await Task.Delay(1500);
+            File.WriteAllLines(parts[0], names.DefaultIfEmpty("(no voices)").Append("speak: " + (Speech.LastError ?? "ok")));
             Application.Current.Shutdown();
             return;
         }

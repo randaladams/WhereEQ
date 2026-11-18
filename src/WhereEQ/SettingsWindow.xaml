@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WhereEQ Settings" Width="760" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <!-- Scrolls when the screen is shorter than the window (MaxHeight set in code). -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20">
 
         <TextBlock Text="File locations" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -85,13 +87,37 @@
 
         <TextBlock Text="Sounds" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,4"/>
         <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"
-                   Text="Beeps when a new line like this shows up in your log. Each has its own tone; ▶ plays it."/>
-        <!-- Two columns of alerts, filled in from Sounds.Alerts. -->
+                   Text="When a new line like this shows up in your log: do nothing, beep (each alert has its own tone) or have the Windows voice say it. ▶ tries it."/>
+        <!-- Two columns of alerts, filled in from Sounds.Alerts (+ the spawn timer bell). -->
         <UniformGrid x:Name="SoundRows" Columns="2"/>
+        <Grid Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="110"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="110"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Voice" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox x:Name="VoiceBox" Grid.Column="1" ToolTip="Voices installed in Windows (Settings → Time &amp; language → Speech adds more)"/>
+            <TextBlock Grid.Column="2" Text="Speed" VerticalAlignment="Center" Margin="16,0,8,0"/>
+            <Slider x:Name="VoiceRateSlider" Grid.Column="3" Minimum="-5" Maximum="8" IsSnapToTickEnabled="True" TickFrequency="1"
+                    VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="4" Text="Volume" VerticalAlignment="Center" Margin="16,0,8,0"/>
+            <Slider x:Name="VoiceVolumeSlider" Grid.Column="5" Minimum="10" Maximum="100" VerticalAlignment="Center"/>
+            <CheckBox x:Name="ReadTellsCheck" Grid.Row="1" Grid.ColumnSpan="6" Margin="0,6,0,0"
+                      Content="Read tells aloud (not just who sent them) — anyone in the room will hear them"/>
+        </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
             <Button Content="Save" IsDefault="True" MinWidth="90" Click="Save_Click" Style="{DynamicResource AccentButtonStyle}"/>
             <Button Content="Cancel" IsCancel="True" MinWidth="90" Margin="8,0,0,0"/>
         </StackPanel>
     </StackPanel>
+    </ScrollViewer>
 </Window>

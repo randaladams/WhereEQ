@@ -34,34 +34,46 @@ public sealed class MapOverlaySettings
     public string? Character { get; set; }
 }
 
-/// <summary>Which log events beep (Settings → Sounds).</summary>
+/// <summary>What an alert does: nothing, a beep, or the Windows voice saying a short phrase.</summary>
+public enum AlertMode { Off, Beep, Voice }
+
+/// <summary>Alerts for log events and spawn timers (Settings → Sounds).</summary>
 public sealed class SoundSettings
 {
-    // The first three (0.1.21) were plain flags; kept so older settings files keep their choice.
+    // Older settings files: 0.1.21 had three flags, 0.1.23 an on/off dictionary. Read only to pick defaults.
     public bool Fall { get; set; } = true;
     public bool Stand { get; set; } = true;
     public bool Tell { get; set; } = true;
-    /// <summary>The other alerts, by <see cref="LogNotice"/> name. Missing = the alert's default.</summary>
     public Dictionary<string, bool> On { get; set; } = new();
 
-    public bool IsOn(LogNotice n) => n switch
-    {
-        LogNotice.Fall => Fall,
-        LogNotice.Stand => Stand,
-        LogNotice.Tell => Tell,
-        _ => On.TryGetValue(n.ToString(), out var v) ? v : Sounds.Alerts.FirstOrDefault(a => a.Notice == n)?.DefaultOn ?? false,
-    };
+    /// <summary>Off / Beep / Voice per alert, by <see cref="LogNotice"/> name.</summary>
+    public Dictionary<string, AlertMode> Modes { get; set; } = new();
+    /// <summary>The spawn timer 🔔 (30 seconds before a respawn).</summary>
+    public AlertMode TimerMode { get; set; } = AlertMode.Beep;
 
-    public void Set(LogNotice n, bool on)
+    /// <summary>Windows voice to use (its description, e.g. "Microsoft Zira Desktop"); null = the Windows default.</summary>
+    public string? VoiceName { get; set; }
+    /// <summary>-10 (slow) .. 10 (fast).</summary>
+    public int VoiceRate { get; set; } = 1;
+    /// <summary>0 .. 100.</summary>
+    public int VoiceVolume { get; set; } = 100;
+    /// <summary>Voice reads the text of tells, not just who sent them.</summary>
+    public bool ReadTells { get; set; }
+
+    public AlertMode ModeOf(LogNotice n)
     {
-        switch (n)
+        if (Modes.TryGetValue(n.ToString(), out var m)) return m;
+        var legacyOn = n switch
         {
-            case LogNotice.Fall: Fall = on; break;
-            case LogNotice.Stand: Stand = on; break;
-            case LogNotice.Tell: Tell = on; break;
-            default: On[n.ToString()] = on; break;
-        }
+            LogNotice.Fall => Fall,
+            LogNotice.Stand => Stand,
+            LogNotice.Tell => Tell,
+            _ => On.TryGetValue(n.ToString(), out var v) ? v : Sounds.Alerts.FirstOrDefault(a => a.Notice == n)?.DefaultOn ?? false,
+        };
+        return legacyOn ? AlertMode.Beep : AlertMode.Off;
     }
+
+    public void SetMode(LogNotice n, AlertMode m) => Modes[n.ToString()] = m;
 }
 
 /// <summary>A timer started by hand in the Timers window (or "restart now" on a kill).</summary>
@@ -194,6 +206,7 @@ public sealed class Settings
                     s.Timers ??= new();
                     s.Sounds ??= new();
                     s.Sounds.On ??= new();
+                    s.Sounds.Modes ??= new();
                     s.Timers.Dismissed ??= new();
                     s.Timers.Manual ??= new();
                     s.Timers.Alerts ??= new();

@@ -26,20 +26,15 @@ public partial class SettingsWindow : Window
         SubfoldersCheck.IsChecked = settings.IncludeSubfolders;
         ServerBox.Text = settings.LogServer ?? "";
         TopmostCheck.IsChecked = settings.AlwaysOnTop;
-        foreach (var a in Sounds.Alerts)
-        {
-            var check = new CheckBox { Content = a.Label, IsChecked = settings.Sounds.IsOn(a.Notice), ToolTip = a.Description,
-                                       VerticalAlignment = VerticalAlignment.Center, Tag = a.Notice };
-            var test = new Button { Content = "▶", Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 0),
-                                    ToolTip = "Play this sound", Tag = a.Notice.ToString() };
-            test.Click += TestSound_Click;
-            var row = new DockPanel { Margin = new Thickness(0, 0, 12, 4) };
-            DockPanel.SetDock(test, Dock.Left);
-            row.Children.Add(test);
-            row.Children.Add(check);
-            SoundRows.Children.Add(row);
-            _soundChecks.Add(check);
-        }
+        foreach (var a in Sounds.Alerts) AddSoundRow(a.Label, a.Description, settings.Sounds.ModeOf(a.Notice), a.Notice);
+        AddSoundRow("Spawn timer 🔔", "30 seconds before a timer with its bell on runs out", settings.Sounds.TimerMode, null);
+        var voices = Speech.VoiceNames();
+        VoiceBox.ItemsSource = new[] { DefaultVoice }.Concat(voices).ToList();
+        VoiceBox.SelectedItem = settings.Sounds.VoiceName is { } vn && voices.Contains(vn) ? vn : DefaultVoice;
+        VoiceRateSlider.Value = settings.Sounds.VoiceRate;
+        VoiceVolumeSlider.Value = settings.Sounds.VoiceVolume;
+        ReadTellsCheck.IsChecked = settings.Sounds.ReadTells;
+        MaxHeight = SystemParameters.WorkArea.Height - 20;
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
         BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
         _ready = true;
@@ -140,18 +135,67 @@ public partial class SettingsWindow : Window
         s.LogServer = Clean(ServerBox.Text);
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;
         s.BankSlots = BankSlotsBox.SelectedItem is int b ? b : InventoryParser.DefaultBankSlots;
-        s.Sounds = new SoundSettings();
-        foreach (var c in _soundChecks) s.Sounds.Set((LogNotice)c.Tag, c.IsChecked == true);
+        s.Sounds = CurrentSounds();
         Result = s;
         DialogResult = true;
     }
 
-    private readonly List<CheckBox> _soundChecks = new();
+    private const string DefaultVoice = "Windows default";
+    private static readonly string[] ModeNames = { "Off", "Beep", "Voice" };
+    /// <summary>Mode box per alert; Tag = the LogNotice, or null for the spawn timer bell.</summary>
+    private readonly List<ComboBox> _modeBoxes = new();
+
+    private void AddSoundRow(string label, string description, AlertMode mode, LogNotice? notice)
+    {
+        var box = new ComboBox { ItemsSource = ModeNames, SelectedIndex = (int)mode, Width = 90, Margin = new Thickness(0, 0, 8, 0),
+                                 Tag = notice, ToolTip = description };
+        var test = new Button { Content = "▶", Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 0),
+                                ToolTip = "Try it", Tag = box };
+        test.Click += TestSound_Click;
+        var text = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center, ToolTip = description,
+                                   TextTrimming = TextTrimming.CharacterEllipsis };
+        var row = new DockPanel { Margin = new Thickness(0, 0, 12, 4) };
+        DockPanel.SetDock(test, Dock.Left);
+        DockPanel.SetDock(box, Dock.Left);
+        row.Children.Add(test);
+        row.Children.Add(box);
+        row.Children.Add(text);
+        SoundRows.Children.Add(row);
+        _modeBoxes.Add(box);
+    }
+
+    /// <summary>The sound settings as currently shown (used for Save and for ▶).</summary>
+    private SoundSettings CurrentSounds()
+    {
+        var s = new SoundSettings
+        {
+            VoiceName = VoiceBox.SelectedItem as string is { } v && v != DefaultVoice ? v : null,
+            VoiceRate = (int)Math.Round(VoiceRateSlider.Value),
+            VoiceVolume = (int)Math.Round(VoiceVolumeSlider.Value),
+            ReadTells = ReadTellsCheck.IsChecked == true,
+        };
+        foreach (var box in _modeBoxes)
+        {
+            var mode = (AlertMode)Math.Max(0, box.SelectedIndex);
+            if (box.Tag is LogNotice n) s.SetMode(n, mode);
+            else s.TimerMode = mode;
+        }
+        return s;
+    }
 
     private void TestSound_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is string name && Enum.TryParse<Sound>(name, out var sound))
-            Sounds.Play(sound, force: true);
+        if ((sender as FrameworkElement)?.Tag is not ComboBox box) return;
+        var s = CurrentSounds();
+        var mode = (AlertMode)Math.Max(0, box.SelectedIndex);
+        if (mode == AlertMode.Off) mode = AlertMode.Beep; // ▶ on an "Off" alert still lets you hear its beep
+        if (box.Tag is LogNotice n)
+        {
+            if (mode == AlertMode.Beep) Sounds.Play(Sounds.For(n), force: true);
+            else Speech.Say(Sounds.Phrase(n, Sounds.SampleLine(n), s.ReadTells), s, force: true);
+        }
+        else if (mode == AlertMode.Beep) Sounds.Play(Sound.Timer, force: true);
+        else Speech.Say("a fire beetle spawning in 30 seconds", s, force: true);
     }
 
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim().Trim('"');

@@ -44,6 +44,66 @@ public static class Sounds
 
     public static Sound For(LogNotice n) => Enum.Parse<Sound>(n.ToString());
 
+    /// <summary>Plays a log alert the way the settings say: nothing, its beep, or the voice.</summary>
+    public static void Alert(SoundSettings s, LogNotice n, string line, bool force = false)
+    {
+        switch (s.ModeOf(n))
+        {
+            case AlertMode.Beep: Play(For(n), force); break;
+            case AlertMode.Voice: Speech.Say(Phrase(n, line, s.ReadTells), s, force); break;
+        }
+    }
+
+    /// <summary>The spawn timer 🔔: beep, or say "a fire beetle spawning in 30 seconds".</summary>
+    public static void TimerAlert(SoundSettings s, string mob)
+    {
+        switch (s.TimerMode)
+        {
+            case AlertMode.Beep: Play(Sound.Timer, force: true); break;
+            case AlertMode.Voice: Speech.Say($"{mob} spawning in 30 seconds", s, force: true); break;
+        }
+    }
+
+    /// <summary>What the voice says for a log line.</summary>
+    public static string Phrase(LogNotice n, string line, bool readTells)
+    {
+        // "Somebody tells you, 'text'" / "Somebody invites you ..." / "Somebody has offered you ..."
+        var who = line.Split(' ', 2)[0];
+        switch (n)
+        {
+            case LogNotice.Tell:
+                var q = line.IndexOf(", '", StringComparison.Ordinal);
+                var text = q > 0 ? line[(q + 3)..].TrimEnd('\'') : "";
+                return readTells && text.Length > 0 ? $"Tell from {who}: {text}" : $"Tell from {who}";
+            case LogNotice.Fall: return "Levitate ending";
+            case LogNotice.Fade: return "Invis fading";
+            case LogNotice.Illusion: return "Illusion ending";
+            case LogNotice.Stand: return "Stand up";
+            case LogNotice.Invite: return $"Group invite from {who}";
+            case LogNotice.Trade: return $"Trade from {who}";
+            case LogNotice.Food:
+                // "You are low on food." -> "Low on food"
+                var t = line.StartsWith("You are ") ? line["You are ".Length..] : line;
+                t = t.TrimEnd('.');
+                return t.Length > 0 ? char.ToUpper(t[0]) + t[1..] : "Food and drink";
+            default: return n.ToString();
+        }
+    }
+
+    /// <summary>Sample lines for the ▶ test buttons.</summary>
+    public static string SampleLine(LogNotice n) => n switch
+    {
+        LogNotice.Tell => "Somebody tells you, 'hello there'",
+        LogNotice.Fall => "You feel as if you are about to fall.",
+        LogNotice.Fade => "You feel yourself starting to appear.",
+        LogNotice.Illusion => "You feel as if you are about to look like yourself again.",
+        LogNotice.Stand => "You must be standing to cast a spell.",
+        LogNotice.Invite => "Somebody invites you to join a group.",
+        LogNotice.Trade => "Somebody has offered you a Bone Chips.",
+        LogNotice.Food => "You are low on food.",
+        _ => "",
+    };
+
     public static void Play(Sound sound, bool force = false)
     {
         lock (Lock)

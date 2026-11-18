@@ -280,7 +280,7 @@ public partial class TimersWindow : Window
             if (r.Alert && !r.Beeped && r.Due is { } due && due - now <= AlertBefore && due > now)
             {
                 r.Beeped = true;
-                Beep();
+                Sounds.TimerAlert(_settings.Sounds, r.Mob);
             }
         }
         // Drop timers whose "keep for" time ran out.
@@ -401,7 +401,6 @@ public partial class TimersWindow : Window
         Tick();
     }
 
-    private static void Beep() => Sounds.Play(Sound.Timer, force: true);
 
     private void Remove(TimerRow r)
     {

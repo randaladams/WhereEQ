@@ -7,7 +7,7 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.24** (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
+- Status: build **0.1.25** (voice alerts: Off/Beep/Voice per alert) after 0.1.24 (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
   the owner's request, 8 alerts left) after 0.1.23 (log alerts with their own tones), 0.1.22 (arena line isn't a zone),
   0.1.21 (kill dots on the map; sounds for falling, stand up, tells), 0.1.20 (timers drag
   from anywhere, overlays kept on screen), 0.1.19 (faction/xp deaths
@@ -98,6 +98,10 @@ Format notes learned from real data:
   <NPC>" or a multi-word speaker "says" is a quest turn-in and is skipped. Manual timers, removed rows, "Clear all" and saved times live in `Settings.Timers`.
 - `Services/SpawnTimes.cs` + `Data/SpawnTimes/spawntimes.txt` — respawn times generated from EqTool's
   `EQToolShared/Zones.cs` by `tools/make_spawn_times.py` (`zone<TAB>*|=Name|~contains<TAB>h:mm:ss`).
+- `Services/Speech.cs` — Windows voice via SAPI COM late binding (`SAPI.SpVoice`, `dynamic`; no package, works in
+  the single-file publish). Runs on the UI thread, async queue, 3 s duplicate drop. `Sounds.Alert` /
+  `Sounds.TimerAlert` route each alert by `SoundSettings.Modes` (Off/Beep/Voice); `Sounds.Phrase` builds the
+  spoken text. Dev hook `out.txt|voices` lists voices and speaks silently (volume 0), writing "speak: ok".
 - `Services/Sounds.cs` — `Sounds.Alerts` is the one table of log alerts (label, description, default); Settings
   builds its rows from it. Beep patterns per `Sound` (same names as `LogNotice`), off the UI thread, 2 s throttle
   (food 60 s). `LogScanner.Classify(msg)` decides the alert; `LogScanner.Notice` fires for fresh lines (stamped

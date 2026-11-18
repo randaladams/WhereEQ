@@ -53,8 +53,11 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Sounds
 
-Settings → **Sounds** beeps when a new line shows up in your log; each alert has its own tone and a **▶** button
-to hear it. Turn any of them off there.
+Settings → **Sounds** reacts when a new line shows up in your log. Each alert can be **Off**, a **Beep** (each
+has its own tone) or **Voice**: the voice built into Windows says a short phrase ("Tell from Somebody",
+"Levitate ending", "Invis fading", "Stand up", "Low on food", "a fire beetle spawning in 30 seconds"). **▶** tries
+it. Pick the voice, speed and volume there; **Read tells aloud** also reads the tell's text (off by default:
+anyone in the room hears it). The voice works offline and needs nothing installed.
 
 | Alert | Log line |
 |---|---|
@@ -67,7 +70,7 @@ to hear it. Turn any of them off there.
 | Trade offered | "Somebody has offered you …" |
 | Food / drink low | "You are low on food / out of drink …" (at most once a minute) |
 
-The 🔔 on a spawn timer has its own tone too.
+The 🔔 on a spawn timer has its own Off / Beep / Voice setting too.
 
 ## Download
 
