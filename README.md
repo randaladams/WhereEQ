@@ -16,7 +16,7 @@ EverQuest client writes and keeps them up to date while you play.
   `/loc` macro. The map switches automatically when you zone.
 - Mouse wheel zooms, drag pans, double-click fits the zone. ⚙ sets the backdrop darkness, map opacity, line
   colors, labels, the trail (show it, or clear it to start over), which character to track, and a manual map pick.
-- Kills (yours and the ones on your Timers list) leave a small orange dot at your last `/loc` before the kill;
+- Kills (yours and the ones on your Timers list) leave a tiny white dot at your last `/loc` before the kill;
   it fades out over 10 minutes.
 - Drag the title bar to move it; it can go right up to a screen edge (Windows Snap doesn't grab it).
 - 🔒 or **Ctrl+Alt+M** makes the map click-through so clicks reach EverQuest; Ctrl+Alt+M again unlocks it.
@@ -62,12 +62,7 @@ to hear it. Turn any of them off there.
 | About to fall | "You feel as if you are about to fall." (levitate wearing off) |
 | Invisibility fading | "You feel yourself starting to appear." / "Your shadows fade." |
 | Illusion ending (off by default) | "You feel as if you are about to look like yourself again." |
-| Your spell wore off | "Your Fear / Root / Dooming Darkness … spell has worn off." |
 | Stand up | "You must be standing to attack / cast a spell / …" |
-| You're charmed | "You have been charmed." |
-| You died | "You have been slain by …" |
-| Rampage | "… goes on a RAMPAGE!" / "… begins to rampage." |
-| Mob gating | "a wurm Gates." / "… begins to cast the gate spell." |
 | Group invite | "Somebody invites you to join a group." |
 | Trade offered | "Somebody has offered you …" |
 | Food / drink low | "You are low on food / out of drink …" (at most once a minute) |

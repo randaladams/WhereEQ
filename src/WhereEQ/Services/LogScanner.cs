@@ -30,7 +30,7 @@ public sealed record KillRecord(string Name, string? Zone, DateTime Time, string
                                 double? X = null, double? Y = null);
 
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
-public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, SpellOff, Charmed, Invite, Trade, Rampage, Gate, Food, Died }
+public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food }
 
 public sealed class LogState
 {
@@ -402,8 +402,6 @@ public static partial class LogScanner
             if (msg.StartsWith("You must be standing to ")) return LogNotice.Stand;
             if (msg == "You feel yourself starting to appear.") return LogNotice.Fade;
             if (msg == "You feel as if you are about to look like yourself again.") return LogNotice.Illusion;
-            if (msg == "You have been charmed.") return LogNotice.Charmed;
-            if (msg.StartsWith("You have been slain by ") || msg == "You died.") return LogNotice.Died;
             if ((msg.StartsWith("You are low on ") || msg.StartsWith("You are out of ")) &&
                 (msg.Contains("food") || msg.Contains("drink"))) return LogNotice.Food;
             if (msg is "You are hungry." or "You are thirsty.") return LogNotice.Food;
@@ -412,11 +410,8 @@ public static partial class LogScanner
         if (msg.StartsWith("Your "))
         {
             if (msg == "Your shadows fade.") return LogNotice.Fade;
-            if (msg.EndsWith(" spell has worn off.")) return LogNotice.SpellOff;
             return null;
         }
-        if (msg.EndsWith(" goes on a RAMPAGE!") || msg.EndsWith(" begins to rampage.")) return LogNotice.Rampage;
-        if (msg.EndsWith(" Gates.") || msg.EndsWith(" begins to cast the gate spell.")) return LogNotice.Gate;
         if (msg.EndsWith(" invites you to join a group.")) return LogNotice.Invite;
         if (msg.Contains(" has offered you ")) return LogNotice.Trade;
         return null;

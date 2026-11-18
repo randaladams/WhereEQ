@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.23** (13 log alerts with their own tones) after 0.1.22 (arena line isn't a zone),
+- Status: build **0.1.24** (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
+  the owner's request, 8 alerts left) after 0.1.23 (log alerts with their own tones), 0.1.22 (arena line isn't a zone),
   0.1.21 (kill dots on the map; sounds for falling, stand up, tells), 0.1.20 (timers drag
   from anywhere, overlays kept on screen), 0.1.19 (faction/xp deaths
   as count-up timers), 0.1.18 (✕/🔔 work while locked; overlays

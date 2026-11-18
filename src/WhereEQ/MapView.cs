@@ -172,13 +172,13 @@ public sealed class MapView : FrameworkElement
             }
         }
 
-        // Kill markers: small dots that fade out over their 10 minutes.
+        // Kill markers: tiny white dots (thin dark ring so they show on light lines) that fade out over 10 minutes.
         foreach (var (kp, age) in Kills)
         {
-            var alpha = (byte)(230 - 150 * Math.Clamp(age, 0, 1));
-            var fill = new SolidColorBrush(Color.FromArgb(alpha, 255, 152, 0));
-            var ring = new Pen(new SolidColorBrush(Color.FromArgb(alpha, 0, 0, 0)), 1);
-            dc.DrawEllipse(fill, ring, ToScreen(kp), 3.5, 3.5);
+            var alpha = (byte)(240 - 160 * Math.Clamp(age, 0, 1));
+            var fill = new SolidColorBrush(Color.FromArgb(alpha, 255, 255, 255));
+            var ring = new Pen(new SolidColorBrush(Color.FromArgb((byte)(alpha / 2), 0, 0, 0)), 0.5);
+            dc.DrawEllipse(fill, ring, ToScreen(kp), 1.75, 1.75);
         }
 
         if (Player is { } pl)
