@@ -79,6 +79,8 @@ public sealed class SpellEffects
     private readonly Dictionary<string, List<SpellInfo>> _fades = new(StringComparer.Ordinal);
     /// <summary>"Lands on someone" text of weapon/item proc effects (no cast time, no class gets them).</summary>
     private readonly Dictionary<string, List<SpellInfo>> _procOnOther = new(StringComparer.Ordinal);
+    /// <summary>"Lands on someone" text of Bard songs, longest first (matched by the end of the line).</summary>
+    private List<(string Suffix, List<SpellInfo> Songs)> _songOnOther = new();
     private readonly Dictionary<string, SpellInfo> _byName = new(StringComparer.OrdinalIgnoreCase);
 
     public string? Path { get; private set; }
@@ -130,6 +132,11 @@ public sealed class SpellEffects
             if (s.Fades.Length > 0) Add(fx._fades, s.Fades, s);
             if (s.IsProc && s.CastOnOther.Length > 0) Add(fx._procOnOther, s.CastOnOther, s);
         }
+        fx._songOnOther = fx._byName.Values
+            .Where(s => s.Levels.ContainsKey("Bard") && s.CastOnOther.Length >= 6)
+            .GroupBy(s => s.CastOnOther)
+            .Select(g => (g.Key, g.ToList()))
+            .OrderByDescending(x => x.Key.Length).ToList();
         return fx;
     }
 
@@ -171,6 +178,23 @@ public sealed class SpellEffects
     /// <summary>Weapon/item proc effects whose "lands on someone" text is <paramref name="rest"/> (the line after the
     /// target's name, e.g. "'s blood boils.").</summary>
     public List<SpellInfo>? ProcLandsOnOther(string rest) => _procOnOther.GetValueOrDefault(rest);
+
+    /// <summary>A Bard song landing on someone: "A siren seductress's hair stands on end." gives the target
+    /// ("A siren seductress") and the songs with that landing text.</summary>
+    public bool SongLandsOnOther(string msg, out string target, out List<SpellInfo> songs)
+    {
+        foreach (var (suffix, list) in _songOnOther)
+        {
+            if (msg.Length > suffix.Length && msg.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                target = msg[..^suffix.Length].Trim();
+                songs = list;
+                return target.Length is > 0 and < 64;
+            }
+        }
+        target = ""; songs = null!;
+        return false;
+    }
 
     /// <summary>Spells whose "wears off you" text is <paramref name="msg"/>.</summary>
     public List<SpellInfo>? FadesFromYou(string msg) => _fades.GetValueOrDefault(msg);

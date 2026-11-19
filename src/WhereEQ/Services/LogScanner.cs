@@ -92,6 +92,12 @@ public sealed class LogState
     /// weapon procs, which land with no "You begin casting" line.</summary>
     public string? MeleeTarget { get; set; }
     public DateTime? MeleeSeen { get; set; }
+    /// <summary>Last "Your song ends." (Bards only see that line, for their own songs).</summary>
+    public DateTime? SongEnded { get; set; }
+    /// <summary>Song landings on others ("A gnoll's hair stands on end.") waiting for "Your song ends." to show
+    /// they were yours.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<((SpellInfo Song, List<SpellInfo> All) Song, string Target, DateTime At)> PendingSongs { get; } = new();
 
     // Faction/experience lines within a couple of seconds, waiting to be matched against "slain" lines.
     public DateTime? PendingTime { get; set; }
@@ -428,6 +434,8 @@ public static partial class LogScanner
     /// <summary>Spell data from the client's spells_us.txt (set by DataStore); empty = no buff tracking.</summary>
     public static SpellEffects Effects { get; set; } = SpellEffects.Empty;
     private const double SpellLookbackHours = 3;
+    /// <summary>A song's landing line and "Your song ends." are logged within this many seconds of each other.</summary>
+    private const double SongMatchSeconds = 1.5;
 
     /// <summary>
     /// Buff tracking, as EqTool does it: the spell's "lands on you" line starts a timer on you ("Your skin turns
@@ -489,6 +497,30 @@ public static partial class LogScanner
             if (target.Length > 0 && target.Length < 64) { AddSpell(state, c, target, ts, true, null); return; }
         }
 
+        // Bard songs never log "You begin singing"; your own songs end with "Your song ends." in the same second as
+        // the line saying where they landed, before or after it. Other bards' songs don't give you that line.
+        if (msg == "Your song ends.")
+        {
+            state.SongEnded = ts;
+            foreach (var (song, target, at) in state.PendingSongs)
+                if ((ts - at).TotalSeconds <= SongMatchSeconds) AddSpell(state, song.Song, target, at, true, song.All, sureWhich: false);
+            state.PendingSongs.Clear();
+            return;
+        }
+        if ((state.Class == "Bard" || state.SongEnded != null) && !msg.StartsWith("You") &&
+            fx.SongLandsOnOther(msg, out var songTarget, out var songs))
+        {
+            var song = SpellEffects.Pick(songs, null, "Bard", state.Level);
+            if (state.SongEnded is { } ended && (ts - ended).TotalSeconds is >= 0 and <= SongMatchSeconds)
+                AddSpell(state, song, songTarget, ts, true, songs, sureWhich: false);
+            else
+            {
+                state.PendingSongs.RemoveAll(p => (ts - p.At).TotalSeconds > SongMatchSeconds);
+                state.PendingSongs.Add(((song, songs), songTarget, ts));
+            }
+            return;
+        }
+
         // Melee: remember the target for weapon procs.
         if (msg.StartsWith("You ") && MeleeLine().Match(msg) is { Success: true } hit)
         {
@@ -514,7 +546,10 @@ public static partial class LogScanner
     private static bool SameSpell(string a, string b) =>
         a.Replace('`', '\'').Equals(b.Replace('`', '\''), StringComparison.OrdinalIgnoreCase);
 
-    private static void AddSpell(LogState state, SpellInfo s, string? target, DateTime ts, bool byYou, List<SpellInfo>? candidates)
+    /// <param name="sureWhich">False when it's yours but the line fits several spells (songs: "begins to chant." is
+    /// Tuyen's Chant of Flame or of Frost), so the alternatives are still listed.</param>
+    private static void AddSpell(LogState state, SpellInfo s, string? target, DateTime ts, bool byYou, List<SpellInfo>? candidates,
+                                 bool sureWhich = true)
     {
         // Your own spells last by your level; someone else's: assume at least your level (buffs mostly hit their cap).
         var minForClass = state.Class != null && s.Levels.TryGetValue(state.Class, out var cl) ? cl : s.MinLevel;
@@ -526,7 +561,7 @@ public static partial class LogScanner
         // "A froglok shin knight's blood boils." starts a sentence; the mob is "a froglok shin knight".
         if (target != null && (target.StartsWith("A ") || target.StartsWith("An "))) target = char.ToLower(target[0]) + target[1..];
         // Same landing message, different spells: say which others it could be (unless you cast it yourself).
-        var others = !byYou && candidates is { Count: > 1 }
+        var others = (!byYou || !sureWhich) && candidates is { Count: > 1 }
             ? string.Join(", ", candidates.Where(c => c != s).Select(c => SpellInfo.DisplayName(c.Name)).Take(6))
             : null;
         state.Spells.RemoveAll(a => SameSpell(a.Name, s.Name) &&

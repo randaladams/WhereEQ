@@ -69,6 +69,11 @@ drains as it runs out. Green = buff, red = debuff on you.
   effect lands on the mob you've been meleeing in the last 10 seconds (`A froglok shin knight's blood boils.`),
   it's listed as yours on that mob. A new proc restarts the timer. A groupmate's identical proc on the same mob
   looks the same in the log.
+- **Bard songs on mobs** (`A gnoll begins to chant.`, `…'s hair stands on end.`, `…is surrounded by chains of
+  music.`): songs never log "You begin singing", but your own songs log `Your song ends.` in the same second, so a
+  song landing right next to that line is yours. Each lasts about 18 seconds and restarts every time you sing it
+  again. Some songs share a landing line (Tuyen's Chant of Flame and of Frost both say "begins to chant"); the
+  tooltip names the other possibility.
 - Times are estimates from the spell's duration formula: your own spells use your level; buffs from others assume
   the caster is at least your level (most buffs reach their cap well before 60). Some landing lines are shared by
   several spells (`You feel replenished.`); the tooltip says which others it could be.

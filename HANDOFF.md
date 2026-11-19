@@ -11,7 +11,8 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.34** ($xpNN typed by your character = % into the level, Characters tab) after 0.1.33
+- Status: build **0.1.35** (Bard songs on mobs in the buffs list) after 0.1.34 ($xpNN typed by your character =
+  % into the level, Characters tab), 0.1.33
   (overlays drawn on the CPU: fixes game pauses; owner says it "seems better"), 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
   moved into the Timers window, split by a draggable bar), 0.1.28 (buff
   tracking: spells on you and your spells on others), 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
@@ -144,7 +145,11 @@ Format notes learned from real data:
   X's lands-on-other line within cast time + 10 s adds a timer on that target (item clicks were seen landing
   10 s after a 5 s cast); "Your X spell has worn off." or the target's death removes it; weapon procs (0.1.30: `SpellInfo.IsProc` = cast
   time 0 and no class levels, indexed by lands-on-other text) count as yours when the line starts with
-  `LogState.MeleeTarget` (last "You pierce X for N points of damage." / "You try to slash X, but miss!", ≤ 10 s); your death clears your
+  `LogState.MeleeTarget` (last "You pierce X for N points of damage." / "You try to slash X, but miss!", ≤ 10 s);
+  Bard songs on others (0.1.35): no "begin singing" line exists in P1999 logs, so a Bard song's lands-on-other line
+  (`SpellEffects.SongLandsOnOther`, matched by line ending) counts as yours within 1.5 s of "Your song ends."
+  (before or after it; `LogState.PendingSongs` holds landings until that line); shared landing lines keep their
+  alternatives in the tooltip (`AddSpell(sureWhich: false)`); your death clears your
   buffs. Durations: `SpellInfo.DurationSeconds` (EqTool's formula table); own spells use your level, others' assume
   max(your level, spell's level). Buff changes don't touch `Signature`, so they ride `PositionChanged`.
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
