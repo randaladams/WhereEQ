@@ -113,9 +113,11 @@ Get **[WhereEQ-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/down
 (it isn't code-signed): choose **More info → Run anyway**.
 
 Already installed? **[WhereEQ-update-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-update-win-x64.zip)**
-holds only what changed since the previous build (usually just `WhereEQ.exe`; the release notes list the files).
-Close WhereEQ and unzip it over your WhereEQ folder, replacing files. If you skipped builds and one of them changed
-something in `Data`, use the full zip instead.
+is the small download: only what changed since the previous build (usually just `WhereEQ.exe`; the release notes
+list the files). Its `WhereEQ.exe` is a few MB because it uses Microsoft's **.NET 10 Desktop Runtime** instead of
+carrying its own copy: install that once from https://dotnet.microsoft.com/download/dotnet/10.0 (".NET Desktop
+Runtime", Windows x64). Close WhereEQ and unzip the update over your WhereEQ folder, replacing files. If you skipped
+builds and one of them changed something in `Data`, use the full zip instead.
 
 ## Setup
 

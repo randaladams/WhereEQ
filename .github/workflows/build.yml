@@ -39,6 +39,10 @@ jobs:
             -p:Version=$env:VERSION -o out/WhereEQ
           Copy-Item packaging/README.txt out/WhereEQ/
           Compress-Archive -Path out/WhereEQ -DestinationPath WhereEQ-win-x64.zip
+          # Small exe for the update zip: same app, but uses the installed .NET 10 Desktop Runtime instead of
+          # carrying its own copy (a few MB instead of ~60).
+          dotnet publish src/WhereEQ/WhereEQ.csproj -c Release -r win-x64 --self-contained false `
+            -p:PublishSingleFile=true -p:DebugType=none -p:Version=$env:VERSION -o out/small
 
       - name: Update zip (changed files only)
         shell: pwsh
@@ -56,7 +60,7 @@ jobs:
             $since = "nothing (first build)"
           }
           New-Item -ItemType Directory -Force upd/WhereEQ | Out-Null
-          Copy-Item out/WhereEQ/WhereEQ.exe upd/WhereEQ/
+          Copy-Item out/small/WhereEQ.exe upd/WhereEQ/
           foreach ($f in $changed) {
             # Repo path -> path in the install folder (src/WhereEQ/Data/x -> Data/x, packaging/README.txt -> README.txt).
             $rel = if ($f -like 'src/WhereEQ/Data/*') { $f.Substring('src/WhereEQ/'.Length) }
@@ -89,10 +93,11 @@ jobs:
           gh release delete latest --cleanup-tag --yes || true
           notes="Automatic build of ${GITHUB_SHA::7} from main.
 
-          - WhereEQ-win-x64.zip: everything. Unzip anywhere and run WhereEQ.exe.
-          - WhereEQ-update-win-x64.zip: only what changed since the previous build. Close WhereEQ and unzip it over
-            your WhereEQ folder (replace files). If you skipped builds, use the full zip, or check that every update
-            you missed had only the exe.
+          - WhereEQ-win-x64.zip: everything, nothing else to install. Unzip anywhere and run WhereEQ.exe.
+          - WhereEQ-update-win-x64.zip: small. A WhereEQ.exe that uses the .NET 10 Desktop Runtime (install it once:
+            https://dotnet.microsoft.com/download/dotnet/10.0 , Desktop Runtime x64), plus only the files that
+            changed since the previous build. Close WhereEQ and unzip it over your WhereEQ folder (replace files).
+            If you skipped builds, use the full zip, or check that every build you missed changed only the exe.
 
           $(cat update-notes.txt)"
           gh release create latest WhereEQ-win-x64.zip WhereEQ-update-win-x64.zip \
