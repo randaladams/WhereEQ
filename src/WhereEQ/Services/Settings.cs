@@ -120,6 +120,23 @@ public sealed class TimersSettings
     public Dictionary<string, int> Overrides { get; set; } = new();
 }
 
+/// <summary>Buffs overlay: spells on you and spells you cast on others, from the log.</summary>
+public sealed class BuffsSettings
+{
+    public bool Open { get; set; }
+    public double? Left { get; set; }
+    public double? Top { get; set; }
+    public double Width { get; set; } = 230;
+    public double Height { get; set; } = 260;
+    public double Backdrop { get; set; } = 0.35;
+    /// <summary>Click-through: mouse goes to the game underneath. Toggle with Ctrl+Alt+B.</summary>
+    public bool Locked { get; set; }
+    /// <summary>Character to show; null = whoever logged something most recently.</summary>
+    public string? Character { get; set; }
+    /// <summary>Also list spells you cast on others (mez, DoTs, buffs on groupmates).</summary>
+    public bool ShowOnOthers { get; set; } = true;
+}
+
 /// <summary>User settings, stored in %LocalAppData%\WhereEQ\settings.json.</summary>
 public sealed class Settings
 {
@@ -150,6 +167,9 @@ public sealed class Settings
 
     /// <summary>Spawn timers window state and options.</summary>
     public TimersSettings Timers { get; set; } = new();
+
+    /// <summary>Buffs window state and options.</summary>
+    public BuffsSettings Buffs { get; set; } = new();
 
     /// <summary>Sounds for log events.</summary>
     public SoundSettings Sounds { get; set; } = new();
@@ -188,7 +208,9 @@ public sealed class Settings
     {
         get
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WhereEQ");
+            // Dev aid: WHEREEQ_APPDATA points tests at their own settings/logstate instead of the real ones.
+            var dir = Environment.GetEnvironmentVariable("WHEREEQ_APPDATA") is { Length: > 0 } dev ? dev
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WhereEQ");
             Directory.CreateDirectory(dir);
             return dir;
         }
@@ -210,6 +232,7 @@ public sealed class Settings
                     s.HiddenCharacters ??= new();
                     s.Map ??= new();
                     s.Timers ??= new();
+                    s.Buffs ??= new();
                     s.Sounds ??= new();
                     s.Sounds.On ??= new();
                     s.Sounds.Modes ??= new();

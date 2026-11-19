@@ -56,6 +56,7 @@ public partial class MainWindow : Window
             await LoadDataAsync();
             if (_settings.Map.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenMap();
             if (_settings.Timers.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenTimers();
+            if (_settings.Buffs.Open && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null) OpenBuffs();
         };
         Closing += (_, _) =>
         {
@@ -63,6 +64,7 @@ public partial class MainWindow : Window
             // Remember the map was open so it comes back next time, then close it with us.
             if (_mapWindow != null) { var open = true; _mapWindow.Close(); _settings.Map.Open = open; _settings.Save(); }
             if (_timersWindow != null) { _timersWindow.Close(); _settings.Timers.Open = true; _settings.Save(); }
+            if (_buffsWindow != null) { _buffsWindow.Close(); _settings.Buffs.Open = true; _settings.Save(); }
             _store?.Dispose();
         };
         // Keep "5m ago" style text fresh.
@@ -193,6 +195,16 @@ public partial class MainWindow : Window
             Application.Current.Shutdown();
             return;
         }
+        if (parts.Length > 1 && parts[1] == "buffs")
+        {
+            if (_buffsWindow == null) OpenBuffs();
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            if (parts.Length > 2) _buffsWindow!.DevShow(parts[2]);
+            await Task.Delay(800);
+            RenderToPng(_buffsWindow!, parts[0]);
+            Application.Current.Shutdown();
+            return;
+        }
         if (parts.Length > 1 && parts[1] is "settings" or "sync")
         {
             Window dlg = parts[1] == "sync" ? new SyncFriendsWindow(_characters) { Owner = this }
@@ -258,10 +270,31 @@ public partial class MainWindow : Window
     /// <summary>Position-only update (/loc, kills, chatter): refresh the map and timers without rebuilding the grids.</summary>
     private void UpdateMap()
     {
-        if ((_mapWindow == null && _timersWindow == null) || _store == null) return;
+        if ((_mapWindow == null && _timersWindow == null && _buffsWindow == null) || _store == null) return;
         var chars = _store.GetCharacters().Where(c => !c.Hidden).ToList();
         _mapWindow?.Update(chars);
         _timersWindow?.Update(chars);
+        _buffsWindow?.Update(chars);
+    }
+
+    // ---------------------------------------------------------------- buffs
+
+    private BuffsWindow? _buffsWindow;
+
+    private void Buffs_Click(object sender, RoutedEventArgs e)
+    {
+        if (_buffsWindow != null) { _buffsWindow.ApplyLock(false); _buffsWindow.Activate(); return; }
+        OpenBuffs();
+    }
+
+    private void OpenBuffs()
+    {
+        _buffsWindow = new BuffsWindow(_settings);
+        _buffsWindow.Closed += (_, _) => { _buffsWindow = null; _settings.Buffs.Open = false; _settings.Save(); };
+        _settings.Buffs.Open = true;
+        _settings.Save();
+        _buffsWindow.Show();
+        UpdateMap();
     }
 
     // ---------------------------------------------------------------- spawn timers
@@ -318,6 +351,7 @@ public partial class MainWindow : Window
         _allCharacters = _store?.GetCharacters() ?? new();
         _mapWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
         _timersWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
+        _buffsWindow?.Update(_allCharacters.Where(c => !c.Hidden).ToList());
         _characters = _allCharacters.Where(c => !c.Hidden).ToList();
         RefreshCharacterFilter();
         RunSearch();

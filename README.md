@@ -51,6 +51,24 @@ EverQuest client writes and keeps them up to date while you play.
   name and a time (`22`, `6:40` or `8:00:00`): **Start timer** starts one by hand, **Save time** always uses
   that time for that mob in that zone.
 
+## Buffs
+
+**✨ Buffs** opens a small see-through list (like the timers) of the spells on you, each with a countdown and a
+bar that drains as it runs out. Green = buff, red = debuff on you.
+
+- It works from the log the way EqTool does: each spell has a "lands on you" line (`Your skin turns hard as
+  steel.`) and a "wears off" line (`Your skin returns to normal.`), both read from the game's own
+  `spells_us.txt` in your EverQuest folder (found next to your inventory files; nothing to set up). Buffs from
+  other players and from clicky items are tracked too. Dying clears the list.
+- **Your spells on others** (blue): after `You begin casting X.`, the line saying X landed on someone
+  (`A gnoll has been mesmerized.`) starts a timer on that target. It ends with `Your X spell has worn off.` or
+  when the target dies. Turn it off in ⚙.
+- Times are estimates from the spell's duration formula: your own spells use your level; buffs from others assume
+  the caster is at least your level (most buffs reach their cap well before 60). Some landing lines are shared by
+  several spells (`You feel replenished.`); the tooltip says which others it could be.
+- Shows whoever played most recently, or pick a character in ⚙. 🔒 or **Ctrl+Alt+B** makes it click-through.
+  Right-click a spell to remove it.
+
 ## Sounds
 
 Settings → **Sounds** reacts when a new line shows up in your log. Each alert can be **Off**, a **Beep** (each

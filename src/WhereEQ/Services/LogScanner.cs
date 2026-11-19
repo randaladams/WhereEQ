@@ -29,6 +29,16 @@ public sealed record TrailPoint(double X, double Y, DateTime T);
 public sealed record KillRecord(string Name, string? Zone, DateTime Time, string? By, string? Kind = null,
                                 double? X = null, double? Y = null);
 
+/// <summary>A spell effect with a timer: a buff or debuff on you (<see cref="Target"/> null), or a spell you cast
+/// on someone else. <see cref="Seconds"/> is the estimated duration from spells_us.txt; <see cref="Others"/> lists
+/// other spells with the same landing message when the log line was ambiguous.</summary>
+public sealed record ActiveSpell(string Name, string? Target, DateTime Start, int Seconds, bool Beneficial,
+                                 bool ByYou, string? Others = null)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime End => Start.AddSeconds(Seconds);
+}
+
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
 public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, Gem }
 
@@ -66,6 +76,13 @@ public sealed class LogState
     /// <summary>Recent mob deaths (newest last), for spawn timers.</summary>
     public List<KillRecord> Kills { get; set; } = new();
     public const int KillsMax = 300;
+
+    /// <summary>Buffs/debuffs on you and spells you cast on others that haven't run out (see LogScanner.TrackSpells).</summary>
+    public List<ActiveSpell> Spells { get; set; } = new();
+    public const int SpellsMax = 80;
+    /// <summary>From "You begin casting X.": what's being cast and when, to tell which spell landed and on whom.</summary>
+    public string? Casting { get; set; }
+    public DateTime? CastingSince { get; set; }
 
     // Faction/experience lines within a couple of seconds, waiting to be matched against "slain" lines.
     public DateTime? PendingTime { get; set; }
@@ -181,6 +198,7 @@ public static partial class LogScanner
             state.Guild = null; state.GuildSeen = null;
             state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
             state.Heading = null; state.HeadingSeen = null; state.Trail.Clear(); state.Kills.Clear();
+            state.Spells.Clear(); state.Casting = null; state.CastingSince = null;
             state.PendingTime = null;
             state.InFriendsList = false;
         }
@@ -229,11 +247,17 @@ public static partial class LogScanner
             // A faction/experience group ends once the log has moved on a couple of seconds.
             if (state.PendingTime is { } pt && ts is { } now && (now - pt).TotalSeconds > PendingSeconds) FlushPending(state);
 
+            // Buffs and spell timers: only lines recent enough for a buff to still be running.
+            if (ts is { } spellTs && !Effects.IsEmpty && (DateTime.Now - spellTs).TotalHours < SpellLookbackHours)
+                TrackSpells(state, Effects, msg, spellTs);
+
             // Mob deaths (spawn timers). Before the other checks: a mob's name can contain words like "guild".
             if (msg.EndsWith('!') && TryParseKill(msg, name, out var victim, out var killer))
             {
                 var (kx, ky) = KillPosition(state, ts);
                 AddKill(state, new KillRecord(victim, state.Zone, ts ?? DateTime.Now, killer, X: kx, Y: ky));
+                if (state.Spells.Count > 0)
+                    state.Spells.RemoveAll(s => s.Target != null && s.Target.Equals(victim, StringComparison.OrdinalIgnoreCase));
                 Pending(state, ts).PendingSlain++;
                 continue;
             }
@@ -374,6 +398,92 @@ public static partial class LogScanner
     }
 
     private const double PendingSeconds = 2;
+
+    /// <summary>Spell data from the client's spells_us.txt (set by DataStore); empty = no buff tracking.</summary>
+    public static SpellEffects Effects { get; set; } = SpellEffects.Empty;
+    private const double SpellLookbackHours = 3;
+
+    /// <summary>
+    /// Buff tracking, as EqTool does it: the spell's "lands on you" line starts a timer on you ("Your skin turns
+    /// hard as steel."), its "wears off" line ends it ("Your skin returns to normal."). After "You begin casting X.",
+    /// X's "lands on someone" line ("Somebody's skin turns hard as steel.") starts a timer on that target, which ends
+    /// with "Your X spell has worn off." or when the target dies. Durations come from the spell's formula.
+    /// </summary>
+    private static void TrackSpells(LogState state, SpellEffects fx, string msg, DateTime ts)
+    {
+        if (msg.Contains(", '") || msg.Contains(" says '")) return; // chat
+
+        if (msg.StartsWith("You begin casting "))
+        {
+            state.Casting = msg["You begin casting ".Length..].TrimEnd('.');
+            state.CastingSince = ts;
+            return;
+        }
+        if (msg is "Your spell is interrupted." or "Your spell fizzles!" || msg.StartsWith("Your target resisted the "))
+        {
+            state.Casting = null;
+            return;
+        }
+        if (msg is "You died." || msg.StartsWith("You have been slain by "))
+        {
+            state.Spells.RemoveAll(s => s.Target == null);
+            state.Casting = null;
+            return;
+        }
+        if (msg.StartsWith("Your ") && msg.EndsWith(" spell has worn off."))
+        {
+            var spell = msg["Your ".Length..^" spell has worn off.".Length];
+            var gone = state.Spells.Where(s => s.ByYou && s.Target != null && SameSpell(s.Name, spell))
+                                   .OrderBy(s => s.Start).FirstOrDefault();
+            if (gone != null) state.Spells.Remove(gone);
+            return;
+        }
+
+        // The spell being cast, if its cast time (plus lag: item clicks were seen landing 10 s after a 5 s cast)
+        // hasn't passed.
+        SpellInfo? casting = null;
+        if (state.Casting is { } cn && state.CastingSince is { } since && fx.ByName(cn) is { } ci &&
+            (ts - since).TotalSeconds <= ci.CastTimeMs / 1000.0 + 10)
+            casting = ci;
+
+        if (fx.LandsOnYou(msg) is { } onYou)
+        {
+            var s = SpellEffects.Pick(onYou, casting, state.Class, state.Level);
+            AddSpell(state, s, null, ts, byYou: casting == s, onYou);
+            return;
+        }
+        if (fx.FadesFromYou(msg) is { } faded)
+        {
+            state.Spells.RemoveAll(a => a.Target == null && faded.Any(f => SameSpell(f.Name, a.Name)));
+            return;
+        }
+        if (casting is { CastOnOther.Length: > 0 } c && msg.EndsWith(c.CastOnOther) && !msg.StartsWith("You"))
+        {
+            var target = msg[..^c.CastOnOther.Length].Trim();
+            if (target.Length > 0 && target.Length < 64) AddSpell(state, c, target, ts, true, null);
+        }
+    }
+
+    private static bool SameSpell(string a, string b) =>
+        a.Replace('`', '\'').Equals(b.Replace('`', '\''), StringComparison.OrdinalIgnoreCase);
+
+    private static void AddSpell(LogState state, SpellInfo s, string? target, DateTime ts, bool byYou, List<SpellInfo>? candidates)
+    {
+        // Your own spells last by your level; someone else's: assume at least your level (buffs mostly hit their cap).
+        var minForClass = state.Class != null && s.Levels.TryGetValue(state.Class, out var cl) ? cl : s.MinLevel;
+        var casterLevel = byYou ? Math.Max(state.Level ?? minForClass, minForClass) : Math.Max(state.Level ?? 50, s.MinLevel);
+        var seconds = s.DurationSeconds(casterLevel);
+        if (seconds <= 0) return;
+        // Same landing message, different spells: say which others it could be (unless you cast it yourself).
+        var others = !byYou && candidates is { Count: > 1 }
+            ? string.Join(", ", candidates.Where(c => c != s).Select(c => SpellInfo.DisplayName(c.Name)).Take(6))
+            : null;
+        state.Spells.RemoveAll(a => SameSpell(a.Name, s.Name) &&
+                                    string.Equals(a.Target, target, StringComparison.OrdinalIgnoreCase));
+        state.Spells.RemoveAll(a => a.End < ts);
+        state.Spells.Add(new ActiveSpell(SpellInfo.DisplayName(s.Name), target, ts, seconds, s.Beneficial, byYou, others));
+        if (state.Spells.Count > LogState.SpellsMax) state.Spells.RemoveRange(0, state.Spells.Count - LogState.SpellsMax);
+    }
 
     /// <summary>Where a kill happened, roughly: the last /loc, if it's in this zone and under 10 minutes old.</summary>
     private static (double? X, double? Y) KillPosition(LogState state, DateTime? when)

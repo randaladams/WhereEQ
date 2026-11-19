@@ -73,6 +73,8 @@ public sealed class DataStore : IDisposable
     public Task StartAsync() => Task.Run(() =>
     {
         LoadLogCache();
+        // Buff tracking needs the client's spell file (EverQuest folder, next to the inventory files).
+        LogScanner.Effects = SpellEffects.Find(SpellFileFolders().ToArray());
         foreach (var f in Enumerate(FileKind.Inventory, "*-Inventory.txt")) LoadFile(f);
         foreach (var f in Enumerate(FileKind.Spellbook, "*-Spellbook.txt")) LoadFile(f);
         foreach (var f in Enumerate(FileKind.Log, "eqlog_*.txt")) LoadFile(f);
@@ -100,6 +102,11 @@ public sealed class DataStore : IDisposable
 
         Changed?.Invoke();
     });
+
+    /// <summary>Where spells_us.txt may be: the EverQuest folder holds the inventory and .ini files, and Logs is in it.</summary>
+    private IEnumerable<string> SpellFileFolders() =>
+        new[] { Settings.InventoryFolder, Settings.IniFolder, Settings.SpellbookFolder, Settings.LogFolder }
+            .Where(f => !string.IsNullOrWhiteSpace(f) && Directory.Exists(f)).Select(f => Path.GetFullPath(f!));
 
     private IEnumerable<string> Enumerate(FileKind kind, string pattern)
     {

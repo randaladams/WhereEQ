@@ -19,6 +19,6 @@ In game
   /who (yourself)         - records your level and class in the log
   /char                   - records your bind point in the log (binding also updates it)
   /friends                - records which friends are online, with level/class/zone
-  /log on                 - logging must be on for level/class/zone/bind/friends
+  /log on                 - logging must be on for level/class/zone/bind/friends, timers and buffs
 
 Your settings are stored in %LocalAppData%\WhereEQ (settings.json, logstate.json).

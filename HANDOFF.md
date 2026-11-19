@@ -7,7 +7,7 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.27** ("Velious Armor Gems" loot alert) after 0.1.26 (fizzle/mana/forage/charm alerts; Bard
+- Status: build **0.1.28** (✨ Buffs window: spells on you and your spells on others) after 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
   18 s charm timer), 0.1.25 (voice alerts:
   Off/Beep/Voice per alert), 0.1.24 (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
   the owner's request, 8 alerts left) after 0.1.23 (log alerts with their own tones), 0.1.22 (arena line isn't a zone),
@@ -120,6 +120,18 @@ Format notes learned from real data:
 - `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile
   them at screen edges, and clamps them to the screen (also on open). Timers: drag from anywhere while
   unlocked (`anywhere: true`, 4 px threshold so clicks still select rows; buttons/text boxes/sliders excluded).
+- `BuffsWindow.xaml(.cs)` + `Services/SpellEffects.cs` — buff tracker (0.1.28), same overlay style as Timers,
+  **Ctrl+Alt+B** lock, snapshot `|buffs` / `|buffs|options`. `SpellEffects` reads the client's `spells_us.txt`
+  (EverQuest folder, found from the inventory/ini/log folders and their parents; field layout as in EqTool:
+  1 name, 6 lands-on-you, 7 lands-on-other, 8 wears-off, 13 cast ms, 16/17 duration formula/ticks, 83 beneficial,
+  104–117 class levels Warrior..Enchanter). Duplicate names: later row wins unless it has no classes (EqTool rule).
+  `LogScanner.TrackSpells` (only lines < 3 h old) keeps `LogState.Spells` (`ActiveSpell`, persisted): a
+  lands-on-you line adds a buff on you (ambiguous lines resolved by `SpellEffects.Pick`: the spell being cast, then
+  your class at/below your level, then closest level); its wears-off line removes it; "You begin casting X." +
+  X's lands-on-other line within cast time + 10 s adds a timer on that target (item clicks were seen landing
+  10 s after a 5 s cast); "Your X spell has worn off." or the target's death removes it; your death clears your
+  buffs. Durations: `SpellInfo.DurationSeconds` (EqTool's formula table); own spells use your level, others' assume
+  max(your level, spell's level). Buff changes don't touch `Signature`, so they ride `PositionChanged`.
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest
@@ -127,7 +139,13 @@ Format notes learned from real data:
 `WHEREEQ_SNAPSHOT="<png>|<what>|<arg>|<arg>"` makes the app render a window to PNG and exit
 (`MainWindow.DevSnapshotAsync`). Examples: `out.png|2` (tab index; tabs are 0 Find, 1 Bags, 2 Characters,
 3 Friends, 4 Spells), `out.png|4|Charname|missing`, `out.png|1|Charname|bank`, `out.png|settings`,
-`out.png|sync`, `out.png|map`, `out.png|timers` (`|timers|details`, `|timers|options`), `out.png|map|options`.
+`out.png|sync`, `out.png|map`, `out.png|timers` (`|timers|details`, `|timers|options`), `out.png|map|options`,
+`out.png|buffs` (`|buffs|options`).
+
+`WHEREEQ_APPDATA=<folder>` makes the app use that folder for `settings.json`/`logstate.json` instead of
+`%LocalAppData%\WhereEQ`, so tests don't touch the real settings (the owner may have WhereEQ running). Buff test
+used: a slice of a real log with timestamps shifted to end ~20 s ago, in a scratch `Logs` folder, plus a test
+`settings.json` with `InventoryFolder` = the P1999 folder (for `spells_us.txt`) and `LogFolder` = the scratch folder.
 
 Map tests used a fake character: write a slice of a real log (zone entry + `/loc` lines) to
 `Logs\eqlog_Testmap_P1999Green.txt`, temporarily set `MapsFolder` and `Map.Character` in `settings.json`
@@ -140,18 +158,14 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 
 ## Open items / next steps
 
-1. **Confirm the Skyshrine map fix on the test PC** (0.1.11+). Root cause: the P1999 install's Skyshrine map file
-   apparently has no wall lines; the bundled EqTool map is now used as a fallback. Not yet seen in-game.
-2. **Spawn timers are new** (0.1.15–0.1.18): not yet tried in-game; the beep, the locked ✕/🔔 clicks and the
-   snap-free drag can't be exercised on the dev machine (no mouse automation used). Kill-message wording was checked against the sample
-   logs; no variance windows (P1999 rare spawns can vary); no sound/flash when a mob is up yet.
-3. Overlay not yet exercised in-game for: Ctrl+Alt+M hotkey, performance under heavy `/loc` spam, other zones,
-   multi-monitor DPI. EverQuest must run **windowed** for any overlay to show (exclusive full screen owns the
-   display; the owner's test PC has one monitor; `WindowedMode=TRUE` in `eqclient.ini`).
-4. Friends `.ini` format and the 100-friend cap are assumptions (no real `.ini` seen yet); sync hasn't been run
-   against real files.
-5. Guild join/leave message wording is a guess (none in the sample logs); `/who` of self is the reliable source.
-6. Friends tab "Where" shows `/friends` short zone names (e.g. `ecommons`); could map via `ZoneNames.ToLong`.
-7. Map ideas not built: show other characters' last known positions, z-level filtering for multi-level zones,
-   per-zone remembered zoom.
-8. `HANDOFF.md`/README should be updated when features change.
+Confirmed working in-game by the owner (2026-11-18): Skyshrine map fallback, spawn timers (beep, locked ✕/🔔,
+snap-free drag), overlay hotkeys/performance, friends `.ini` sync. EverQuest must run **windowed** for overlays.
+
+1. **Buffs window is new** (0.1.28): checked only against real log slices + snapshots, not live in-game. Ideas not
+   built: alert when a buff on you is about to fade, spell icons (EqTool reads `uifiles\default\spells0N.tga`),
+   tracking other players' buffs you didn't cast. Bard songs refresh on every pulse (no "begin casting" line for
+   songs in the logs seen); offline time counts down like play time.
+2. Shelved by the owner for now: guild join/leave wording (a guess; `/who` of self is reliable), Friends tab short
+   zone names (could map via `ZoneNames.ToLong`), map ideas (other characters' last positions, z-level filtering,
+   per-zone zoom).
+3. `HANDOFF.md`/README should be updated when features change.

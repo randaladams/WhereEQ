@@ -20,6 +20,8 @@
                         ToolTip="Open the transparent map overlay (Ctrl+Alt+M toggles click-through)"/>
                 <Button Content="⏱ Timers" Click="Timers_Click" Margin="0,0,8,0"
                         ToolTip="Spawn timers for mobs you kill (from your logs)"/>
+                <Button Content="✨ Buffs" Click="Buffs_Click" Margin="0,0,8,0"
+                        ToolTip="Buffs and spells on you, and your spells on others, with time left (Ctrl+Alt+B toggles click-through)"/>
                 <Button Content="Settings…" Click="Settings_Click"/>
             </StackPanel>
             <CheckBox x:Name="TopmostCheck" Grid.Column="3" Content="Always on top" VerticalAlignment="Center"
