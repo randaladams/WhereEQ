@@ -65,6 +65,10 @@ drains as it runs out. Green = buff, red = debuff on you.
 - **Your spells on others** (blue): after `You begin casting X.`, the line saying X landed on someone
   (`A gnoll has been mesmerized.`) starts a timer on that target. It ends with `Your X spell has worn off.` or
   when the target dies. Turn it off in ⚙.
+- **Weapon procs** (e.g. Boiling Blood from Nadrandi's Lance) have no "begin casting" line: when an item/weapon
+  effect lands on the mob you've been meleeing in the last 10 seconds (`A froglok shin knight's blood boils.`),
+  it's listed as yours on that mob. A new proc restarts the timer. A groupmate's identical proc on the same mob
+  looks the same in the log.
 - Times are estimates from the spell's duration formula: your own spells use your level; buffs from others assume
   the caster is at least your level (most buffs reach their cap well before 60). Some landing lines are shared by
   several spells (`You feel replenished.`); the tooltip says which others it could be.

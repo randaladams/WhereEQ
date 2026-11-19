@@ -83,6 +83,10 @@ public sealed class LogState
     /// <summary>From "You begin casting X.": what's being cast and when, to tell which spell landed and on whom.</summary>
     public string? Casting { get; set; }
     public DateTime? CastingSince { get; set; }
+    /// <summary>What you last hit or swung at in melee ("You pierce a froglok for 116 points of damage."), for
+    /// weapon procs, which land with no "You begin casting" line.</summary>
+    public string? MeleeTarget { get; set; }
+    public DateTime? MeleeSeen { get; set; }
 
     // Faction/experience lines within a couple of seconds, waiting to be matched against "slain" lines.
     public DateTime? PendingTime { get; set; }
@@ -460,9 +464,30 @@ public static partial class LogScanner
         if (casting is { CastOnOther.Length: > 0 } c && msg.EndsWith(c.CastOnOther) && !msg.StartsWith("You"))
         {
             var target = msg[..^c.CastOnOther.Length].Trim();
-            if (target.Length > 0 && target.Length < 64) AddSpell(state, c, target, ts, true, null);
+            if (target.Length > 0 && target.Length < 64) { AddSpell(state, c, target, ts, true, null); return; }
+        }
+
+        // Melee: remember the target for weapon procs.
+        if (msg.StartsWith("You ") && MeleeLine().Match(msg) is { Success: true } hit)
+        {
+            state.MeleeTarget = hit.Groups["t"].Value;
+            state.MeleeSeen = ts;
+            return;
+        }
+        // A weapon/item proc landing on the mob you're fighting ("A froglok shin knight's blood boils."): no
+        // "begin casting" line, so it's matched by the mob's name + a proc effect's landing text. (A groupmate's
+        // identical proc on the same mob looks the same; it just refreshes the timer.)
+        if (state.MeleeTarget is { } mt && state.MeleeSeen is { } seen && (ts - seen).TotalSeconds <= 10 &&
+            msg.Length > mt.Length && msg.StartsWith(mt, StringComparison.OrdinalIgnoreCase) &&
+            fx.ProcLandsOnOther(msg[mt.Length..]) is { Count: > 0 } procs)
+        {
+            AddSpell(state, procs[0], mt, ts, true, null);
         }
     }
+
+    // "You pierce a froglok shin knight for 116 points of damage." / "You try to slash a gnoll, but miss!"
+    [GeneratedRegex(@"^You (?:try to )?(?:hit|slash|pierce|crush|bash|kick|punch|backstab|strike|bite|claw|smash|slam|maul|gore|sting|frenzy on|round kick|flying kick|tiger claw|eagle strike|dragon punch) (?<t>.+?)(?: for \d+ points? of damage\.|, but miss!)$")]
+    private static partial Regex MeleeLine();
 
     private static bool SameSpell(string a, string b) =>
         a.Replace('`', '\'').Equals(b.Replace('`', '\''), StringComparison.OrdinalIgnoreCase);
@@ -471,9 +496,13 @@ public static partial class LogScanner
     {
         // Your own spells last by your level; someone else's: assume at least your level (buffs mostly hit their cap).
         var minForClass = state.Class != null && s.Levels.TryGetValue(state.Class, out var cl) ? cl : s.MinLevel;
-        var casterLevel = byYou ? Math.Max(state.Level ?? minForClass, minForClass) : Math.Max(state.Level ?? 50, s.MinLevel);
+        // Level unknown (no /who yet): assume 50, or the spell's level if higher (procs have no level at all).
+        var casterLevel = byYou ? Math.Max(state.Level ?? Math.Max(minForClass, 50), minForClass)
+                                : Math.Max(state.Level ?? 50, s.MinLevel);
         var seconds = s.DurationSeconds(casterLevel);
         if (seconds <= 0) return;
+        // "A froglok shin knight's blood boils." starts a sentence; the mob is "a froglok shin knight".
+        if (target != null && (target.StartsWith("A ") || target.StartsWith("An "))) target = char.ToLower(target[0]) + target[1..];
         // Same landing message, different spells: say which others it could be (unless you cast it yourself).
         var others = !byYou && candidates is { Count: > 1 }
             ? string.Join(", ", candidates.Where(c => c != s).Select(c => SpellInfo.DisplayName(c.Name)).Take(6))

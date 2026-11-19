@@ -23,6 +23,9 @@ public sealed class SpellInfo
 
     public int MinLevel => Levels.Count > 0 ? Levels.Values.Min() : 0;
 
+    /// <summary>A weapon/item effect (e.g. Boiling Blood from Nadrandi's Lance): instant, and no class gets it.</summary>
+    public bool IsProc => CastTimeMs == 0 && Levels.Count == 0;
+
     /// <summary>"Selo's Accelerando" (the file uses backticks); item effects like "JourneymanBoots" get spaces.</summary>
     public static string DisplayName(string name)
     {
@@ -74,6 +77,8 @@ public sealed class SpellEffects
 
     private readonly Dictionary<string, List<SpellInfo>> _onYou = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<SpellInfo>> _fades = new(StringComparer.Ordinal);
+    /// <summary>"Lands on someone" text of weapon/item proc effects (no cast time, no class gets them).</summary>
+    private readonly Dictionary<string, List<SpellInfo>> _procOnOther = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SpellInfo> _byName = new(StringComparer.OrdinalIgnoreCase);
 
     public string? Path { get; private set; }
@@ -123,6 +128,7 @@ public sealed class SpellEffects
         {
             if (s.CastOnYou.Length > 0) Add(fx._onYou, s.CastOnYou, s);
             if (s.Fades.Length > 0) Add(fx._fades, s.Fades, s);
+            if (s.IsProc && s.CastOnOther.Length > 0) Add(fx._procOnOther, s.CastOnOther, s);
         }
         return fx;
     }
@@ -161,6 +167,10 @@ public sealed class SpellEffects
     /// <summary>Spells whose "lands on you" text is <paramref name="msg"/>. Some lines end in ".." in the log.</summary>
     public List<SpellInfo>? LandsOnYou(string msg) =>
         _onYou.GetValueOrDefault(msg) ?? (msg.EndsWith("..") ? _onYou.GetValueOrDefault(msg[..^1]) : null);
+
+    /// <summary>Weapon/item proc effects whose "lands on someone" text is <paramref name="rest"/> (the line after the
+    /// target's name, e.g. "'s blood boils.").</summary>
+    public List<SpellInfo>? ProcLandsOnOther(string rest) => _procOnOther.GetValueOrDefault(rest);
 
     /// <summary>Spells whose "wears off you" text is <paramref name="msg"/>.</summary>
     public List<SpellInfo>? FadesFromYou(string msg) => _fades.GetValueOrDefault(msg);
