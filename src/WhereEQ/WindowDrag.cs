@@ -96,6 +96,18 @@ public static class WindowDrag
         return false;
     }
 
+    /// <summary>
+    /// Draws a see-through overlay on the CPU instead of the graphics card. A transparent (layered) WPF window drawn
+    /// on the GPU is copied back from the GPU on every repaint, which makes the GPU wait and can stall the game
+    /// underneath (seen as the game pausing once the buffs list started repainting every second). These windows
+    /// are small, so CPU drawing is cheap. WHEREEQ_GPU_OVERLAYS=1 turns it off (for comparison).
+    /// </summary>
+    public static void UseSoftwareRendering(System.Windows.Interop.HwndSource? source)
+    {
+        if (Environment.GetEnvironmentVariable("WHEREEQ_GPU_OVERLAYS") == "1") return;
+        if (source?.CompositionTarget is { } target) target.RenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+    }
+
     /// <summary>Cursor position in the window's device-independent screen coordinates.</summary>
     public static Point CursorInDips(Visual window)
     {

@@ -11,7 +11,7 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.30** (weapon procs on mobs, e.g. Boiling Blood, in the buffs list) after 0.1.29 (buffs
+- Status: build **0.1.33** (overlays drawn on the CPU: fixes game pauses) after 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
   moved into the Timers window, split by a draggable bar), 0.1.28 (buff
   tracking: spells on you and your spells on others), 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
   18 s charm timer), 0.1.25 (voice alerts:
@@ -162,6 +162,15 @@ Map tests used a fake character: write a slice of a real log (zone entry + `/loc
 `Logs\eqlog_Testmap_P1999Green.txt`, temporarily set `MapsFolder` and `Map.Character` in `settings.json`
 (back it up first), snapshot `|map`, then restore settings and delete the test log. Test logs must never be
 committed (they're under the ignored `Logs/`).
+
+Lesson learned (0.1.33): **overlays are drawn on the CPU** (`WindowDrag.UseSoftwareRendering`, called in the
+map's and timers' `SourceInitialized`). The owner saw the game pause for seconds after buffs arrived. Measured with
+a feeder script appending real log lines at 3× speed to a copy of the logs (WHEREEQ_APPDATA test folder), sampling
+WhereEQ's CPU: log reading + buff tracking alone ≈ 90 ms/s; the Timers & buffs overlay drawn on the GPU swung from
+44 to 488 ms/s depending on what the running game was doing (a transparent/layered WPF window drawn on the GPU is
+read back from the GPU every repaint, so it competes with the game; buff rows repaint every second). CPU-drawn: a
+steady 200–230 ms/s and no GPU use. Removing the list `DropShadowEffect`s made CPU drawing *slower* (~490 ms/s), so
+they stay. `WHEREEQ_GPU_OVERLAYS=1` switches GPU drawing back on for comparison.
 
 Lesson learned: **don't restyle `DataGridRow`/`DataGridCell` with `BasedOn` the type key** — it picks up the
 classic style and gives white rows in dark mode. Colour cell text via `ElementStyle`

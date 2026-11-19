@@ -153,6 +153,7 @@ public partial class TimersWindow : Window
         {
             _hwnd = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
             _hwnd?.AddHook(WndProc);
+            WindowDrag.UseSoftwareRendering(_hwnd);
             RegisterHotKey(_hwnd!.Handle, HotkeyId, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, (uint)KeyInterop.VirtualKeyFromKey(Key.T));
             ApplyLock(_settings.Timers.Locked);
         };

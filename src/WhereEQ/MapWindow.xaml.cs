@@ -62,6 +62,7 @@ public partial class MapWindow : Window
         {
             _hwnd = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
             _hwnd?.AddHook(WndProc);
+            WindowDrag.UseSoftwareRendering(_hwnd);
             RegisterHotKey(_hwnd!.Handle, HotkeyId, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, (uint)KeyInterop.VirtualKeyFromKey(Key.M));
             ApplyLock(_settings.Map.Locked);
         };
