@@ -118,19 +118,16 @@ public sealed class TimersSettings
     public List<string> Alerts { get; set; } = new();
     /// <summary>Your own respawn times in seconds, keyed by SpawnTimes.OverrideKey ("zone|mob", lower case).</summary>
     public Dictionary<string, int> Overrides { get; set; } = new();
+    /// <summary>Share of the window's list area given to buffs (0..1, the rest is timers); set by dragging the
+    /// bar between them. Null = never shown with buffs yet (the window grows to fit both the first time).</summary>
+    public double? BuffsShare { get; set; }
 }
 
-/// <summary>Buffs overlay: spells on you and spells you cast on others, from the log.</summary>
+/// <summary>Buffs list (bottom of the Timers window): spells on you and spells you cast on others, from the log.</summary>
 public sealed class BuffsSettings
 {
+    /// <summary>0.1.28 had a separate Buffs window; if it was open, the Timers window opens instead (once).</summary>
     public bool Open { get; set; }
-    public double? Left { get; set; }
-    public double? Top { get; set; }
-    public double Width { get; set; } = 230;
-    public double Height { get; set; } = 260;
-    public double Backdrop { get; set; } = 0.35;
-    /// <summary>Click-through: mouse goes to the game underneath. Toggle with Ctrl+Alt+B.</summary>
-    public bool Locked { get; set; }
     /// <summary>Character to show; null = whoever logged something most recently.</summary>
     public string? Character { get; set; }
     /// <summary>Also list spells you cast on others (mez, DoTs, buffs on groupmates).</summary>

@@ -13,7 +13,8 @@ using WhereEQ.Services;
 namespace WhereEQ;
 
 /// <summary>
-/// Spawn timers overlay: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!")
+/// Timers &amp; buffs overlay. Top: spawn timers; bottom: <see cref="BuffsPanel"/>; the bar between them is dragged
+/// to share the room (<see cref="TimersSettings.BuffsShare"/>). Spawn timers: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!")
 /// starts a countdown using the bundled P1999 respawn times. Small and see-through like the map: compact shows
 /// countdown + mob, the details button adds zone, kill time, killer and timer (wider). Lock (or Ctrl+Alt+T) makes
 /// it click-through.
@@ -125,6 +126,15 @@ public partial class TimersWindow : Window
         Backdrop.Opacity = t.Backdrop;
         DetailsButton.IsChecked = t.Details;
         List.ItemTemplate = (DataTemplate)Resources[t.Details ? "DetailsTemplate" : "CompactTemplate"];
+        Buffs.Init(settings);
+        BuffsOthersCheck.IsChecked = settings.Buffs.ShowOnOthers;
+        if (t.BuffsShare == null)
+        {
+            // First time with buffs in here: half the room each, and tall enough for both.
+            t.BuffsShare = 0.5;
+            if (Height < 360) Height = 360;
+        }
+        ApplySplit(t.BuffsShare.Value);
         _updatingUi = false;
 
         HintText.Text = spawnTimes.IsEmpty
@@ -175,6 +185,53 @@ public partial class TimersWindow : Window
     {
         _characters = characters;
         Rebuild();
+        Buffs.Update(characters);
+        RefreshBuffsCharacterBox();
+    }
+
+    // ------------------------------------------------------------------ buffs + split
+
+    private void ApplySplit(double buffsShare)
+    {
+        buffsShare = Math.Clamp(buffsShare, 0, 1);
+        TimersRow.Height = new GridLength(1 - buffsShare, GridUnitType.Star);
+        BuffsRow.Height = new GridLength(buffsShare, GridUnitType.Star);
+    }
+
+    private void Splitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        var total = TimersRow.ActualHeight + BuffsRow.ActualHeight;
+        if (total <= 0) return;
+        _settings.Timers.BuffsShare = BuffsRow.ActualHeight / total;
+        ApplySplit(_settings.Timers.BuffsShare.Value);
+        _settings.Save();
+    }
+
+    private void RefreshBuffsCharacterBox()
+    {
+        var names = Buffs.CharacterChoices;
+        if (BuffsCharacterBox.ItemsSource is List<string> old && old.SequenceEqual(names)) return;
+        var was = _updatingUi;
+        _updatingUi = true;
+        BuffsCharacterBox.ItemsSource = names;
+        BuffsCharacterBox.SelectedItem = _settings.Buffs.Character is { } c && names.Contains(c) ? c : BuffsPanel.ActiveChoice;
+        _updatingUi = was;
+    }
+
+    private void BuffsCharacter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_updatingUi || BuffsCharacterBox.SelectedItem is not string s) return;
+        _settings.Buffs.Character = s == BuffsPanel.ActiveChoice ? null : s;
+        _settings.Save();
+        Buffs.Reset();
+    }
+
+    private void BuffsOthers_Click(object sender, RoutedEventArgs e)
+    {
+        if (_updatingUi) return;
+        _settings.Buffs.ShowOnOthers = BuffsOthersCheck.IsChecked == true;
+        _settings.Save();
+        Buffs.Rebuild();
     }
 
     private void Rebuild()
@@ -280,6 +337,7 @@ public partial class TimersWindow : Window
 
     private void Tick()
     {
+        Buffs.Tick();
         var now = DateTime.Now;
         var keepUp = TimeSpan.FromMinutes(_settings.Timers.KeepUpMinutes);
         foreach (var r in _rows)
@@ -307,9 +365,10 @@ public partial class TimersWindow : Window
         var show = OptionsButton.IsChecked == true;
         OptionsPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         if (!show) return;
+        BuffsHintText.Text = BuffsPanel.SpellDataText;
         // The panel needs some room; grow a tiny window (it stays that size).
         if (Width < 310) Width = 310;
-        if (Height < 340) Height = 340;
+        if (Height < 560) Height = 560;
     }
 
     private void Details_Click(object sender, RoutedEventArgs e)
@@ -489,7 +548,8 @@ public partial class TimersWindow : Window
         OptionsButton.IsChecked = false;
         Frame.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         ResizeMode = locked ? ResizeMode.NoResize : ResizeMode.CanResizeWithGrip;
-        if (locked) List.SelectedItem = null;
+        if (locked) { List.SelectedItem = null; Buffs.ClearSelection(); }
+        Splitter.IsEnabled = !locked;
 
         if (_hwnd == null) return;
         var style = GetWindowLong(_hwnd.Handle, GWL_EXSTYLE);

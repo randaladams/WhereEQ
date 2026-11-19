@@ -1,7 +1,8 @@
 <Window x:Class="WhereEQ.TimersWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WhereEQ Timers" Width="240" Height="200" MinWidth="150" MinHeight="140"
+        xmlns:local="clr-namespace:WhereEQ"
+        Title="WhereEQ Timers &amp; Buffs" Width="240" Height="360" MinWidth="150" MinHeight="140"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
@@ -196,7 +197,33 @@
                 </StackPanel>
             </Border>
 
-            <Grid Margin="2,4,2,4">
+            <!-- Timers on top, buffs below; drag the bar between them to give either more room. -->
+            <Grid x:Name="Split" Margin="2,4,2,4">
+                <Grid.RowDefinitions>
+                    <RowDefinition x:Name="TimersRow" Height="*" MinHeight="0"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition x:Name="BuffsRow" Height="*" MinHeight="0"/>
+                </Grid.RowDefinitions>
+                <GridSplitter x:Name="Splitter" Grid.Row="1" Height="7" HorizontalAlignment="Stretch"
+                              ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" Background="Transparent"
+                              Cursor="SizeNS" DragCompleted="Splitter_DragCompleted"
+                              ToolTip="Drag to give timers or buffs more room">
+                    <GridSplitter.Template>
+                        <ControlTemplate TargetType="GridSplitter">
+                            <Border Background="Transparent">
+                                <Border x:Name="Line" Height="1" Margin="6,0" Background="#55FFFFFF" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Line" Property="Height" Value="3"/>
+                                    <Setter TargetName="Line" Property="Background" Value="#AAFFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </GridSplitter.Template>
+                </GridSplitter>
+                <local:BuffsPanel x:Name="Buffs" Grid.Row="2"/>
+                <Grid Grid.Row="0">
                 <ListBox x:Name="List" Background="Transparent" BorderThickness="0" FontSize="12"
                          Grid.IsSharedSizeScope="True" ItemContainerStyle="{StaticResource RowStyle}"
                          ItemTemplate="{StaticResource CompactTemplate}"
@@ -215,6 +242,7 @@
                 <TextBlock x:Name="EmptyText" Margin="8,2" Foreground="#DDFFFFFF" FontSize="11" TextWrapping="Wrap"
                            IsHitTestVisible="False" Effect="{StaticResource Shadow}"
                            Text="No timers. One starts when you kill a mob."/>
+                </Grid>
             </Grid>
         </DockPanel>
 
@@ -222,6 +250,11 @@
         <Border x:Name="OptionsPanel" Visibility="Collapsed" VerticalAlignment="Top" Margin="4,4,34,4"
                 Background="#EE202020" CornerRadius="6" Padding="10">
             <StackPanel>
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="Backdrop" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Slider x:Name="BackdropSlider" Minimum="0" Maximum="0.9" ValueChanged="Backdrop_Changed"/>
+                </DockPanel>
+                <TextBlock Text="Timers" Foreground="#BBBBBB" FontSize="11" Margin="0,0,0,4"/>
                 <CheckBox x:Name="OthersCheck" Content="Kills by others and pets" Foreground="White" Margin="0,0,0,6"
                           Click="Others_Click"
                           ToolTip="Also time mobs killed by other players and pets (&quot;a rat has been slain by Somebody!&quot;)."/>
@@ -229,10 +262,6 @@
                     <TextBlock Text="Keep up timers" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ComboBox x:Name="KeepBox" SelectionChanged="Keep_Changed"
                               ToolTip="How long a timer stays in the list after the mob is up again."/>
-                </DockPanel>
-                <DockPanel Margin="0,0,0,8">
-                    <TextBlock Text="Backdrop" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <Slider x:Name="BackdropSlider" Minimum="0" Maximum="0.9" ValueChanged="Backdrop_Changed"/>
                 </DockPanel>
                 <TextBlock Text="Start a timer by hand, or save a mob's respawn time:" Foreground="#BBBBBB" FontSize="11"
                            TextWrapping="Wrap" Margin="0,0,0,4"/>
@@ -251,7 +280,17 @@
                             ToolTip="Always use this respawn time for this mob in this zone."/>
                     <Button Content="Clear all" Padding="8,2" Margin="0,0,6,4" Click="Clear_Click" ToolTip="Remove every timer."/>
                 </WrapPanel>
-                <TextBlock x:Name="HintText" Foreground="#BBBBBB" FontSize="11" TextWrapping="Wrap"/>
+                <TextBlock x:Name="HintText" Foreground="#BBBBBB" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBlock Text="Buffs" Foreground="#BBBBBB" FontSize="11" Margin="0,0,0,4"/>
+                <DockPanel Margin="0,0,0,6">
+                    <TextBlock Text="Character" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="BuffsCharacterBox" SelectionChanged="BuffsCharacter_Changed"
+                              ToolTip="Whose buffs to show. Active = whoever's log changed most recently."/>
+                </DockPanel>
+                <CheckBox x:Name="BuffsOthersCheck" Content="Spells you cast on others" Foreground="White" Margin="0,0,0,8"
+                          Click="BuffsOthers_Click"
+                          ToolTip="Mez, DoTs, slows and buffs you cast on mobs and groupmates, until they wear off."/>
+                <TextBlock x:Name="BuffsHintText" Foreground="#BBBBBB" FontSize="11" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
     </Grid>

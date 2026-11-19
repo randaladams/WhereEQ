@@ -28,7 +28,9 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Spawn timers
 
-**⏱ Timers** opens a small, see-through, always-on-top list (like the map) of mobs and when they respawn:
+**⏱ Timers & buffs** opens a small, see-through, always-on-top window (like the map). Spawn timers are on top,
+your [buffs](#buffs) below; drag the bar between them to give either one more room (all the way, to hide one).
+The spawn timers list mobs and when they respawn:
 
 - A timer starts whenever your log says `You have slain a fire beetle!`. Tick **Kills by others** to also time
   mobs that others or pets kill (`... has been slain by Somebody!`). A death you're too far away to see isn't
@@ -53,8 +55,8 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Buffs
 
-**✨ Buffs** opens a small see-through list (like the timers) of the spells on you, each with a countdown and a
-bar that drains as it runs out. Green = buff, red = debuff on you.
+The bottom part of the **⏱ Timers & buffs** window lists the spells on you, each with a countdown and a bar that
+drains as it runs out. Green = buff, red = debuff on you.
 
 - It works from the log the way EqTool does: each spell has a "lands on you" line (`Your skin turns hard as
   steel.`) and a "wears off" line (`Your skin returns to normal.`), both read from the game's own
@@ -66,8 +68,7 @@ bar that drains as it runs out. Green = buff, red = debuff on you.
 - Times are estimates from the spell's duration formula: your own spells use your level; buffs from others assume
   the caster is at least your level (most buffs reach their cap well before 60). Some landing lines are shared by
   several spells (`You feel replenished.`); the tooltip says which others it could be.
-- Shows whoever played most recently, or pick a character in ⚙. 🔒 or **Ctrl+Alt+B** makes it click-through.
-  Right-click a spell to remove it.
+- Shows whoever played most recently, or pick a character in ⚙ (Buffs section). Right-click a spell to remove it.
 
 ## Sounds
 

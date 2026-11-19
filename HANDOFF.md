@@ -7,7 +7,8 @@ client writes and keeps them live while you play. This file is the starting poin
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.28** (✨ Buffs window: spells on you and your spells on others) after 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
+- Status: build **0.1.29** (buffs moved into the Timers window, split by a draggable bar) after 0.1.28 (buff
+  tracking: spells on you and your spells on others), 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
   18 s charm timer), 0.1.25 (voice alerts:
   Off/Beep/Voice per alert), 0.1.24 (kill dots half size and white; spell-off/charmed/died/rampage/gate alerts removed at
   the owner's request, 8 alerts left) after 0.1.23 (log alerts with their own tones), 0.1.22 (arena line isn't a zone),
@@ -120,8 +121,11 @@ Format notes learned from real data:
 - `WindowDrag.cs` — moves the overlays by hand instead of `DragMove`, so Windows Snap doesn't maximize/tile
   them at screen edges, and clamps them to the screen (also on open). Timers: drag from anywhere while
   unlocked (`anywhere: true`, 4 px threshold so clicks still select rows; buttons/text boxes/sliders excluded).
-- `BuffsWindow.xaml(.cs)` + `Services/SpellEffects.cs` — buff tracker (0.1.28), same overlay style as Timers,
-  **Ctrl+Alt+B** lock, snapshot `|buffs` / `|buffs|options`. `SpellEffects` reads the client's `spells_us.txt`
+- `BuffsPanel.xaml(.cs)` + `Services/SpellEffects.cs` — buff tracker (0.1.28; own window with Ctrl+Alt+B in
+  0.1.28, since 0.1.29 a UserControl in the bottom row of `TimersWindow`). A `GridSplitter` between the rows sets
+  `Settings.Timers.BuffsShare` (0..1, star heights; null = first time, window grows to 360 high). Buff options
+  (character, spells on others) are in the Timers ⚙ panel; `Settings.Buffs.Open` only migrates 0.1.28 users (opens
+  Timers once). Lock = Ctrl+Alt+T for both. Snapshot `|timers` / `|timers|options` shows both. `SpellEffects` reads the client's `spells_us.txt`
   (EverQuest folder, found from the inventory/ini/log folders and their parents; field layout as in EqTool:
   1 name, 6 lands-on-you, 7 lands-on-other, 8 wears-off, 13 cast ms, 16/17 duration formula/ticks, 83 beneficial,
   104–117 class levels Warrior..Enchanter). Duplicate names: later row wins unless it has no classes (EqTool rule).
@@ -161,7 +165,7 @@ classic style and gives white rows in dark mode. Colour cell text via `ElementSt
 Confirmed working in-game by the owner (2026-11-18): Skyshrine map fallback, spawn timers (beep, locked ✕/🔔,
 snap-free drag), overlay hotkeys/performance, friends `.ini` sync. EverQuest must run **windowed** for overlays.
 
-1. **Buffs window is new** (0.1.28): checked only against real log slices + snapshots, not live in-game. Ideas not
+1. **Buffs are new** (0.1.28, in the Timers window since 0.1.29): checked only against real log slices + snapshots, not live in-game. Ideas not
    built: alert when a buff on you is about to fade, spell icons (EqTool reads `uifiles\default\spells0N.tga`),
    tracking other players' buffs you didn't cast. Bard songs refresh on every pulse (no "begin casting" line for
    songs in the logs seen); offline time counts down like play time.
