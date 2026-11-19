@@ -183,7 +183,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Lvl" Binding="{Binding LevelText}" SortMemberPath="Level" Width="50">
+                            <DataGridTextColumn Header="Lvl" Binding="{Binding LevelText}" SortMemberPath="Level" Width="72">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
                                         <Setter Property="ToolTip" Value="{Binding LevelSource, StringFormat='Level from: {0}'}"/>

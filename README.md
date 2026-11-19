@@ -134,6 +134,12 @@ From the logs WhereEQ picks up level and class (`/who` yourself, level-ups), zon
 (`/char`, which logs "You are currently bound in: …", or binding) and when friends were last seen online (`/friends`, `/who`). The friends list
 itself comes from each character's `.ini` file.
 
+**Experience:** EverQuest doesn't log how far into a level you are, so type it: `$xp78` (or `$XP78`) in any chat
+(`/say`, group, guild, a tell…) records that the character is 78% into their current level. The Characters tab
+then shows `60 (78%)`; hover it for how much is left to the next level (60 is the top level on P1999). Only lines
+your own character typed count, never someone else's `$xp`. After a level-up the old percent is dropped until you
+type a new one.
+
 ## Building
 
 Requires the .NET 10 SDK.

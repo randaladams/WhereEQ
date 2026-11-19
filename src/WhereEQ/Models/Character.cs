@@ -47,9 +47,18 @@ public sealed class Character
     public int? Level => Log?.Level ?? Override?.Level ?? SpellbookMaxLevel;
 
     public string LevelSource =>
-        Log?.Level != null ? (Log.LevelSeen is { } t ? $"log, {t:MMM d}" : "log") :
-        Override?.Level != null ? "manual" :
-        SpellbookMaxLevel != null ? "spellbook (minimum)" : "unknown";
+        (Log?.Level != null ? (Log.LevelSeen is { } t ? $"log, {t:MMM d}" : "log") :
+         Override?.Level != null ? "manual" :
+         SpellbookMaxLevel != null ? "spellbook (minimum)" : "unknown") + XpTip;
+
+    /// <summary>Percent into the current level from "$xp78" typed by this character, if it's still this level
+    /// (a level gained since then makes it out of date).</summary>
+    public int? XpPercent =>
+        Log?.XpPercent is { } p && (Log.XpLevel == null || Log.XpLevel == Level) ? p : null;
+
+    private string XpTip => XpPercent is not { } p ? "" :
+        $"\n{p}% into level {Level}" + (Level >= 60 ? " (60 is the top level on P1999)" : $", {100 - p}% to {Level + 1}") +
+        (Log?.XpSeen is { } s ? $" ($xp typed {s:MMM d, h:mm tt})" : "");
 
     public int? SpellbookMaxLevel => Spellbook is { Count: > 0 } b ? b.Max(s => s.Level) : null;
 
@@ -63,7 +72,7 @@ public sealed class Character
     public DateTime? LastSeen => Log?.LastLine;
 
     public string ClassText => Class ?? "?";
-    public string LevelText => Level?.ToString() ?? "?";
+    public string LevelText => Level is not { } l ? "?" : XpPercent is { } p ? $"{l} ({p}%)" : l.ToString();
     public string BagsText => Inventory is { } i ? $"{i.BagSlotsFree} / {i.BagSlotsTotal}" : "";
     public string BankText => Inventory is { } i ? $"{i.BankSlotsFree} / {i.BankSlotsTotal}" : "";
     public string InventoryAge => Inventory is { } i ? Ago(i.SnapshotTime) : "no file";

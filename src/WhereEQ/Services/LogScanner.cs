@@ -45,7 +45,7 @@ public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, 
 public sealed class LogState
 {
     /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6; // 6: $xpNN
     public int Version { get; set; }
 
     public string Path { get; set; } = "";
@@ -54,6 +54,11 @@ public sealed class LogState
     public long Offset { get; set; }
     public int? Level { get; set; }
     public DateTime? LevelSeen { get; set; }
+    /// <summary>"$xp78" typed by this character (any channel: "You say, '$xp78'"): 78% into <see cref="XpLevel"/>.
+    /// EverQuest doesn't log experience percent, so this is how it's recorded.</summary>
+    public int? XpPercent { get; set; }
+    public int? XpLevel { get; set; }
+    public DateTime? XpSeen { get; set; }
     public string? Class { get; set; }
     public string? Zone { get; set; }
     public DateTime? LastLine { get; set; }
@@ -153,6 +158,10 @@ public static partial class LogScanner
     [GeneratedRegex(@"^(?<name>\w+) is (?<no>no longer|now) your friend\.$")]
     private static partial Regex FriendChange();
 
+    // "$xp78" / "$XP 78" (percent into the current level).
+    [GeneratedRegex(@"\$xp\s*(?<pct>\d{1,3})\b", RegexOptions.IgnoreCase)]
+    private static partial Regex XpTag();
+
     [GeneratedRegex(@"^You have gained a level! Welcome to level (?<lvl>\d+)!")]
     private static partial Regex LevelUp();
 
@@ -203,6 +212,7 @@ public static partial class LogScanner
             state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
             state.Heading = null; state.HeadingSeen = null; state.Trail.Clear(); state.Kills.Clear();
             state.Spells.Clear(); state.Casting = null; state.CastingSince = null;
+            state.XpPercent = state.XpLevel = null; state.XpSeen = null;
             state.PendingTime = null;
             state.InFriendsList = false;
         }
@@ -245,6 +255,18 @@ public static partial class LogScanner
                     state.Trail.Add(new TrailPoint(p.X, p.Y, ts ?? DateTime.Now));
                     if (state.Trail.Count > LogState.TrailMax) state.Trail.RemoveRange(0, state.Trail.Count - LogState.TrailMax);
                 }
+                continue;
+            }
+
+            // "$xp78" typed by this character only ("You say, '$xp78'", "You tell your party, '...'", ...); never
+            // from anyone else's chat.
+            if (msg.StartsWith("You ") && msg.Contains(", '") && msg.Contains("$xp", StringComparison.OrdinalIgnoreCase) &&
+                XpTag().Match(msg[msg.IndexOf(", '", StringComparison.Ordinal)..]) is { Success: true } xp &&
+                int.TryParse(xp.Groups["pct"].Value, out var pct) && pct <= 100)
+            {
+                state.XpPercent = pct;
+                state.XpLevel = state.Level;
+                state.XpSeen = ts;
                 continue;
             }
 

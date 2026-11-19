@@ -11,7 +11,8 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.33** (overlays drawn on the CPU: fixes game pauses) after 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
+- Status: build **0.1.34** ($xpNN typed by your character = % into the level, Characters tab) after 0.1.33
+  (overlays drawn on the CPU: fixes game pauses; owner says it "seems better"), 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
   moved into the Timers window, split by a draggable bar), 0.1.28 (buff
   tracking: spells on you and your spells on others), 0.1.27 ("Velious Armor Gems" loot alert), 0.1.26 (fizzle/mana/forage/charm alerts; Bard
   18 s charm timer), 0.1.25 (voice alerts:
@@ -62,11 +63,14 @@ Format notes learned from real data:
   `<loc>-SlotN` rows exist for it. CRLF.
 - Spellbook: `level<TAB>name` (names use backticks: `Selo`s`); compared with `'` normalised.
 - Log lines: `[Tue Nov 10 15:16:42 2026] message`, CRLF, Latin-1. Scanner reads incrementally from a saved
-  offset; `LogState.CurrentVersion` (now **5**) forces a one-time re-read when the parser learns new things.
+  offset; `LogState.CurrentVersion` (now **6**) forces a one-time re-read when the parser learns new things.
   Extracted: level/class (`/who` of self `[51 Rake] Name (Halfling) <Guild>`, level-up), zone
   (`You have entered X.`), bind (`You are currently bound in: X` from `/char`; `You feel yourself bind to the
   area.` = current zone), guild (self `/who` tag; no tag = none), friends (`X is now/no longer your friend.`,
   `/friends` blocks), `/loc` + trail + sense-heading.
+  `$xpNN` (0.1.34, version 6): only lines starting "You " with chat text (`You say, '$xp78'`), never other
+  players (owner's rule); stored as `XpPercent` + `XpLevel` (level at the time); `Character.XpPercent` hides it
+  once the level differs. Shown as "60 (78%)" in the Characters Lvl column, details in its tooltip.
 - `/loc` prints **Y, X, Z**; map files use **(-X, -Y)** (`MapData.FromLoc`). Verified: 10,645 of 10,647 logged
   East Commonlands locs fall inside the ecommons map with this transform.
 - Seen in bigger logs (Shadow Knight 2.4M lines, Bard 1.7M): stray NUL bytes (harmless: such lines don't match
