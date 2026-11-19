@@ -112,6 +112,11 @@ Get **[WhereEQ-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/down
 `WhereEQ.exe`. Nothing else needs to be installed. Windows may warn that the app is unrecognized
 (it isn't code-signed): choose **More info → Run anyway**.
 
+Already installed? **[WhereEQ-update-win-x64.zip](https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-update-win-x64.zip)**
+holds only what changed since the previous build (usually just `WhereEQ.exe`; the release notes list the files).
+Close WhereEQ and unzip it over your WhereEQ folder, replacing files. If you skipped builds and one of them changed
+something in `Data`, use the full zip instead.
+
 ## Setup
 
 On first run the Settings window asks where your files are:

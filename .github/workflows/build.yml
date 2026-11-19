@@ -2,6 +2,8 @@ name: Build
 
 # Every push to main builds a self-contained Windows exe and publishes it as the "latest" release,
 # so it can be downloaded from https://github.com/<owner>/WhereEQ/releases/latest without signing in.
+# Two downloads: WhereEQ-win-x64.zip (everything) and WhereEQ-update-win-x64.zip (the exe plus only the files
+# that changed since the previous "latest" build, to unzip over an existing install).
 on:
   push:
     branches: [main]
@@ -21,6 +23,8 @@ jobs:
       VERSION: 0.1.${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags, to compare with the previous "latest" build
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -36,6 +40,41 @@ jobs:
           Copy-Item packaging/README.txt out/WhereEQ/
           Compress-Archive -Path out/WhereEQ -DestinationPath WhereEQ-win-x64.zip
 
+      - name: Update zip (changed files only)
+        shell: pwsh
+        run: |
+          # The "latest" tag still points at the previous build's commit until the release step replaces it.
+          $prev = git rev-list -n 1 latest 2>$null
+          $changed = @(); $deleted = @()
+          if ($LASTEXITCODE -eq 0 -and $prev) {
+            $changed = @(git diff --name-only --diff-filter=d $prev HEAD -- src/WhereEQ/Data packaging/README.txt)
+            $deleted = @(git diff --name-only --diff-filter=D $prev HEAD -- src/WhereEQ/Data)
+            $since = "build $(git rev-parse --short $prev)"
+          } else {
+            # No previous build to compare with: the update zip is the whole thing.
+            $changed = @(Get-ChildItem out/WhereEQ -Recurse -File | ForEach-Object { $_.FullName })
+            $since = "nothing (first build)"
+          }
+          New-Item -ItemType Directory -Force upd/WhereEQ | Out-Null
+          Copy-Item out/WhereEQ/WhereEQ.exe upd/WhereEQ/
+          foreach ($f in $changed) {
+            # Repo path -> path in the install folder (src/WhereEQ/Data/x -> Data/x, packaging/README.txt -> README.txt).
+            $rel = if ($f -like 'src/WhereEQ/Data/*') { $f.Substring('src/WhereEQ/'.Length) }
+                   elseif ($f -eq 'packaging/README.txt') { 'README.txt' }
+                   else { [IO.Path]::GetRelativePath((Resolve-Path out/WhereEQ), $f) }
+            $src = Join-Path out/WhereEQ $rel
+            if (-not (Test-Path $src -PathType Leaf)) { continue } # not part of the release (e.g. not copied by the build)
+            $dst = Join-Path upd/WhereEQ $rel
+            New-Item -ItemType Directory -Force (Split-Path $dst) | Out-Null
+            Copy-Item $src $dst
+          }
+          Compress-Archive -Path upd/WhereEQ -DestinationPath WhereEQ-update-win-x64.zip
+          $files = Get-ChildItem upd/WhereEQ -Recurse -File | ForEach-Object { $_.FullName.Substring((Resolve-Path upd/WhereEQ).Path.Length + 1) }
+          $notes = "Changes since $since. WhereEQ-update-win-x64.zip has $($files.Count) file(s): $($files -join ', ')."
+          if ($deleted.Count -gt 0) { $notes += " Removed (delete these if you like): $($deleted -replace '^src/WhereEQ/','' -join ', ')." }
+          $notes | Out-File update-notes.txt -Encoding utf8
+          Write-Host $notes
+
       - uses: actions/upload-artifact@v4
         with:
           name: WhereEQ-win-x64-${{ env.VERSION }}
@@ -48,9 +87,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --cleanup-tag --yes || true
-          gh release create latest WhereEQ-win-x64.zip \
+          notes="Automatic build of ${GITHUB_SHA::7} from main.
+
+          - WhereEQ-win-x64.zip: everything. Unzip anywhere and run WhereEQ.exe.
+          - WhereEQ-update-win-x64.zip: only what changed since the previous build. Close WhereEQ and unzip it over
+            your WhereEQ folder (replace files). If you skipped builds, use the full zip, or check that every update
+            you missed had only the exe.
+
+          $(cat update-notes.txt)"
+          gh release create latest WhereEQ-win-x64.zip WhereEQ-update-win-x64.zip \
             --target "$GITHUB_SHA" \
             --title "WhereEQ $VERSION (latest build)" \
-            --notes "Automatic build of ${GITHUB_SHA::7} from main. Download WhereEQ-win-x64.zip, unzip, run WhereEQ.exe." \
+            --notes "$notes" \
             --latest
-

@@ -5,6 +5,9 @@ client writes and keeps them live while you play. This file is the starting poin
 
 - Repo: https://github.com/randaladams/WhereEQ (public). Every push to `main` builds and publishes the
   **`latest`** release: https://github.com/randaladams/WhereEQ/releases/download/latest/WhereEQ-win-x64.zip
+  plus `WhereEQ-update-win-x64.zip` = the exe and only the release files changed since the previous `latest` build
+  (the workflow diffs `src/WhereEQ/Data` and `packaging/README.txt` against the old `latest` tag before replacing it;
+  checkout uses `fetch-depth: 0`; release notes list the files).
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
 - Status: build **0.1.30** (weapon procs on mobs, e.g. Boiling Blood, in the buffs list) after 0.1.29 (buffs
