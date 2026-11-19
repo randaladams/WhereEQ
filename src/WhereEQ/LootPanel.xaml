@@ -1,0 +1,73 @@
+<UserControl x:Class="WhereEQ.LootPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <DropShadowEffect x:Key="Shadow" ShadowDepth="0" BlurRadius="4" Color="Black" Opacity="1"/>
+
+        <DataTemplate x:Key="RowTemplate">
+            <Grid ToolTip="{Binding Tip}" Margin="2,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Price"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Ago"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="Price" Text="{Binding PriceText}" Foreground="#CCCCCC" HorizontalAlignment="Right"
+                           Margin="0,0,8,0" FontWeight="SemiBold"/>
+                <TextBlock Grid.Column="1" Text="{Binding Item}" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Grid.Column="2" Text="{Binding AgoText}" Foreground="#99FFFFFF" FontSize="10.5"
+                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Valuable}" Value="True">
+                    <Setter TargetName="Price" Property="Foreground" Value="#FFD54F"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Priced}" Value="True">
+                    <Setter TargetName="Price" Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <Style x:Key="RowStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="4,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="3">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#44FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" x:Name="HeaderText" Text="Loot" Foreground="#BBFFFFFF" FontSize="10.5"
+                   FontWeight="SemiBold" Margin="6,4,0,1" Effect="{StaticResource Shadow}"
+                   ToolTip="Average asking prices from pigparse.org auction data (not actual sales)"/>
+        <Grid>
+            <ListBox x:Name="List" Background="Transparent" BorderThickness="0" FontSize="12"
+                     Grid.IsSharedSizeScope="True" ItemContainerStyle="{StaticResource RowStyle}"
+                     ItemTemplate="{StaticResource RowTemplate}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.Effect>
+                    <DropShadowEffect ShadowDepth="0" BlurRadius="4" Color="Black" Opacity="1"/>
+                </ListBox.Effect>
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Clear loot list" Click="Clear_Click"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+            <TextBlock x:Name="EmptyText" Margin="8,2" Foreground="#DDFFFFFF" FontSize="11" TextWrapping="Wrap"
+                       IsHitTestVisible="False" Effect="{StaticResource Shadow}"
+                       Text="Nothing looted in the last 2 hours. Loot shows here with its pigparse.org price."/>
+        </Grid>
+    </DockPanel>
+</UserControl>

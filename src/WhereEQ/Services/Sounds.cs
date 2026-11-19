@@ -2,7 +2,7 @@ namespace WhereEQ.Services;
 
 /// <summary>Things WhereEQ can beep for. Each has its own short tone pattern so you can tell them apart.
 /// Log-driven ones share their names with <see cref="LogNotice"/>.</summary>
-public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, CharmEnd, Gem }
+public enum Sound { Timer, Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, CharmEnd, Gem, Valuable }
 
 /// <summary>One log alert: what it's called in Settings, which lines trigger it, and whether it's on by default.</summary>
 public sealed record AlertInfo(LogNotice Notice, string Label, string Description, bool DefaultOn = true);
@@ -52,6 +52,7 @@ public static class Sounds
         new(LogNotice.Forage, "Foraged", "\"You have scrounged up some food / water / ...\""),
         new(LogNotice.Charm, "Charm landed", "\"... 's eyes glaze over.\" On a Bard this starts an 18-second charm timer instead"),
         new(LogNotice.Gem, "Velious Armor Gems", "Looting Flawless Diamond, Nephrite, Crushed Coral, Jaundice Gem, ... (the Velious armor quest gems)"),
+        new(LogNotice.Valuable, "Valuable loot", "You loot something whose pigparse.org price is at least the amount set below"),
         new(LogNotice.Food, "Food / drink low", "\"You are low on food / out of drink ...\" (at most once a minute)"),
     };
 
@@ -71,6 +72,7 @@ public static class Sounds
         [Sound.Forage] = new[] { (1300, 50), (1700, 50) },                           // tiny up blip
         [Sound.Charm] = new[] { (900, 70), (1300, 70), (900, 70) },                  // up-down
         [Sound.CharmEnd] = new[] { (2000, 60) },
+        [Sound.Valuable] = new[] { (1319, 90), (1568, 90), (2093, 90), (2637, 220) },   // rising arpeggio: money!
         [Sound.Gem] = new[] { (1568, 110), (2093, 260) },                            // a bright two-note chime (G, high C)                                     // one short high blip                             // slow pair
     };
 
@@ -141,6 +143,11 @@ public static class Sounds
                 var gem = LogScanner.LootedItem(line) ?? "gem";
                 var looter = LogScanner.Looter(line);
                 return looter is "You" or "" ? $"Looted {gem}" : $"{looter} looted {gem}";
+            case LogNotice.Valuable:
+                // "Flawless Diamond|1117" (item|price), built when the price came back.
+                var parts = line.Split('|');
+                return parts.Length == 2 && int.TryParse(parts[1], out var pp)
+                    ? $"Valuable loot: {parts[0]}, {pp:N0} platinum" : "Valuable loot";
             default: return n.ToString();
         }
     }
@@ -161,6 +168,7 @@ public static class Sounds
         LogNotice.Forage => "You have scrounged up some food.",
         LogNotice.Charm => "A bulthar's eyes glaze over.",
         LogNotice.Gem => "--You have looted a Flawless Diamond.--",
+        LogNotice.Valuable => "Flawless Diamond|1117",
         _ => "",
     };
 

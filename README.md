@@ -79,6 +79,19 @@ drains as it runs out. Green = buff, red = debuff on you.
   several spells (`You feel replenished.`); the tooltip says which others it could be.
 - Shows whoever played most recently, or pick a character in ⚙ (Buffs section). Right-click a spell to remove it.
 
+## Loot prices
+
+The bottom part of the **⏱ Timers & buffs** window lists what your characters looted in the last two hours, newest
+first, with each item's price from [pigparse.org](https://www.pigparse.org): the average asking price (WTS) in
+auction chat over the last 30 days, or a longer stretch when there were no recent auctions. Prices at or above the
+**Valuable loot** amount (Settings → Sounds) are gold, and the heading adds up the total. Hover a price for the
+number of auctions, the wanted-to-buy (WTB) average and when it was last for sale; right-click to clear the list.
+
+- Only your own loot counts (`--You have looted a Nephrite.--`), not groupmates'.
+- WhereEQ sends pigparse only the item name and your server (from the log's file name, e.g. P1999Green); prices are
+  remembered for an hour. Without internet, or for items pigparse has never seen, the price says "no price".
+- These are asking prices from auction chat, not what items actually sold for.
+
 ## Sounds
 
 Settings → **Sounds** reacts when a new line shows up in your log. Each alert can be **Off**, a **Beep** (each
@@ -101,6 +114,7 @@ anyone in the room hears it). The voice works offline and needs nothing installe
 | Foraged | "You have scrounged up some food / water / …" |
 | Charm landed | "… 's eyes glaze over." (see below for Bards) |
 | Velious Armor Gems | you or a groupmate loots one of the Velious armor quest gems (Flawless Diamond, Flawed Sea Sapphire, Flawed Emerald, Pristine Emerald, Nephrite, Jaundice Gem, Black Marble, Chipped Onyx Sapphire, Flawed Topaz, and the Crushed Coral / Topaz / Black Marble / Flame Emerald / Lava Ruby / Opal / Onyx Sapphire / Flame Opal / Jaundice Gem); plays a two-note chime |
+| Valuable loot | you loot something whose [pigparse.org](https://www.pigparse.org) price is at least the amount set under the voice options (500 platinum to start); the voice says "Valuable loot: Flawless Diamond, 1,117 platinum" |
 | Food / drink low | "You are low on food / out of drink …" (at most once a minute) |
 
 The 🔔 on a spawn timer has its own Off / Beep / Voice setting too.

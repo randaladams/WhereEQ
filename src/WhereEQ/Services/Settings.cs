@@ -59,6 +59,8 @@ public sealed class SoundSettings
     public int VoiceVolume { get; set; } = 100;
     /// <summary>Voice reads the text of tells, not just who sent them.</summary>
     public bool ReadTells { get; set; }
+    /// <summary>"Valuable loot" alert: looted items whose pigparse.org price is at least this many platinum.</summary>
+    public int LootMinPp { get; set; } = 500;
 
     public AlertMode ModeOf(LogNotice n)
     {
@@ -121,6 +123,10 @@ public sealed class TimersSettings
     /// <summary>Share of the window's list area given to buffs (0..1, the rest is timers); set by dragging the
     /// bar between them. Null = never shown with buffs yet (the window grows to fit both the first time).</summary>
     public double? BuffsShare { get; set; }
+    /// <summary>Share for the loot list at the bottom (0..1). Null = not shown yet (it takes a quarter the first time).</summary>
+    public double? LootShare { get; set; }
+    /// <summary>"Clear loot list": loot before this time isn't listed.</summary>
+    public DateTime? LootClearedBefore { get; set; }
 }
 
 /// <summary>Buffs list (bottom of the Timers window): spells on you and spells you cast on others, from the log.</summary>

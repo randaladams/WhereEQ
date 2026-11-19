@@ -34,6 +34,7 @@ public partial class SettingsWindow : Window
         VoiceRateSlider.Value = settings.Sounds.VoiceRate;
         VoiceVolumeSlider.Value = settings.Sounds.VoiceVolume;
         ReadTellsCheck.IsChecked = settings.Sounds.ReadTells;
+        LootMinBox.Text = settings.Sounds.LootMinPp.ToString();
         MaxHeight = SystemParameters.WorkArea.Height - 20;
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
         BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
@@ -173,6 +174,7 @@ public partial class SettingsWindow : Window
             VoiceRate = (int)Math.Round(VoiceRateSlider.Value),
             VoiceVolume = (int)Math.Round(VoiceVolumeSlider.Value),
             ReadTells = ReadTellsCheck.IsChecked == true,
+            LootMinPp = int.TryParse(LootMinBox.Text.Replace(",", "").Replace("pp", "").Trim(), out var min) && min > 0 ? min : 500,
         };
         foreach (var box in _modeBoxes)
         {

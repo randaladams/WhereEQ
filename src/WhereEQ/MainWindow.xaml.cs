@@ -49,6 +49,17 @@ public partial class MainWindow : Window
             else
                 Sounds.Alert(_settings.Sounds, notice, line);
         };
+        // Fresh loot: look up its price; alert if it's worth at least the "valuable loot" amount.
+        LogScanner.Looted += async (character, server, item) =>
+        {
+            try
+            {
+                var info = await PriceLookup.GetAsync(PriceLookup.ServerName(server), item);
+                if (info?.Price is { } price && price >= _settings.Sounds.LootMinPp)
+                    Sounds.Alert(_settings.Sounds, LogNotice.Valuable, $"{info.Item}|{price}");
+            }
+            catch { /* no price, no alert */ }
+        };
         Loaded += async (_, _) =>
         {
             if (!_settings.HasAnyFolder && Environment.GetEnvironmentVariable("WHEREEQ_SNAPSHOT") == null)
@@ -172,6 +183,25 @@ public partial class MainWindow : Window
                 if (LogScanner.Classify(line[(close + 2)..]) is { } n) counts[n.ToString()] = counts.GetValueOrDefault(n.ToString()) + 1;
             }
             File.WriteAllLines(parts[0], counts.OrderBy(k => k.Key).Select(k => $"{k.Key}\t{k.Value}"));
+            Application.Current.Shutdown();
+            return;
+        }
+        if (parts.Length > 2 && parts[1] == "price")
+        {
+            // Dev: WHEREEQ_SNAPSHOT="out.txt|price|Flawless Diamond[|Green]" -> the pigparse lookup result.
+            var sw = Stopwatch.StartNew();
+            var info = await PriceLookup.GetAsync(parts.Length > 3 ? parts[3] : "Green", parts[2]);
+            File.WriteAllText(parts[0], info == null ? $"null (no data or unreachable) {sw.ElapsedMilliseconds} ms"
+                                                     : $"{info.Text} | {info.Tip.Replace('\n', ' ')} | {sw.ElapsedMilliseconds} ms");
+            Application.Current.Shutdown();
+            return;
+        }
+        if (parts.Length > 1 && parts[1] == "timers" && parts.Length > 2 && parts[2] == "loot")
+        {
+            // Dev: wait for loot prices before rendering.
+            if (_timersWindow == null) OpenTimers();
+            await Task.Delay(4000);
+            RenderToPng(_timersWindow!, parts[0]);
             Application.Current.Shutdown();
             return;
         }

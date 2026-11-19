@@ -113,6 +113,13 @@
             <CheckBox x:Name="ReadTellsCheck" Grid.Row="1" Grid.ColumnSpan="6" Margin="0,6,0,0"
                       Content="Read tells aloud (not just who sent them) — anyone in the room will hear them"/>
         </Grid>
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <TextBlock Text="Valuable loot: at least" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <TextBox x:Name="LootMinBox" Width="80" VerticalAlignment="Center"
+                     ToolTip="Platinum. Prices are pigparse.org's average asking price (WTS) in auction chat."/>
+            <TextBlock Text="platinum (pigparse.org price; also turns the price gold in the loot list)" VerticalAlignment="Center"
+                       Margin="8,0,0,0" Foreground="{StaticResource MutedBrush}"/>
+        </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
             <Button Content="Save" IsDefault="True" MinWidth="90" Click="Save_Click" Style="{DynamicResource AccentButtonStyle}"/>

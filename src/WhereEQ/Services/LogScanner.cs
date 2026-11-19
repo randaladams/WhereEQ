@@ -39,13 +39,17 @@ public sealed record ActiveSpell(string Name, string? Target, DateTime Start, in
     public DateTime End => Start.AddSeconds(Seconds);
 }
 
-/// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>).</summary>
-public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, Gem }
+/// <summary>An item you looted ("--You have looted a Nephrite.--"), for the loot price list.</summary>
+public sealed record LootRecord(string Item, DateTime Time, string? Zone);
+
+/// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>). <see cref="Valuable"/> isn't from
+/// Classify: it fires after a looted item's price comes back at or above the threshold.</summary>
+public enum LogNotice { Fall, Stand, Tell, Fade, Illusion, Invite, Trade, Food, Fizzle, Mana, Forage, Charm, Gem, Valuable }
 
 public sealed class LogState
 {
     /// <summary>Bumped when the scanner learns new things, so cached logs are re-read once from the start.</summary>
-    public const int CurrentVersion = 6; // 6: $xpNN
+    public const int CurrentVersion = 7; // 6: $xpNN, 7: loot list
     public int Version { get; set; }
 
     public string Path { get; set; } = "";
@@ -81,6 +85,10 @@ public sealed class LogState
     /// <summary>Recent mob deaths (newest last), for spawn timers.</summary>
     public List<KillRecord> Kills { get; set; } = new();
     public const int KillsMax = 300;
+
+    /// <summary>Items you looted, newest last (loot price list).</summary>
+    public List<LootRecord> Loot { get; set; } = new();
+    public const int LootMax = 100;
 
     /// <summary>Buffs/debuffs on you and spells you cast on others that haven't run out (see LogScanner.TrackSpells).</summary>
     public List<ActiveSpell> Spells { get; set; } = new();
@@ -194,6 +202,10 @@ public static partial class LogScanner
     /// </summary>
     public static event Action<LogNotice, string, string?, string>? Notice;
 
+    /// <summary>Raised (on the log reader's thread) for a fresh "--You have looted a X.--" line (stamped under 20 s
+    /// ago). Arguments: character, server (from the log's file name), item.</summary>
+    public static event Action<string, string, string>? Looted;
+
     public static bool TryParseFileName(string path, out string character, out string server)
     {
         var m = LogFileName().Match(System.IO.Path.GetFileNameWithoutExtension(path));
@@ -218,7 +230,7 @@ public static partial class LogScanner
             state.MapX = state.MapY = state.LocZ = null; state.LocSeen = null; state.LocZone = null;
             state.Heading = null; state.HeadingSeen = null; state.Trail.Clear(); state.Kills.Clear();
             state.Spells.Clear(); state.Casting = null; state.CastingSince = null;
-            state.XpPercent = state.XpLevel = null; state.XpSeen = null;
+            state.XpPercent = state.XpLevel = null; state.XpSeen = null; state.Loot.Clear();
             state.PendingTime = null;
             state.InFriendsList = false;
         }
@@ -273,6 +285,18 @@ public static partial class LogScanner
                 state.XpPercent = pct;
                 state.XpLevel = state.Level;
                 state.XpSeen = ts;
+                continue;
+            }
+
+            // Your own loot (not "--Somebody has looted ...--"): the loot price list.
+            if (msg.StartsWith("--You have looted ") && LootedItem(msg) is { } loot)
+            {
+                state.Loot.Add(new LootRecord(loot, ts ?? DateTime.Now, state.Zone));
+                if (state.Loot.Count > LogState.LootMax) state.Loot.RemoveRange(0, state.Loot.Count - LogState.LootMax);
+                if (Looted != null && ts is { } lts && (DateTime.Now - lts).TotalSeconds < 20)
+                {
+                    try { Looted.Invoke(name, state.Server, loot); } catch { /* never break log reading */ }
+                }
                 continue;
             }
 

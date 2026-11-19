@@ -13,8 +13,8 @@ using WhereEQ.Services;
 namespace WhereEQ;
 
 /// <summary>
-/// Timers &amp; buffs overlay. Top: spawn timers; bottom: <see cref="BuffsPanel"/>; the bar between them is dragged
-/// to share the room (<see cref="TimersSettings.BuffsShare"/>). Spawn timers: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!")
+/// Timers &amp; buffs overlay. Top: spawn timers; then <see cref="BuffsPanel"/> and <see cref="LootPanel"/>; the bars
+/// between them are dragged to share the room (<see cref="TimersSettings.BuffsShare"/>, <see cref="TimersSettings.LootShare"/>). Spawn timers: every mob death in the logs ("You have slain X!", optionally "X has been slain by Y!")
 /// starts a countdown using the bundled P1999 respawn times. Small and see-through like the map: compact shows
 /// countdown + mob, the details button adds zone, kill time, killer and timer (wider). Lock (or Ctrl+Alt+T) makes
 /// it click-through.
@@ -127,6 +127,7 @@ public partial class TimersWindow : Window
         DetailsButton.IsChecked = t.Details;
         List.ItemTemplate = (DataTemplate)Resources[t.Details ? "DetailsTemplate" : "CompactTemplate"];
         Buffs.Init(settings);
+        Loot.Init(settings);
         BuffsOthersCheck.IsChecked = settings.Buffs.ShowOnOthers;
         if (t.BuffsShare == null)
         {
@@ -134,7 +135,14 @@ public partial class TimersWindow : Window
             t.BuffsShare = 0.5;
             if (Height < 360) Height = 360;
         }
-        ApplySplit(t.BuffsShare.Value);
+        if (t.LootShare == null)
+        {
+            // First time with the loot list: it takes a quarter, the others keep their proportions.
+            t.LootShare = 0.25;
+            t.BuffsShare *= 0.75;
+            if (Height < 440) Height = 440;
+        }
+        ApplySplit(t.BuffsShare.Value, t.LootShare.Value);
         _updatingUi = false;
 
         HintText.Text = spawnTimes.IsEmpty
@@ -187,24 +195,28 @@ public partial class TimersWindow : Window
         _characters = characters;
         Rebuild();
         Buffs.Update(characters);
+        Loot.Update(characters);
         RefreshBuffsCharacterBox();
     }
 
     // ------------------------------------------------------------------ buffs + split
 
-    private void ApplySplit(double buffsShare)
+    private void ApplySplit(double buffsShare, double lootShare)
     {
         buffsShare = Math.Clamp(buffsShare, 0, 1);
-        TimersRow.Height = new GridLength(1 - buffsShare, GridUnitType.Star);
+        lootShare = Math.Clamp(lootShare, 0, 1 - buffsShare);
+        TimersRow.Height = new GridLength(1 - buffsShare - lootShare, GridUnitType.Star);
         BuffsRow.Height = new GridLength(buffsShare, GridUnitType.Star);
+        LootRow.Height = new GridLength(lootShare, GridUnitType.Star);
     }
 
     private void Splitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
     {
-        var total = TimersRow.ActualHeight + BuffsRow.ActualHeight;
+        var total = TimersRow.ActualHeight + BuffsRow.ActualHeight + LootRow.ActualHeight;
         if (total <= 0) return;
         _settings.Timers.BuffsShare = BuffsRow.ActualHeight / total;
-        ApplySplit(_settings.Timers.BuffsShare.Value);
+        _settings.Timers.LootShare = LootRow.ActualHeight / total;
+        ApplySplit(_settings.Timers.BuffsShare.Value, _settings.Timers.LootShare.Value);
         _settings.Save();
     }
 
@@ -339,6 +351,7 @@ public partial class TimersWindow : Window
     private void Tick()
     {
         Buffs.Tick();
+        Loot.Tick();
         var now = DateTime.Now;
         var keepUp = TimeSpan.FromMinutes(_settings.Timers.KeepUpMinutes);
         foreach (var r in _rows)
@@ -549,8 +562,8 @@ public partial class TimersWindow : Window
         OptionsButton.IsChecked = false;
         Frame.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         ResizeMode = locked ? ResizeMode.NoResize : ResizeMode.CanResizeWithGrip;
-        if (locked) { List.SelectedItem = null; Buffs.ClearSelection(); }
-        Splitter.IsEnabled = !locked;
+        if (locked) { List.SelectedItem = null; Buffs.ClearSelection(); Loot.ClearSelection(); }
+        Splitter.IsEnabled = LootSplitter.IsEnabled = !locked;
 
         if (_hwnd == null) return;
         var style = GetWindowLong(_hwnd.Handle, GWL_EXSTYLE);

@@ -197,32 +197,46 @@
                 </StackPanel>
             </Border>
 
-            <!-- Timers on top, buffs below; drag the bar between them to give either more room. -->
+            <!-- Timers on top, buffs, then loot; drag the bars between them to give any of them more room. -->
             <Grid x:Name="Split" Margin="2,4,2,4">
+                <Grid.Resources>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Height" Value="7"/>
+                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                        <Setter Property="ResizeDirection" Value="Rows"/>
+                        <Setter Property="ResizeBehavior" Value="PreviousAndNext"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Cursor" Value="SizeNS"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="GridSplitter">
+                                    <Border Background="Transparent">
+                                        <Border x:Name="Line" Height="1" Margin="6,0" Background="#55FFFFFF" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Line" Property="Height" Value="3"/>
+                                            <Setter TargetName="Line" Property="Background" Value="#AAFFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Grid.Resources>
                 <Grid.RowDefinitions>
                     <RowDefinition x:Name="TimersRow" Height="*" MinHeight="0"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition x:Name="BuffsRow" Height="*" MinHeight="0"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition x:Name="LootRow" Height="*" MinHeight="0"/>
                 </Grid.RowDefinitions>
-                <GridSplitter x:Name="Splitter" Grid.Row="1" Height="7" HorizontalAlignment="Stretch"
-                              ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" Background="Transparent"
-                              Cursor="SizeNS" DragCompleted="Splitter_DragCompleted"
-                              ToolTip="Drag to give timers or buffs more room">
-                    <GridSplitter.Template>
-                        <ControlTemplate TargetType="GridSplitter">
-                            <Border Background="Transparent">
-                                <Border x:Name="Line" Height="1" Margin="6,0" Background="#55FFFFFF" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Line" Property="Height" Value="3"/>
-                                    <Setter TargetName="Line" Property="Background" Value="#AAFFFFFF"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </GridSplitter.Template>
-                </GridSplitter>
+                <GridSplitter x:Name="Splitter" Grid.Row="1" DragCompleted="Splitter_DragCompleted"
+                              ToolTip="Drag to give timers or buffs more room"/>
                 <local:BuffsPanel x:Name="Buffs" Grid.Row="2"/>
+                <GridSplitter x:Name="LootSplitter" Grid.Row="3" DragCompleted="Splitter_DragCompleted"
+                              ToolTip="Drag to give buffs or loot more room"/>
+                <local:LootPanel x:Name="Loot" Grid.Row="4"/>
                 <Grid Grid.Row="0">
                 <ListBox x:Name="List" Background="Transparent" BorderThickness="0" FontSize="12"
                          Grid.IsSharedSizeScope="True" ItemContainerStyle="{StaticResource RowStyle}"

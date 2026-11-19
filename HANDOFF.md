@@ -11,7 +11,8 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.35** (Bard songs on mobs in the buffs list) after 0.1.34 ($xpNN typed by your character =
+- Status: build **0.1.36** (loot list with pigparse.org prices + "Valuable loot" alert) after 0.1.35 (Bard songs on
+  mobs in the buffs list), 0.1.34 ($xpNN typed by your character =
   % into the level, Characters tab), 0.1.33
   (overlays drawn on the CPU: fixes game pauses; owner says it "seems better"), 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
   moved into the Timers window, split by a draggable bar), 0.1.28 (buff
@@ -152,6 +153,15 @@ Format notes learned from real data:
   alternatives in the tooltip (`AddSpell(sureWhich: false)`); your death clears your
   buffs. Durations: `SpellInfo.DurationSeconds` (EqTool's formula table); own spells use your level, others' assume
   max(your level, spell's level). Buff changes don't touch `Signature`, so they ride `PositionChanged`.
+- Loot prices (0.1.36): `LogScanner` records your own `--You have looted a X.--` lines in `LogState.Loot`
+  (`LootRecord`, 100 max; log state version 7) and raises `LogScanner.Looted` for fresh ones. `Services/PriceLookup.cs`
+  calls `GET https://www.pigparse.org/api/item/get/{Green|Blue|Red|Quarm}/{item}` (no key; 204 = unknown item),
+  takes the first WTS window with count and average > 0 (30 d, 60 d, 90 d, 6 mo, year), caches answers 1 h and
+  failures 5 min, raises `Updated`. `LootPanel.xaml(.cs)` is the third row of `TimersWindow` (second `GridSplitter`,
+  `Timers.LootShare`, null = first time → 0.25 and buffs scaled by 0.75; `Timers.LootClearedBefore` for "Clear").
+  `MainWindow` handles `Looted` → price ≥ `Sounds.LootMinPp` (default 500, box in Settings) → `LogNotice.Valuable`
+  alert (Off/Beep/Voice like the others; the line passed to `Sounds.Phrase` is "item|price"). Only the item name and
+  server are sent. Dev hooks: `out.txt|price|Item Name[|Server]`, `out.png|timers|loot` (waits 4 s for prices).
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest
