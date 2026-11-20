@@ -35,6 +35,9 @@ public partial class SettingsWindow : Window
         VoiceVolumeSlider.Value = settings.Sounds.VoiceVolume;
         ReadTellsCheck.IsChecked = settings.Sounds.ReadTells;
         LootMinBox.Text = settings.Sounds.LootMinPp.ToString();
+        LootTrackCheck.IsChecked = settings.LootTracking;
+        LootPricesCheck.IsChecked = settings.LootPrices;
+        Loot_Click(this, new RoutedEventArgs());
         MaxHeight = SystemParameters.WorkArea.Height - 20;
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
         BankSlotsBox.SelectedItem = Math.Clamp(settings.BankSlots, 1, 16);
@@ -59,6 +62,14 @@ public partial class SettingsWindow : Window
     }
 
     private void Folder_Changed(object sender, RoutedEventArgs e) => UpdateInfo();
+
+    /// <summary>Prices (and the valuable-loot alert) work on the loot list, so they're greyed out without it.</summary>
+    private void Loot_Click(object sender, RoutedEventArgs e)
+    {
+        var tracking = LootTrackCheck.IsChecked == true;
+        LootPricesCheck.IsEnabled = tracking;
+        LootMinRow.IsEnabled = tracking && LootPricesCheck.IsChecked == true;
+    }
 
     private void UpdateInfo()
     {
@@ -137,6 +148,8 @@ public partial class SettingsWindow : Window
         s.AlwaysOnTop = TopmostCheck.IsChecked == true;
         s.BankSlots = BankSlotsBox.SelectedItem is int b ? b : InventoryParser.DefaultBankSlots;
         s.Sounds = CurrentSounds();
+        s.LootTracking = LootTrackCheck.IsChecked == true;
+        s.LootPrices = LootPricesCheck.IsChecked == true;
         Result = s;
         DialogResult = true;
     }

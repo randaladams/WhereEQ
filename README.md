@@ -10,7 +10,7 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Map overlay
 
-**🗺 Map** opens a transparent, always-on-top map of your current zone that can sit over the game:
+**🗺 Map** shows or hides (click again) a transparent, always-on-top map of your current zone that can sit over the game:
 
 - Your position, heading and recent trail come from `/loc` lines in the log, so bind `/loc` to a key or use a
   `/loc` macro. The map switches automatically when you zone.
@@ -28,7 +28,7 @@ EverQuest client writes and keeps them up to date while you play.
 
 ## Spawn timers
 
-**⏱ Timers & buffs** opens a small, see-through, always-on-top window (like the map). Spawn timers are on top,
+**⏱ Timers & buffs** shows or hides (click again) a small, see-through, always-on-top window (like the map). Spawn timers are on top,
 your [buffs](#buffs) below; drag the bar between them to give either one more room (all the way, to hide one).
 The spawn timers list mobs and when they respawn:
 
@@ -84,13 +84,16 @@ drains as it runs out. Green = buff, red = debuff on you.
 The bottom part of the **⏱ Timers & buffs** window lists what your characters looted in the last two hours, newest
 first, with each item's price from [pigparse.org](https://www.pigparse.org): the average asking price (WTS) in
 auction chat over the last 30 days, or a longer stretch when there were no recent auctions. Prices at or above the
-**Valuable loot** amount (Settings → Sounds) are gold, and the heading adds up the total. Hover a price for the
+**Valuable loot** amount (Settings → Options → Loot) are gold, and the heading adds up the total. Hover a price for the
 number of auctions, the wanted-to-buy (WTB) average and when it was last for sale; right-click to clear the list.
 
 - Only your own loot counts (`--You have looted a Nephrite.--`), not groupmates'.
 - WhereEQ sends pigparse only the item name and your server (from the log's file name, e.g. P1999Green); prices are
   remembered for an hour. Without internet, or for items pigparse has never seen, the price says "no price".
 - These are asking prices from auction chat, not what items actually sold for.
+- Both are optional (Settings → Options → Loot): turn off **Keep a list of what you loot** to hide the list and stop
+  recording loot, or **Look up loot prices on pigparse.org** to keep the list without ever contacting pigparse (no
+  prices, no Valuable loot alert).
 
 ## Sounds
 

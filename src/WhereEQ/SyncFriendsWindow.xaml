@@ -1,4 +1,5 @@
 <Window x:Class="WhereEQ.SyncFriendsWindow"
+        Icon="/Assets/WhereEQ.ico"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Sync friends lists" Width="820" Height="620" MinWidth="640" MinHeight="420"

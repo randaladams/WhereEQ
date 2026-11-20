@@ -64,9 +64,13 @@ public static class PriceLookup
         return !c.Failed;
     }
 
-    /// <summary>The price, from the cache or pigparse. Null = no data or the site couldn't be reached.</summary>
+    /// <summary>Settings → Options → "Look up prices on pigparse.org". Off: nothing is ever sent.</summary>
+    public static bool Enabled { get; set; } = true;
+
+    /// <summary>The price, from the cache or pigparse. Null = no data, the site couldn't be reached, or lookups are off.</summary>
     public static Task<PriceInfo?> GetAsync(string server, string item)
     {
+        if (!Enabled) return Task.FromResult<PriceInfo?>(null);
         if (TryGetCached(server, item, out var cached)) return Task.FromResult(cached);
         var key = Key(server, item);
         if (Cache.TryGetValue(key, out var c) && c.Failed && DateTime.UtcNow - c.At < RetryFailed) return Task.FromResult<PriceInfo?>(null);

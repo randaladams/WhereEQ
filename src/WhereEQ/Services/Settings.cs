@@ -174,6 +174,11 @@ public sealed class Settings
     /// <summary>Buffs window state and options.</summary>
     public BuffsSettings Buffs { get; set; } = new();
 
+    /// <summary>Keep a list of what you loot (bottom of the Timers &amp; buffs window).</summary>
+    public bool LootTracking { get; set; } = true;
+    /// <summary>Look up looted items' prices on pigparse.org (sends the item name and server).</summary>
+    public bool LootPrices { get; set; } = true;
+
     /// <summary>Sounds for log events.</summary>
     public SoundSettings Sounds { get; set; } = new();
 

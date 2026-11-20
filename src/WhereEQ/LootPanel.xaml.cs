@@ -73,7 +73,12 @@ public partial class LootPanel : UserControl
             string priceText, tip;
             var price = 0;
             var valuable = false;
-            if (PriceLookup.TryGetCached(server, l.Item, out var info))
+            if (!_settings.LootPrices)
+            {
+                priceText = "";
+                tip = l.Item;
+            }
+            else if (PriceLookup.TryGetCached(server, l.Item, out var info))
             {
                 priceText = info?.Text ?? "no price";
                 price = info?.Price ?? 0;
@@ -90,6 +95,9 @@ public partial class LootPanel : UserControl
             rows.Add(new LootRow($"{who}|{l.Time.Ticks}|{l.Item}", l.Item, priceText, price, valuable, Character.Ago(l.Time), tip));
         }
 
+        EmptyText.Text = _settings.LootPrices
+            ? "Nothing looted in the last 2 hours. Loot shows here with its pigparse.org price."
+            : "Nothing looted in the last 2 hours. (Price lookups are off in Settings → Options.)";
         EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         var total = rows.Sum(r => r.Price);
         HeaderText.Text = rows.Count == 0 ? "Loot" : $"Loot · {rows.Count} item{(rows.Count == 1 ? "" : "s")}" +

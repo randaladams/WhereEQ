@@ -1,130 +1,166 @@
 <Window x:Class="WhereEQ.SettingsWindow"
+        Icon="/Assets/WhereEQ.ico"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WhereEQ Settings" Width="760" SizeToContent="Height" ResizeMode="NoResize"
+        Title="WhereEQ Settings" Width="780" Height="600" MinWidth="600" MinHeight="400" ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
-    <!-- Scrolls when the screen is shorter than the window (MaxHeight set in code). -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="20">
+    <Window.Resources>
+        <Style x:Key="Info" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Margin" Value="2,2,0,8"/>
+        </Style>
+        <Style x:Key="Note" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Group" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,12,0,6"/>
+        </Style>
+    </Window.Resources>
 
-        <TextBlock Text="File locations" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
-        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12"
-                   Text="Each kind of file can live in its own folder, or they can all share one. WhereEQ watches these folders and updates as files change."/>
-
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Text="Inventory files" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <TextBox x:Name="InventoryBox" Grid.Row="0" Grid.Column="1" TextChanged="Folder_Changed"/>
-            <Button Grid.Row="0" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=InventoryBox}" Click="Browse_Click"/>
-            <TextBlock x:Name="InventoryInfo" Grid.Row="1" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
-
-            <TextBlock Grid.Row="2" Text="Spellbook files" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <TextBox x:Name="SpellbookBox" Grid.Row="2" Grid.Column="1" TextChanged="Folder_Changed"/>
-            <Button Grid.Row="2" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=SpellbookBox}" Click="Browse_Click"/>
-            <TextBlock x:Name="SpellbookInfo" Grid.Row="3" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
-
-            <TextBlock Grid.Row="4" Text="Log files" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <TextBox x:Name="LogBox" Grid.Row="4" Grid.Column="1" TextChanged="Folder_Changed"/>
-            <Button Grid.Row="4" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=LogBox}" Click="Browse_Click"/>
-            <TextBlock x:Name="LogInfo" Grid.Row="5" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
-
-            <TextBlock Grid.Row="6" Text="Character .ini files" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <TextBox x:Name="IniBox" Grid.Row="6" Grid.Column="1" TextChanged="Folder_Changed"
-                     ToolTip="Name_server.ini files (friends lists). Leave blank to use the inventory folder."/>
-            <Button Grid.Row="6" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=IniBox}" Click="Browse_Click"/>
-            <TextBlock x:Name="IniInfo" Grid.Row="7" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
-
-            <TextBlock Grid.Row="8" Text="Map files" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <TextBox x:Name="MapsBox" Grid.Row="8" Grid.Column="1" TextChanged="Folder_Changed"
-                     ToolTip="The maps folder in your P1999 install. Leave blank to use 'maps' under the inventory folder."/>
-            <Button Grid.Row="8" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=MapsBox}" Click="Browse_Click"/>
-            <TextBlock x:Name="MapsInfo" Grid.Row="9" Grid.Column="1" Margin="2,2,0,10" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
-        </Grid>
-
-        <CheckBox x:Name="SubfoldersCheck" Content="Also look in subfolders" Margin="0,0,0,16" Click="Folder_Changed"/>
-
-        <TextBlock Text="Options" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
-        <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="Server" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <ComboBox x:Name="ServerBox" Grid.Column="1" IsEditable="True"/>
-            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
-                       Foreground="{StaticResource MutedBrush}" Text="Only read logs and .ini files for this server (eqlog_Name_SERVER.txt, Name_SERVER.ini). Blank reads all."/>
-        </Grid>
-        <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="90"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="Bank slots" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <ComboBox x:Name="BankSlotsBox" Grid.Column="1"/>
-            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12"
-                       Foreground="{StaticResource MutedBrush}" Text="Bank slots your server allows (P1999: 8). Higher slots in the inventory file are ignored."/>
-        </Grid>
-        <CheckBox x:Name="TopmostCheck" Content="Keep WhereEQ on top of other windows" Margin="0,4,0,0"/>
-
-        <TextBlock Text="Sounds" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,4"/>
-        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"
-                   Text="When a new line like this shows up in your log: do nothing, beep (each alert has its own tone) or have the Windows voice say it. ▶ tries it."/>
-        <!-- Two columns of alerts, filled in from Sounds.Alerts (+ the spawn timer bell). -->
-        <UniformGrid x:Name="SoundRows" Columns="2"/>
-        <Grid Margin="0,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="240"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="110"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="110"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="Voice" VerticalAlignment="Center" Margin="0,0,8,0"/>
-            <ComboBox x:Name="VoiceBox" Grid.Column="1" ToolTip="Voices installed in Windows (Settings → Time &amp; language → Speech adds more)"/>
-            <TextBlock Grid.Column="2" Text="Speed" VerticalAlignment="Center" Margin="16,0,8,0"/>
-            <Slider x:Name="VoiceRateSlider" Grid.Column="3" Minimum="-5" Maximum="8" IsSnapToTickEnabled="True" TickFrequency="1"
-                    VerticalAlignment="Center"/>
-            <TextBlock Grid.Column="4" Text="Volume" VerticalAlignment="Center" Margin="16,0,8,0"/>
-            <Slider x:Name="VoiceVolumeSlider" Grid.Column="5" Minimum="10" Maximum="100" VerticalAlignment="Center"/>
-            <CheckBox x:Name="ReadTellsCheck" Grid.Row="1" Grid.ColumnSpan="6" Margin="0,6,0,0"
-                      Content="Read tells aloud (not just who sent them) — anyone in the room will hear them"/>
-        </Grid>
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="Valuable loot: at least" VerticalAlignment="Center" Margin="0,0,8,0"/>
-            <TextBox x:Name="LootMinBox" Width="80" VerticalAlignment="Center"
-                     ToolTip="Platinum. Prices are pigparse.org's average asking price (WTS) in auction chat."/>
-            <TextBlock Text="platinum (pigparse.org price; also turns the price gold in the loot list)" VerticalAlignment="Center"
-                       Margin="8,0,0,0" Foreground="{StaticResource MutedBrush}"/>
-        </StackPanel>
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+    <DockPanel Margin="16,12,16,16">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Save" IsDefault="True" MinWidth="90" Click="Save_Click" Style="{DynamicResource AccentButtonStyle}"/>
             <Button Content="Cancel" IsCancel="True" MinWidth="90" Margin="8,0,0,0"/>
         </StackPanel>
-    </StackPanel>
-    </ScrollViewer>
+
+        <TabControl x:Name="Tabs">
+            <!-- Folders: where each kind of file is. -->
+            <TabItem Header="Folders">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="4,12,8,4">
+                        <TextBlock Style="{StaticResource Note}" Margin="0,0,0,10"
+                                   Text="Each kind of file can have its own folder, or they can all share the EverQuest folder. WhereEQ updates as files change."/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Inventory files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBox x:Name="InventoryBox" Grid.Row="0" Grid.Column="1" TextChanged="Folder_Changed"/>
+                            <Button Grid.Row="0" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=InventoryBox}" Click="Browse_Click"/>
+                            <TextBlock x:Name="InventoryInfo" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+
+                            <TextBlock Grid.Row="2" Text="Spellbook files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBox x:Name="SpellbookBox" Grid.Row="2" Grid.Column="1" TextChanged="Folder_Changed"/>
+                            <Button Grid.Row="2" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=SpellbookBox}" Click="Browse_Click"/>
+                            <TextBlock x:Name="SpellbookInfo" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+
+                            <TextBlock Grid.Row="4" Text="Log files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBox x:Name="LogBox" Grid.Row="4" Grid.Column="1" TextChanged="Folder_Changed"/>
+                            <Button Grid.Row="4" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=LogBox}" Click="Browse_Click"/>
+                            <TextBlock x:Name="LogInfo" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+
+                            <TextBlock Grid.Row="6" Text="Character .ini files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBox x:Name="IniBox" Grid.Row="6" Grid.Column="1" TextChanged="Folder_Changed"
+                                     ToolTip="Name_server.ini files (friends lists). Leave blank to use the inventory folder."/>
+                            <Button Grid.Row="6" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=IniBox}" Click="Browse_Click"/>
+                            <TextBlock x:Name="IniInfo" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+
+                            <TextBlock Grid.Row="8" Text="Map files" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBox x:Name="MapsBox" Grid.Row="8" Grid.Column="1" TextChanged="Folder_Changed"
+                                     ToolTip="The maps folder in your P1999 install. Leave blank to use 'maps' under the inventory folder."/>
+                            <Button Grid.Row="8" Grid.Column="2" Content="Browse…" Margin="8,0,0,0" Tag="{Binding ElementName=MapsBox}" Click="Browse_Click"/>
+                            <TextBlock x:Name="MapsInfo" Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+                        </Grid>
+                        <CheckBox x:Name="SubfoldersCheck" Content="Also look in subfolders" Click="Folder_Changed"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Options: server, bank, window, loot. -->
+            <TabItem Header="Options">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="4,4,8,4">
+                        <TextBlock Text="Game" Style="{StaticResource Group}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Server" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="ServerBox" Grid.Column="1" IsEditable="True"/>
+                            <TextBlock Grid.Column="2" Margin="12,0,0,0" Style="{StaticResource Note}"
+                                       Text="Only read logs and .ini files for this server. Blank reads all."/>
+                            <TextBlock Grid.Row="1" Text="Bank slots" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <ComboBox x:Name="BankSlotsBox" Grid.Row="1" Grid.Column="1" Width="90" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="12,8,0,0" Style="{StaticResource Note}"
+                                       Text="P1999 has 8. Higher slots in the inventory file are ignored."/>
+                        </Grid>
+
+                        <TextBlock Text="Window" Style="{StaticResource Group}"/>
+                        <CheckBox x:Name="TopmostCheck" Content="Keep WhereEQ on top of other windows"/>
+
+                        <TextBlock Text="Loot" Style="{StaticResource Group}"/>
+                        <CheckBox x:Name="LootTrackCheck" Content="Keep a list of what you loot (bottom of the Timers &amp; buffs window)"
+                                  Click="Loot_Click"/>
+                        <CheckBox x:Name="LootPricesCheck" Margin="0,6,0,0" Click="Loot_Click"
+                                  Content="Look up loot prices on pigparse.org (sends only the item name and your server)"/>
+                        <StackPanel x:Name="LootMinRow" Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="Valuable loot: at least" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="LootMinBox" Width="80" VerticalAlignment="Center"
+                                     ToolTip="Platinum. Prices are pigparse.org's average asking price (WTS) in auction chat."/>
+                            <TextBlock Text="platinum: turns the price gold, and plays the Valuable loot alert (Sounds)"
+                                       Margin="8,0,0,0" Style="{StaticResource Note}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Sounds: one Off/Beep/Voice box per alert + the voice. -->
+            <TabItem Header="Sounds">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="4,12,8,4">
+                        <TextBlock Style="{StaticResource Note}" Margin="0,0,0,10"
+                                   Text="When a new line like this shows up in your log: do nothing, beep (each alert has its own tone) or have the Windows voice say it. ▶ tries it."/>
+                        <!-- Two columns of alerts, filled in from Sounds.Alerts (+ the spawn timer bell). -->
+                        <UniformGrid x:Name="SoundRows" Columns="2"/>
+                        <TextBlock Text="Voice" Style="{StaticResource Group}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="240"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="110"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="VoiceBox" ToolTip="Voices installed in Windows (Settings → Time &amp; language → Speech adds more)"/>
+                            <TextBlock Grid.Column="1" Text="Speed" VerticalAlignment="Center" Margin="16,0,8,0"/>
+                            <Slider x:Name="VoiceRateSlider" Grid.Column="2" Minimum="-5" Maximum="8" IsSnapToTickEnabled="True" TickFrequency="1"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="Volume" VerticalAlignment="Center" Margin="16,0,8,0"/>
+                            <Slider x:Name="VoiceVolumeSlider" Grid.Column="4" Minimum="10" Maximum="100" VerticalAlignment="Center"/>
+                        </Grid>
+                        <CheckBox x:Name="ReadTellsCheck" Margin="0,8,0,0"
+                                  Content="Read tells aloud (not just who sent them) — anyone in the room will hear them"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

@@ -206,6 +206,9 @@ public static partial class LogScanner
     /// ago). Arguments: character, server (from the log's file name), item.</summary>
     public static event Action<string, string, string>? Looted;
 
+    /// <summary>Settings → Options → "Keep a list of what you loot". Off: loot lines aren't recorded.</summary>
+    public static bool TrackLoot { get; set; } = true;
+
     public static bool TryParseFileName(string path, out string character, out string server)
     {
         var m = LogFileName().Match(System.IO.Path.GetFileNameWithoutExtension(path));
@@ -289,7 +292,7 @@ public static partial class LogScanner
             }
 
             // Your own loot (not "--Somebody has looted ...--"): the loot price list.
-            if (msg.StartsWith("--You have looted ") && LootedItem(msg) is { } loot)
+            if (TrackLoot && msg.StartsWith("--You have looted ") && LootedItem(msg) is { } loot)
             {
                 state.Loot.Add(new LootRecord(loot, ts ?? DateTime.Now, state.Zone));
                 if (state.Loot.Count > LogState.LootMax) state.Loot.RemoveRange(0, state.Loot.Count - LogState.LootMax);

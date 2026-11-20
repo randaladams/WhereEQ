@@ -10,7 +10,14 @@
     <NoWarn>$(NoWarn);WPF0001</NoWarn>
     <AssemblyTitle>WhereEQ</AssemblyTitle>
     <Product>WhereEQ</Product>
+    <!-- Exe icon (Explorer, taskbar); drawn by tools/make_icon.py -->
+    <ApplicationIcon>Assets\WhereEQ.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Title bar icon of the app's windows -->
+    <Resource Include="Assets\WhereEQ.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Reference spell lists per class: Data/Spells/<Class>.txt ("level<TAB>spell name") -->

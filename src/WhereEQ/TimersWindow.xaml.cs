@@ -142,7 +142,7 @@ public partial class TimersWindow : Window
             t.BuffsShare *= 0.75;
             if (Height < 440) Height = 440;
         }
-        ApplySplit(t.BuffsShare.Value, t.LootShare.Value);
+        ApplyOptions();
         _updatingUi = false;
 
         HintText.Text = spawnTimes.IsEmpty
@@ -210,13 +210,32 @@ public partial class TimersWindow : Window
         LootRow.Height = new GridLength(lootShare, GridUnitType.Star);
     }
 
+    /// <summary>Settings that change the layout (loot list on/off); called at start and after Settings are saved.</summary>
+    public void ApplyOptions()
+    {
+        var t = _settings.Timers;
+        var showLoot = _settings.LootTracking;
+        Loot.Visibility = LootSplitter.Visibility = showLoot ? Visibility.Visible : Visibility.Collapsed;
+        ApplySplit(t.BuffsShare ?? 0.5, showLoot ? t.LootShare ?? 0.25 : 0);
+        Loot.Rebuild();
+    }
+
     private void Splitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
     {
+        var t = _settings.Timers;
         var total = TimersRow.ActualHeight + BuffsRow.ActualHeight + LootRow.ActualHeight;
         if (total <= 0) return;
-        _settings.Timers.BuffsShare = BuffsRow.ActualHeight / total;
-        _settings.Timers.LootShare = LootRow.ActualHeight / total;
-        ApplySplit(_settings.Timers.BuffsShare.Value, _settings.Timers.LootShare.Value);
+        if (_settings.LootTracking)
+        {
+            t.BuffsShare = BuffsRow.ActualHeight / total;
+            t.LootShare = LootRow.ActualHeight / total;
+        }
+        else
+        {
+            // Loot hidden: keep its saved share for when it comes back; timers and buffs split the rest.
+            t.BuffsShare = BuffsRow.ActualHeight / total * (1 - (t.LootShare ?? 0.25));
+        }
+        ApplyOptions();
         _settings.Save();
     }
 

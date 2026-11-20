@@ -14,6 +14,8 @@ public partial class MainWindow : Window
     private const string AllCharacters = "All characters";
 
     private readonly Settings _settings = Settings.Load();
+    /// <summary>The app is shutting down: closing an overlay now doesn't mean "keep it closed".</summary>
+    private bool _closing;
     private readonly SpellDatabase _spellDb = new(Path.Combine(AppContext.BaseDirectory, "Data", "Spells"));
     private readonly SpawnTimes _spawnTimes = SpawnTimes.LoadBundled();
     private DataStore? _store;
@@ -49,9 +51,11 @@ public partial class MainWindow : Window
             else
                 Sounds.Alert(_settings.Sounds, notice, line);
         };
+        ApplyRuntimeOptions();
         // Fresh loot: look up its price; alert if it's worth at least the "valuable loot" amount.
         LogScanner.Looted += async (character, server, item) =>
         {
+            if (!_settings.LootPrices) return;
             try
             {
                 var info = await PriceLookup.GetAsync(PriceLookup.ServerName(server), item);
@@ -73,6 +77,7 @@ public partial class MainWindow : Window
         };
         Closing += (_, _) =>
         {
+            _closing = true; // overlays closed with the app reopen next time
             SaveWindow();
             // Remember the map was open so it comes back next time, then close it with us.
             if (_mapWindow != null) { var open = true; _mapWindow.Close(); _settings.Map.Open = open; _settings.Save(); }
@@ -102,10 +107,21 @@ public partial class MainWindow : Window
         _settings.BankSlots = r.BankSlots;
         _settings.MapsFolder = r.MapsFolder;
         _settings.Sounds = r.Sounds;
+        _settings.LootTracking = r.LootTracking;
+        _settings.LootPrices = r.LootPrices;
         _settings.Save();
+        ApplyRuntimeOptions();
         _mapWindow?.ReloadMaps();
         TopmostCheck.IsChecked = r.AlwaysOnTop;
         return true;
+    }
+
+    /// <summary>Settings that the log reader and price lookups read directly (loot list, pigparse lookups).</summary>
+    private void ApplyRuntimeOptions()
+    {
+        LogScanner.TrackLoot = _settings.LootTracking;
+        PriceLookup.Enabled = _settings.LootPrices;
+        _timersWindow?.ApplyOptions();
     }
 
     private async void Settings_Click(object sender, RoutedEventArgs e)
@@ -231,6 +247,7 @@ public partial class MainWindow : Window
             Window dlg = parts[1] == "sync" ? new SyncFriendsWindow(_characters) { Owner = this }
                                             : new SettingsWindow(_settings) { Owner = this };
             dlg.Show();
+            if (dlg is SettingsWindow sw && parts.Length > 2 && int.TryParse(parts[2], out var tabIndex)) sw.Tabs.SelectedIndex = tabIndex;
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             await Task.Delay(500);
             RenderToPng(dlg, parts[0]);
@@ -272,16 +289,24 @@ public partial class MainWindow : Window
 
     private MapWindow? _mapWindow;
 
+    /// <summary>🗺 Map toggles the overlay: opens it, or closes it if it's open.</summary>
     private void Map_Click(object sender, RoutedEventArgs e)
     {
-        if (_mapWindow != null) { _mapWindow.ApplyLock(false); _mapWindow.Activate(); return; }
-        OpenMap();
+        if (_mapWindow != null) _mapWindow.Close();
+        else OpenMap();
+        MapButton.IsChecked = _mapWindow != null;
     }
 
     private void OpenMap()
     {
         _mapWindow = new MapWindow(_settings);
-        _mapWindow.Closed += (_, _) => _mapWindow = null;
+        _mapWindow.Closed += (_, _) =>
+        {
+            _mapWindow = null;
+            MapButton.IsChecked = false;
+            if (!_closing) { _settings.Map.Open = false; _settings.Save(); }
+        };
+        MapButton.IsChecked = true;
         _settings.Map.Open = true;
         _settings.Save();
         _mapWindow.Show();
@@ -301,15 +326,12 @@ public partial class MainWindow : Window
 
     private TimersWindow? _timersWindow;
 
+    /// <summary>⏱ Timers &amp; buffs toggles the overlay: opens it, or closes it if it's open.</summary>
     private void Timers_Click(object sender, RoutedEventArgs e)
     {
-        if (_timersWindow != null)
-        {
-            if (_timersWindow.WindowState == WindowState.Minimized) _timersWindow.WindowState = WindowState.Normal;
-            _timersWindow.Activate();
-            return;
-        }
-        OpenTimers();
+        if (_timersWindow != null) _timersWindow.Close();
+        else OpenTimers();
+        TimersButton.IsChecked = _timersWindow != null;
     }
 
     private bool IsBard(string character, string? cls)
@@ -339,7 +361,13 @@ public partial class MainWindow : Window
     private void OpenTimers()
     {
         _timersWindow = new TimersWindow(_settings, _spawnTimes);
-        _timersWindow.Closed += (_, _) => { _timersWindow = null; _settings.Timers.Open = false; _settings.Save(); };
+        _timersWindow.Closed += (_, _) =>
+        {
+            _timersWindow = null;
+            TimersButton.IsChecked = false;
+            if (!_closing) { _settings.Timers.Open = false; _settings.Save(); }
+        };
+        TimersButton.IsChecked = true;
         _settings.Timers.Open = true;
         _settings.Save();
         _timersWindow.Show();

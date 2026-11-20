@@ -11,7 +11,8 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.36** (loot list with pigparse.org prices + "Valuable loot" alert) after 0.1.35 (Bard songs on
+- Status: build **0.1.37** (loot list/price lookups optional; Map and Timers buttons toggle; app icon; Settings in
+  three tabs) after 0.1.36 (loot list with pigparse.org prices + "Valuable loot" alert), 0.1.35 (Bard songs on
   mobs in the buffs list), 0.1.34 ($xpNN typed by your character =
   % into the level, Characters tab), 0.1.33
   (overlays drawn on the CPU: fixes game pauses; owner says it "seems better"), 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
@@ -162,6 +163,13 @@ Format notes learned from real data:
   `MainWindow` handles `Looted` → price ≥ `Sounds.LootMinPp` (default 500, box in Settings) → `LogNotice.Valuable`
   alert (Off/Beep/Voice like the others; the line passed to `Sounds.Phrase` is "item|price"). Only the item name and
   server are sent. Dev hooks: `out.txt|price|Item Name[|Server]`, `out.png|timers|loot` (waits 4 s for prices).
+- 0.1.37: `Settings.LootTracking` / `LootPrices` (Settings → Options → Loot) feed `LogScanner.TrackLoot` and
+  `PriceLookup.Enabled` via `MainWindow.ApplyRuntimeOptions` (start + after Settings save) and
+  `TimersWindow.ApplyOptions` (hides the loot row and its splitter). 🗺 Map and ⏱ Timers & buffs are ToggleButtons
+  (`MapButton`/`TimersButton`): click closes an open overlay; closing by hand saves `Open = false`, closing with
+  the app (`_closing`) keeps it true so it comes back. Icon: `tools/make_icon.py` (Pillow) draws
+  `src/WhereEQ/Assets/WhereEQ.ico` (exe `ApplicationIcon` + `Icon=` on the titled windows). Settings is a
+  `TabControl` (Folders / Options / Sounds, `x:Name="Tabs"`; snapshot `out.png|settings|<tab index>`).
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest
