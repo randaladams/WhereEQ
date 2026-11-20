@@ -128,6 +128,23 @@
                             <TextBlock Text="platinum: turns the price gold, and plays the Valuable loot alert (Sounds)"
                                        Margin="8,0,0,0" Style="{StaticResource Note}"/>
                         </StackPanel>
+                        <Grid x:Name="PriceUrlRow" Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Price lookup address" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="PriceUrlBox" Grid.Column="1" TextChanged="PriceUrl_Changed"
+                                     ToolTip="Only change this if pigparse.org moves its API. {server} becomes Green/Blue/Red/Quarm, {item} the item name."/>
+                            <Button Grid.Column="2" Content="Reset" Margin="8,0,0,0" Click="PriceUrlReset_Click"
+                                    ToolTip="Back to pigparse.org's address"/>
+                            <TextBlock x:Name="PriceUrlInfo" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Info}"/>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

@@ -178,6 +178,8 @@ public sealed class Settings
     public bool LootTracking { get; set; } = true;
     /// <summary>Look up looted items' prices on pigparse.org (sends the item name and server).</summary>
     public bool LootPrices { get; set; } = true;
+    /// <summary>Price lookup address with {server} and {item}; null = pigparse's (PriceLookup.DefaultUrl).</summary>
+    public string? PriceUrl { get; set; }
 
     /// <summary>Sounds for log events.</summary>
     public SoundSettings Sounds { get; set; } = new();

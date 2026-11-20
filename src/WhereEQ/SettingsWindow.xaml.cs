@@ -37,6 +37,7 @@ public partial class SettingsWindow : Window
         LootMinBox.Text = settings.Sounds.LootMinPp.ToString();
         LootTrackCheck.IsChecked = settings.LootTracking;
         LootPricesCheck.IsChecked = settings.LootPrices;
+        PriceUrlBox.Text = settings.PriceUrl ?? PriceLookup.DefaultUrl;
         Loot_Click(this, new RoutedEventArgs());
         MaxHeight = SystemParameters.WorkArea.Height - 20;
         BankSlotsBox.ItemsSource = Enumerable.Range(1, 16).ToList();
@@ -68,8 +69,20 @@ public partial class SettingsWindow : Window
     {
         var tracking = LootTrackCheck.IsChecked == true;
         LootPricesCheck.IsEnabled = tracking;
-        LootMinRow.IsEnabled = tracking && LootPricesCheck.IsChecked == true;
+        LootMinRow.IsEnabled = PriceUrlRow.IsEnabled = tracking && LootPricesCheck.IsChecked == true;
     }
+
+    private void PriceUrl_Changed(object sender, RoutedEventArgs e)
+    {
+        var t = PriceUrlBox.Text.Trim();
+        PriceUrlInfo.Text =
+            t.Length == 0 || t == PriceLookup.DefaultUrl ? "pigparse.org (default)." :
+            !t.Contains("{item}", StringComparison.OrdinalIgnoreCase) ? "Needs {item} where the item name goes." :
+            PriceLookup.UrlFor(t, "Green", "Flawless Diamond") is { } example ? $"Example: {example}" :
+            "Not a web address (should start with https://).";
+    }
+
+    private void PriceUrlReset_Click(object sender, RoutedEventArgs e) => PriceUrlBox.Text = PriceLookup.DefaultUrl;
 
     private void UpdateInfo()
     {
@@ -150,6 +163,10 @@ public partial class SettingsWindow : Window
         s.Sounds = CurrentSounds();
         s.LootTracking = LootTrackCheck.IsChecked == true;
         s.LootPrices = LootPricesCheck.IsChecked == true;
+        var priceUrl = PriceUrlBox.Text.Trim();
+        s.PriceUrl = priceUrl.Length == 0 || priceUrl == PriceLookup.DefaultUrl ||
+                     !priceUrl.Contains("{item}", StringComparison.OrdinalIgnoreCase) || PriceLookup.UrlFor(priceUrl, "Green", "x") == null
+            ? null : priceUrl;
         Result = s;
         DialogResult = true;
     }

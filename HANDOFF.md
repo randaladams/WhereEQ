@@ -11,8 +11,8 @@ client writes and keeps them live while you play. This file is the starting poin
   single-file publish (`out/small`, needs the .NET 10 Desktop Runtime) so it's a few MB instead of ~60.
 - The owner tests on a separate "test PC" that has P1999 installed; **EverQuest is not installed on the dev
   machine**, so features are verified with sample files + rendered snapshots (see *Verifying UI* below).
-- Status: build **0.1.37** (loot list/price lookups optional; Map and Timers buttons toggle; app icon; Settings in
-  three tabs) after 0.1.36 (loot list with pigparse.org prices + "Valuable loot" alert), 0.1.35 (Bard songs on
+- Status: build **0.1.38** (trade offers in the loot list; price lookup address is a setting) after 0.1.37 (loot
+  list/price lookups optional; Map and Timers buttons toggle; app icon; Settings in three tabs), 0.1.36 (loot list with pigparse.org prices + "Valuable loot" alert), 0.1.35 (Bard songs on
   mobs in the buffs list), 0.1.34 ($xpNN typed by your character =
   % into the level, Characters tab), 0.1.33
   (overlays drawn on the CPU: fixes game pauses; owner says it "seems better"), 0.1.31–0.1.32 (small update zip), 0.1.30 (weapon procs on mobs, e.g. Boiling Blood, in the buffs list), 0.1.29 (buffs
@@ -170,6 +170,11 @@ Format notes learned from real data:
   the app (`_closing`) keeps it true so it comes back. Icon: `tools/make_icon.py` (Pillow) draws
   `src/WhereEQ/Assets/WhereEQ.ico` (exe `ApplicationIcon` + `Icon=` on the titled windows). Settings is a
   `TabControl` (Folders / Options / Sounds, `x:Name="Tabs"`; snapshot `out.png|settings|<tab index>`).
+- 0.1.38: "Somebody has offered you a X." (trade window; no "trade done" line exists in the logs) is recorded as
+  `LootRecord.From` = Somebody (`LogScanner.OfferLine`, one-word capitalized name, not chat) and listed as
+  "X ← Somebody"; no Valuable alert for offers. `Settings.PriceUrl` (null = `PriceLookup.DefaultUrl`) →
+  `PriceLookup.UrlTemplate` with `{server}`/`{item}` (escaped); changing it clears the price cache; Settings shows an
+  example address and refuses ones without `{item}` or not http(s) (saved as null = default).
 - `Services/RecycleBin.cs` — `SHFileOperation` to send deleted character files to the Recycle Bin.
 
 ## Verifying UI without EverQuest

@@ -109,6 +109,7 @@ public partial class MainWindow : Window
         _settings.Sounds = r.Sounds;
         _settings.LootTracking = r.LootTracking;
         _settings.LootPrices = r.LootPrices;
+        _settings.PriceUrl = r.PriceUrl;
         _settings.Save();
         ApplyRuntimeOptions();
         _mapWindow?.ReloadMaps();
@@ -121,6 +122,7 @@ public partial class MainWindow : Window
     {
         LogScanner.TrackLoot = _settings.LootTracking;
         PriceLookup.Enabled = _settings.LootPrices;
+        PriceLookup.UrlTemplate = _settings.PriceUrl ?? PriceLookup.DefaultUrl;
         _timersWindow?.ApplyOptions();
     }
 

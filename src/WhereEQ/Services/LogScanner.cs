@@ -39,8 +39,10 @@ public sealed record ActiveSpell(string Name, string? Target, DateTime Start, in
     public DateTime End => Start.AddSeconds(Seconds);
 }
 
-/// <summary>An item you looted ("--You have looted a Nephrite.--"), for the loot price list.</summary>
-public sealed record LootRecord(string Item, DateTime Time, string? Zone);
+/// <summary>An item you looted ("--You have looted a Nephrite.--"), for the loot price list. <see cref="From"/> is set
+/// for an item someone put in a trade window ("Somebody has offered you a Nephrite."): the log doesn't say whether the
+/// trade went through.</summary>
+public sealed record LootRecord(string Item, DateTime Time, string? Zone, string? From = null);
 
 /// <summary>Log lines worth a sound (see <see cref="LogScanner.Notice"/>). <see cref="Valuable"/> isn't from
 /// Classify: it fires after a looted item's price comes back at or above the threshold.</summary>
@@ -172,6 +174,10 @@ public static partial class LogScanner
     [GeneratedRegex(@"^(?<name>\w+) is (?<no>no longer|now) your friend\.$")]
     private static partial Regex FriendChange();
 
+    // "Somebody has offered you a Lionhide Backpack." (players have one-word names)
+    [GeneratedRegex(@"^(?<who>[A-Z][a-z]+) has offered you (?:an? |some |the )?(?<item>.+?)\.$")]
+    private static partial Regex OfferLine();
+
     // "$xp78" / "$XP 78" (percent into the current level).
     [GeneratedRegex(@"\$xp\s*(?<pct>\d{1,3})\b", RegexOptions.IgnoreCase)]
     private static partial Regex XpTag();
@@ -300,6 +306,15 @@ public static partial class LogScanner
                 {
                     try { Looted.Invoke(name, state.Server, loot); } catch { /* never break log reading */ }
                 }
+                continue;
+            }
+
+            // Someone puts an item in a trade window with you: "Somebody has offered you a Lionhide Backpack."
+            if (TrackLoot && msg.Contains(" has offered you ") && !msg.Contains(", '") &&
+                OfferLine().Match(msg) is { Success: true } offer)
+            {
+                state.Loot.Add(new LootRecord(offer.Groups["item"].Value, ts ?? DateTime.Now, state.Zone, offer.Groups["who"].Value));
+                if (state.Loot.Count > LogState.LootMax) state.Loot.RemoveRange(0, state.Loot.Count - LogState.LootMax);
                 continue;
             }
 

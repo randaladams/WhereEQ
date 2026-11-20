@@ -88,12 +88,18 @@ auction chat over the last 30 days, or a longer stretch when there were no recen
 number of auctions, the wanted-to-buy (WTB) average and when it was last for sale; right-click to clear the list.
 
 - Only your own loot counts (`--You have looted a Nephrite.--`), not groupmates'.
+- Items someone puts in a trade window with you (`Somebody has offered you a Lionhide Backpack.`) are listed too,
+  as `Lionhide Backpack ← Somebody`, so you can see what it's worth before you accept. The log doesn't say whether
+  the trade went through, and offers don't play the Valuable loot alert.
 - WhereEQ sends pigparse only the item name and your server (from the log's file name, e.g. P1999Green); prices are
   remembered for an hour. Without internet, or for items pigparse has never seen, the price says "no price".
 - These are asking prices from auction chat, not what items actually sold for.
 - Both are optional (Settings → Options → Loot): turn off **Keep a list of what you loot** to hide the list and stop
   recording loot, or **Look up loot prices on pigparse.org** to keep the list without ever contacting pigparse (no
   prices, no Valuable loot alert).
+- Prices come from `https://www.pigparse.org/api/item/get/{server}/{item}`. If pigparse ever moves that, change
+  **Price lookup address** (Settings → Options → Loot) and keep `{server}` and `{item}` in it; **Reset** puts the
+  default back.
 
 ## Sounds
 

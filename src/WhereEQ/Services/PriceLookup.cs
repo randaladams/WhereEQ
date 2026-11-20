@@ -20,7 +20,7 @@ public sealed record PriceInfo(string Item, int? Price, string Window, int Count
 }
 
 /// <summary>
-/// Looks up item prices on pigparse.org (GET /api/item/get/{server}/{item}, no sign-in). Only the item name and
+/// Looks up item prices on pigparse.org (GET <see cref="DefaultUrl"/>, no sign-in; the address is a setting). Only the item name and
 /// server are sent. Answers are kept for an hour (pigparse rebuilds its averages every 10 minutes); failed lookups
 /// are retried after 5 minutes.
 /// </summary>
@@ -36,7 +36,7 @@ public static class PriceLookup
 
     private static HttpClient CreateClient()
     {
-        var c = new HttpClient { BaseAddress = new Uri("https://www.pigparse.org/"), Timeout = TimeSpan.FromSeconds(10) };
+        var c = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         var v = typeof(PriceLookup).Assembly.GetName().Version;
         c.DefaultRequestHeaders.UserAgent.ParseAdd($"WhereEQ/{v?.Major ?? 0}.{v?.Minor ?? 1}.{v?.Build ?? 0}");
         return c;
@@ -64,6 +64,33 @@ public static class PriceLookup
         return !c.Failed;
     }
 
+    /// <summary>pigparse's price API; {server} = Green/Blue/Red/Quarm, {item} = the item name (URL-encoded).</summary>
+    public const string DefaultUrl = "https://www.pigparse.org/api/item/get/{server}/{item}";
+
+    private static string _url = DefaultUrl;
+    /// <summary>Settings → Options → Loot → "Price lookup address" (in case pigparse moves its API). Changing it
+    /// forgets cached prices.</summary>
+    public static string UrlTemplate
+    {
+        get => _url;
+        set
+        {
+            var v = string.IsNullOrWhiteSpace(value) ? DefaultUrl : value.Trim();
+            if (v == _url) return;
+            _url = v;
+            Cache.Clear();
+        }
+    }
+
+    /// <summary>The address for one item, or null if the template isn't a usable http(s) address.</summary>
+    public static string? UrlFor(string template, string server, string item)
+    {
+        var url = template.Replace("{server}", Uri.EscapeDataString(server), StringComparison.OrdinalIgnoreCase)
+                          .Replace("{item}", Uri.EscapeDataString(item), StringComparison.OrdinalIgnoreCase);
+        return Uri.TryCreate(url, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttps || u.Scheme == Uri.UriSchemeHttp)
+            ? u.AbsoluteUri : null;
+    }
+
     /// <summary>Settings → Options → "Look up prices on pigparse.org". Off: nothing is ever sent.</summary>
     public static bool Enabled { get; set; } = true;
 
@@ -84,7 +111,8 @@ public static class PriceLookup
     {
         try
         {
-            using var resp = await Http.GetAsync($"api/item/get/{server}/{Uri.EscapeDataString(item)}").ConfigureAwait(false);
+            var url = UrlFor(UrlTemplate, server, item) ?? throw new InvalidOperationException("bad price lookup address");
+            using var resp = await Http.GetAsync(url).ConfigureAwait(false);
             PriceInfo? info;
             if (resp.StatusCode == HttpStatusCode.NoContent) info = new PriceInfo(item, null, "", 0, null, null);
             else

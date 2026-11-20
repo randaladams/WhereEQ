@@ -91,8 +91,11 @@ public partial class LootPanel : UserControl
                 priceText = "…";
                 tip = $"{l.Item}: looking up the price on pigparse.org";
             }
-            tip += $"\nLooted {l.Time:HH:mm}{(several ? " by " + who : "")}{(l.Zone != null ? " in " + l.Zone : "")}";
-            rows.Add(new LootRow($"{who}|{l.Time.Ticks}|{l.Item}", l.Item, priceText, price, valuable, Character.Ago(l.Time), tip));
+            tip += l.From != null
+                ? $"\nOffered by {l.From} in a trade at {l.Time:HH:mm}{(several ? " (to " + who + ")" : "")} — the log doesn't say whether the trade went through"
+                : $"\nLooted {l.Time:HH:mm}{(several ? " by " + who : "")}{(l.Zone != null ? " in " + l.Zone : "")}";
+            var label = l.From != null ? $"{l.Item}  ← {l.From}" : l.Item;
+            rows.Add(new LootRow($"{who}|{l.Time.Ticks}|{l.Item}|{l.From}", label, priceText, price, valuable, Character.Ago(l.Time), tip));
         }
 
         EmptyText.Text = _settings.LootPrices
